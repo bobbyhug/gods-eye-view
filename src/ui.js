@@ -2346,6 +2346,14 @@ export class StyleManager {
     this._cctvCalibResetBtn = document.getElementById('cctv-calib-reset-btn');
     this._cctvFrame = document.getElementById('cctv-frame');
     this._cctvFrameWrap = document.getElementById('cctv-frame-wrap');
+    this._cctvLightbox = document.getElementById('cctv-lightbox');
+    this._cctvLightboxFrame = document.getElementById('cctv-lightbox-frame');
+    this._cctvLightboxTitle = document.getElementById('cctv-lightbox-title');
+    this._cctvLightboxMeta = document.getElementById('cctv-lightbox-meta');
+    this._cctvLightboxCopyBtn = document.getElementById('cctv-lightbox-copy');
+    this._cctvLightboxSaveBtn = document.getElementById('cctv-lightbox-save');
+    this._cctvLightboxStatusTimer = null;
+    this._initCctvLightbox();
     this._cctvFrameRequestToken = 0;
     this._cctvFramePreloader = null;
     this._cctvSourceBadge = document.getElementById('cctv-source-badge');
@@ -6237,6 +6245,8 @@ export class StyleManager {
       this._cctvFrame.dataset.error = '';
     }
     this._cctvFrameWrap?.classList.remove('loading', 'has-frame');
+    // Nothing left to enlarge — don't strand the lightbox over a dead camera.
+    this._closeCctvLightbox();
   }
 
   /**
@@ -6316,6 +6326,7 @@ export class StyleManager {
     this._cctvFrame.src = src;
     this._cctvFrame.classList.add('active');
     this._cctvFrameWrap?.classList.add('has-frame');
+    this._syncCctvLightboxFrame();
     syncBadge();
   }
 
@@ -6639,6 +6650,182 @@ export class StyleManager {
 
     this._syncCctvSourceBadge(activeCamera, enabled);
     this._typeCctvSummary(state?.summary || 'Enable CCTV to start camera-linked intelligence summaries.');
+  }
+
+  /**
+   * Wires the CCTV preview → lightbox interaction.
+   *
+   * The lightbox mirrors the panel's frame element rather than owning its own
+   * polling: every frame the panel commits is pushed across in
+   * `_syncCctvLightboxFrame`, so the enlarged view stays live (and one camera
+   * is never fetched twice per refresh).
+   *
+   * @returns {void}
+   */
+  _initCctvLightbox() {
+    if (!this._cctvLightbox || !this._cctvFrameWrap) return;
+
+    this._cctvFrameWrap.addEventListener('click', () => {
+      // Only open once there is a settled frame worth enlarging.
+      if (!this._cctvFrameWrap.classList.contains('has-frame')) return;
+      this._openCctvLightbox();
+    });
+
+    for (const el of this._cctvLightbox.querySelectorAll('[data-cctv-lightbox-close]')) {
+      el.addEventListener('click', () => this._closeCctvLightbox());
+    }
+
+    // Capture phase: while the lightbox owns the screen, Esc closes it and must
+    // not also reach the globe's own Esc handling (clear selection / exit cockpit).
+    this._cctvLightboxKeyHandler = (event) => {
+      if (event.key !== 'Escape' || this._cctvLightbox.hidden) return;
+      event.stopPropagation();
+      this._closeCctvLightbox();
+    };
+    document.addEventListener('keydown', this._cctvLightboxKeyHandler, true);
+
+    this._cctvLightboxCopyBtn?.addEventListener('click', () => this._copyCctvFrame());
+    this._cctvLightboxSaveBtn?.addEventListener('click', () => this._saveCctvFrame());
+  }
+
+  /** Opens the enlarged frame view. @returns {void} */
+  _openCctvLightbox() {
+    if (!this._cctvLightbox) return;
+    this._cctvLightbox.hidden = false;
+    this._setCctvLightboxStatus('');
+    this._syncCctvLightboxFrame();
+  }
+
+  /** Closes the enlarged frame view. @returns {void} */
+  _closeCctvLightbox() {
+    if (!this._cctvLightbox) return;
+    this._cctvLightbox.hidden = true;
+    this._setCctvLightboxStatus('');
+  }
+
+  /**
+   * Pushes the panel's current frame and camera identity into the lightbox.
+   * No-op while closed, so a background CCTV refresh costs nothing.
+   * @returns {void}
+   */
+  _syncCctvLightboxFrame() {
+    if (!this._cctvLightbox || this._cctvLightbox.hidden || !this._cctvLightboxFrame) return;
+
+    const src = this._cctvFrame?.dataset.currentSrc || '';
+    // Compare against a dataset copy, not `.src`: the DOM property returns an
+    // absolute URL, so comparing it to the relative frame path would never
+    // match and would re-request the image on every sync.
+    if (src && this._cctvLightboxFrame.dataset.currentSrc !== src) {
+      this._cctvLightboxFrame.dataset.currentSrc = src;
+      this._cctvLightboxFrame.src = src;
+    }
+
+    const camera = this._cctvState?.activeCamera;
+    if (this._cctvLightboxTitle) {
+      this._cctvLightboxTitle.textContent = camera
+        ? [camera.name || camera.id, camera.city].filter(Boolean).join(' · ')
+        : 'CCTV';
+    }
+  }
+
+  /**
+   * Fetches the current frame and returns it as a PNG blob.
+   *
+   * Upstream frames are JPEG, but clipboard image writes are PNG-only across
+   * browsers, so anything else is re-encoded through a canvas. Same-origin
+   * (`/api/cctv/frame/...`), so the canvas never taints.
+   *
+   * @param {string} src - Frame URL.
+   * @returns {Promise<Blob>} PNG blob.
+   */
+  async _cctvFrameAsPng(src) {
+    const response = await fetch(src, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`frame HTTP ${response.status}`);
+    const blob = await response.blob();
+    if (blob.type === 'image/png') return blob;
+
+    const bitmap = await createImageBitmap(blob);
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    canvas.getContext('2d').drawImage(bitmap, 0, 0);
+    bitmap.close();
+    return await new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (out) => (out ? resolve(out) : reject(new Error('PNG encode failed'))),
+        'image/png'
+      );
+    });
+  }
+
+  /** @returns {string} The frame URL currently on show, or ''. */
+  _currentCctvFrameSrc() {
+    return this._cctvLightboxFrame?.dataset.currentSrc
+      || this._cctvFrame?.dataset.currentSrc
+      || '';
+  }
+
+  /**
+   * Copies the visible frame to the clipboard as a PNG.
+   *
+   * The ClipboardItem is constructed with the *pending* blob promise rather
+   * than an awaited blob: Safari drops the write if the user-activation window
+   * closes while awaiting, and passing the promise keeps the gesture alive.
+   *
+   * @returns {Promise<void>}
+   */
+  async _copyCctvFrame() {
+    const src = this._currentCctvFrameSrc();
+    if (!src) return;
+    try {
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': this._cctvFrameAsPng(src) }),
+      ]);
+      this._setCctvLightboxStatus('COPIED TO CLIPBOARD');
+    } catch (err) {
+      console.warn('[CCTV] frame copy failed:', err);
+      this._setCctvLightboxStatus('COPY BLOCKED — TRY SAVE PNG');
+    }
+  }
+
+  /**
+   * Downloads the visible frame as a PNG.
+   * @returns {Promise<void>}
+   */
+  async _saveCctvFrame() {
+    const src = this._currentCctvFrameSrc();
+    if (!src) return;
+    try {
+      const png = await this._cctvFrameAsPng(src);
+      const cameraId = this._cctvState?.activeCamera?.id || 'cctv';
+      const url = URL.createObjectURL(png);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${cameraId}-frame.png`;
+      link.click();
+      // Revoke late: some browsers start the download asynchronously.
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      this._setCctvLightboxStatus('SAVED');
+    } catch (err) {
+      console.warn('[CCTV] frame save failed:', err);
+      this._setCctvLightboxStatus('SAVE FAILED');
+    }
+  }
+
+  /**
+   * Shows a transient status line in the lightbox footer.
+   * @param {string} text - Message, or '' to clear immediately.
+   * @returns {void}
+   */
+  _setCctvLightboxStatus(text) {
+    if (!this._cctvLightboxMeta) return;
+    this._cctvLightboxMeta.textContent = text;
+    clearTimeout(this._cctvLightboxStatusTimer);
+    this._cctvLightboxStatusTimer = null;
+    if (!text) return;
+    this._cctvLightboxStatusTimer = setTimeout(() => {
+      if (this._cctvLightboxMeta) this._cctvLightboxMeta.textContent = '';
+    }, 2600);
   }
 
   /**

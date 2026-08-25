@@ -9161,3 +9161,98 @@ body.scene-playback-mode #first-run-launcher {
   /* Scrolling a tile into view must not animate either. */
   .first-run-choices { scroll-behavior: auto; }
 }
+
+/* ── CCTV frame lightbox ─────────────────────────────────────────────────────
+   Click the CCTV panel preview to open the live frame large and centred. The
+   image keeps refreshing while open (the panel drives it), so this is a live
+   view, not a still capture. */
+.cctv-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4vmin;
+}
+
+.cctv-lightbox[hidden] {
+  display: none;
+}
+
+.cctv-lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 8, 14, 0.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.cctv-lightbox-shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: min(1600px, 94vw);
+  max-height: 92vh;
+  padding: 16px 18px 18px;
+  border: 1px solid rgba(0, 229, 255, 0.34);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(6, 18, 28, 0.97), rgba(4, 12, 20, 0.97));
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.62), 0 0 0 1px rgba(0, 229, 255, 0.08) inset;
+}
+
+.cctv-lightbox-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.cctv-lightbox-title {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #cfefff;
+}
+
+.cctv-lightbox-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  border: 1px solid rgba(0, 229, 255, 0.16);
+  border-radius: 6px;
+  background: #01060b;
+  overflow: hidden;
+}
+
+#cctv-lightbox-frame {
+  display: block;
+  max-width: 100%;
+  /* Header + footer + padding are ~150px; keep the image inside the shell so a
+     tall frame never pushes the copy/save controls off screen. */
+  max-height: calc(92vh - 150px);
+  object-fit: contain;
+  image-rendering: auto;
+}
+
+.cctv-lightbox-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cctv-lightbox-meta {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: rgba(190, 226, 246, 0.72);
+}
+
+/* The panel preview advertises that it opens. */
+.cctv-frame-wrap.has-frame {
+  cursor: zoom-in;
+}

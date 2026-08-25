@@ -128,6 +128,26 @@ export const DATA_CREDITS = [
       'Contains OS data © Crown copyright and database rights.',
   },
   {
+    key: 'fl511-cctv',
+    html:
+      'CCTV cameras &amp; frames (Florida): FDOT FL511 — ' +
+      '<a href="https://fl511.com/" target="_blank" rel="noopener">fl511.com</a>',
+  },
+  {
+    key: 'drivebc-cctv',
+    html:
+      'CCTV cameras &amp; frames (British Columbia): ' +
+      '<a href="https://www.drivebc.ca" target="_blank" rel="noopener">DriveBC.ca</a> — ' +
+      '<a href="https://www2.gov.bc.ca/gov/content/data/open-data/open-government-licence-bc" target="_blank" rel="noopener">Open Government Licence – British Columbia</a>',
+  },
+  {
+    key: 'carto-labels',
+    html:
+      'Map labels (town / street names): ' +
+      '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>, ' +
+      '<a href="https://carto.com/attributions" target="_blank" rel="noopener">© CARTO</a>',
+  },
+  {
     key: 'gbfs',
     html: 'Bikeshare availability: GBFS operator feeds (e.g. Austin BCycle)',
   },

@@ -895,5 +895,26 @@
   </div>
 
   <script type="module" src="/src/main.js"></script>
+
+  <!-- CCTV frame lightbox: click the panel preview to open the live frame large
+       and centred, with copy-to-clipboard and PNG save. -->
+  <div id="cctv-lightbox" class="cctv-lightbox" hidden>
+    <div class="cctv-lightbox-backdrop" data-cctv-lightbox-close></div>
+    <div class="cctv-lightbox-shell" role="dialog" aria-modal="true" aria-labelledby="cctv-lightbox-title">
+      <div class="cctv-lightbox-header">
+        <span id="cctv-lightbox-title" class="cctv-lightbox-title">CCTV</span>
+        <button id="cctv-lightbox-close" class="scene-btn" data-cctv-lightbox-close title="Close (Esc)">CLOSE</button>
+      </div>
+      <div class="cctv-lightbox-stage">
+        <img id="cctv-lightbox-frame" alt="CCTV camera frame, enlarged" />
+      </div>
+      <div class="cctv-lightbox-footer">
+        <button id="cctv-lightbox-copy" class="scene-btn">COPY IMAGE</button>
+        <button id="cctv-lightbox-save" class="scene-btn">SAVE PNG</button>
+        <span id="cctv-lightbox-meta" class="cctv-lightbox-meta"></span>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

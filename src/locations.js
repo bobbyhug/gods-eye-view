@@ -342,6 +342,90 @@ export function findPoiByName(query) {
 export const CANCELLED_SEARCH = Object.freeze({ cancelled: true });
 
 /**
+ * OSM place classes → the Google `types` vocabulary geocodeNavigationMode reads.
+ *
+ * Only the distinctions that change camera framing are mapped; anything
+ * unlisted falls through to 'precise-place', which is the same default the
+ * Google path takes for an unrecognized type.
+ */
+const OSM_TYPE_TO_GOOGLE_TYPES = {
+  country: ['country'],
+  state: ['administrative_area_level_1'],
+  province: ['administrative_area_level_1'],
+  region: ['administrative_area_level_1'],
+  county: ['administrative_area_level_2'],
+  city: ['locality'],
+  town: ['locality'],
+  village: ['locality'],
+  municipality: ['locality'],
+  suburb: ['sublocality'],
+  neighbourhood: ['neighborhood'],
+  quarter: ['neighborhood'],
+  postcode: ['postal_code'],
+  road: ['route'],
+  residential: ['route'],
+  motorway: ['route'],
+  primary: ['route'],
+  secondary: ['route'],
+  tertiary: ['route'],
+  park: ['park'],
+  nature_reserve: ['park'],
+  water: ['natural_feature'],
+  bay: ['natural_feature'],
+  peak: ['natural_feature'],
+  university: ['university'],
+  college: ['campus'],
+  aerodrome: ['airport'],
+  stadium: ['stadium'],
+  zoo: ['zoo'],
+  mall: ['shopping_mall'],
+};
+
+/**
+ * Keyless geocode fallback via the dev server's Nominatim proxy.
+ *
+ * Runs only when the Google path produced nothing — which is the normal state
+ * on an install whose Maps key has just the Map Tiles API enabled. Returns the
+ * same shape the Google branch assembles so the framing logic below is shared.
+ *
+ * @param {Cesium.Viewer} viewer
+ * @param {string} query
+ * @returns {Promise<{lat:number, lon:number, label:string, types:string[],
+ *   viewport:object|null}|null>}
+ */
+async function keylessGeocode(viewer, query) {
+  try {
+    const params = new URLSearchParams({ q: query });
+    // Reuse the same viewport bias the Google call uses, reordered into
+    // Nominatim's lon/lat viewbox form.
+    const rect = viewer?.camera?.computeViewRectangle?.();
+    if (rect) {
+      const west = Cesium.Math.toDegrees(rect.west);
+      const south = Cesium.Math.toDegrees(rect.south);
+      const east = Cesium.Math.toDegrees(rect.east);
+      const north = Cesium.Math.toDegrees(rect.north);
+      if ([west, south, east, north].every(Number.isFinite)) {
+        params.set('viewbox', `${west.toFixed(4)},${south.toFixed(4)},${east.toFixed(4)},${north.toFixed(4)}`);
+      }
+    }
+    const response = await fetch(`/api/geocode?${params}`);
+    if (!response.ok) return null;
+    const place = await response.json();
+    if (!Number.isFinite(place?.lat) || !Number.isFinite(place?.lon)) return null;
+    return {
+      lat: place.lat,
+      lon: place.lon,
+      label: place.label || query,
+      types: OSM_TYPE_TO_GOOGLE_TYPES[place.osmType] || [],
+      viewport: place.viewport || null,
+    };
+  } catch (err) {
+    console.warn('[Search] keyless geocode failed:', err);
+    return null;
+  }
+}
+
+/**
  * Geocode a place name using Google Geocoding API, then fly there at a scale
  * appropriate to the request. Countries and cities use their viewport by
  * default; precise landmarks/buildings use close landmark framing.
@@ -359,8 +443,10 @@ export async function searchAndFlyTo(viewer, query, options = {}) {
   let url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${apiKey}`;
   const bias = viewportBias(viewer);
   if (bias) url += `&bounds=${bias}`;
-  const response = await fetch(url);
-  const data = await response.json();
+  // A transport failure here must not skip the keyless fallback below, so an
+  // unreachable/denied Google geocode degrades to an empty result rather than
+  // throwing out of searchAndFlyTo.
+  const data = await fetch(url).then((r) => r.json()).catch(() => ({}));
 
   const result = (data.status === 'OK' && data.results?.length) ? data.results[0] : null;
   let lat = result?.geometry.location.lat;
@@ -372,7 +458,8 @@ export async function searchAndFlyTo(viewer, query, options = {}) {
   // Places-near-view recovery (annotationResolver's twin): a missed geocode, or one
   // that landed implausibly far from the view centre, snaps back to a view-biased
   // Places hit within the trust bound — "the Capitol" means the one on screen.
-  const recovered = await placesNearViewRecovery(viewer, query, result ? { lat, lon: lng } : null);
+  const recovered = await placesNearViewRecovery(viewer, query, result ? { lat, lon: lng } : null)
+    .catch(() => null);
   if (recovered) {
     lat = recovered.lat;
     lng = recovered.lon;
@@ -380,7 +467,16 @@ export async function searchAndFlyTo(viewer, query, options = {}) {
     types = recovered.types || [];
     viewport = placesViewportToBounds(recovered.viewport) || viewport;
   } else if (!result) {
-    return null;
+    // Google produced nothing — most often because the Maps key has only the
+    // Map Tiles API enabled. Fall back to the keyless OSM geocoder so address
+    // and place search still works.
+    const fallback = await keylessGeocode(viewer, query);
+    if (!fallback) return null;
+    lat = fallback.lat;
+    lng = fallback.lon;
+    label = fallback.label;
+    types = fallback.types;
+    viewport = fallback.viewport;
   }
 
   const requestedRange = finitePositive(options.range);
