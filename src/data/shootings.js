@@ -36,6 +36,18 @@ const API_URL = '/api/shootings';
  */
 const UPDATE_INTERVAL_MS = 0;
 
+/**
+ * Within this range of the camera, markers ignore the depth test so terrain
+ * cannot swallow them; beyond it the globe occludes them normally.
+ */
+const NEAR_DEPTH_TEST_SKIP_M = 50_000;
+
+/**
+ * How deep to drill when picking. Enough to see past the tile surface and a
+ * couple of other layers' primitives without walking the whole scene.
+ */
+const PICK_DEPTH = 8;
+
 /** Filter floor presented on the row slider. */
 export const MIN_KILLED_FLOOR = 0;
 /** Filter ceiling. Above this the slider stops being useful — very few
@@ -104,6 +116,7 @@ export function normalizeIncident(raw, index = 0) {
     killed,
     injured,
     venueType: typeof raw.venueType === 'string' ? raw.venueType : '',
+    precision: typeof raw.precision === 'string' ? raw.precision : 'exact',
     sourceName: typeof raw.sourceName === 'string' ? raw.sourceName : '',
     sourceUrl: typeof raw.sourceUrl === 'string' ? raw.sourceUrl : '',
   };
@@ -169,19 +182,38 @@ export function createShootingsLayer() {
   let _loaded = false;
   let _coverageNote = '';
   let _rowControlsListener = null;
+  /** entityId -> incident, so a pick resolves without searching. */
+  const _byEntityId = new Map();
+  /** @type {Cesium.ScreenSpaceEventHandler|null} */
+  let _clickHandler = null;
+  let _card = null;
 
   /** Repaint entities for the current filter. */
   function render() {
     if (!_dataSource) return;
     _dataSource.entities.removeAll();
+    _byEntityId.clear();
     const visible = filterByToll(_incidents, _minKilled);
     _shown = visible.length;
 
+    let rejected = 0;
     for (const incident of visible) {
+      const entityId = `shooting-${incident.id}`;
+      // Guarded per record. A duplicate id makes entities.add throw, and an
+      // unguarded throw here abandoned the loop partway — 378 of 654 markers
+      // drawn and the rest silently missing. One malformed record should cost
+      // one marker, not the map.
+      try {
+      _byEntityId.set(entityId, incident);
       _dataSource.entities.add({
-        id: `shooting-${incident.id}`,
+        id: entityId,
         position: Cesium.Cartesian3.fromDegrees(incident.lon, incident.lat),
         point: {
+          // Clamped to the surface. Without this the point sits at ellipsoid
+          // height zero, which is BELOW ground anywhere with elevation — a
+          // marker in Denver or Zurich was buried inside the terrain and could
+          // not be seen or clicked.
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
           pixelSize: tollRadiusPx(incident.killed),
           color: tollColor(incident.killed).withAlpha(0.85),
           outlineColor: Cesium.Color.BLACK.withAlpha(0.55),
@@ -190,7 +222,16 @@ export function createShootingsLayer() {
           // in on one — the size means a death toll, so it must not also mean
           // camera distance.
           scaleByDistance: new Cesium.NearFarScalar(1.0e4, 1.0, 4.0e7, 0.45),
-          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          // FINITE, not Infinity. Infinity disables the depth test outright,
+          // which meant markers on the far side of the planet drew straight
+          // through it — incidents in the United States appearing over the
+          // empty South Pacific and across Antarctica.
+          //
+          // A finite value keeps the useful half of that behaviour: within
+          // this range the depth test is still skipped, so a marker is not
+          // swallowed by the hill or building it sits on. Beyond it the globe
+          // occludes as it should.
+          disableDepthTestDistance: NEAR_DEPTH_TEST_SKIP_M,
         },
         description: describeIncident(incident),
         properties: {
@@ -202,8 +243,118 @@ export function createShootingsLayer() {
           sourceUrl: incident.sourceUrl,
         },
       });
+      } catch (error) {
+        rejected += 1;
+        _byEntityId.delete(entityId);
+        if (rejected === 1) console.warn('[Data:Shootings] record rejected:', error?.message || error);
+      }
+    }
+    if (rejected > 0) {
+      _shown -= rejected;
+      console.warn(`[Data:Shootings] ${rejected} record(s) could not be plotted`);
     }
     _rowControlsListener?.();
+  }
+
+  /**
+   * Human date: "12 June 2016" reads as a day something happened; "2016-06-12"
+   * reads as a database row.
+   *
+   * @param {string} iso
+   * @returns {string}
+   */
+  function formatDate(iso) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''));
+    if (!match) return String(iso || '');
+    const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+    if (Number.isNaN(date.getTime())) return iso;
+    return date.toLocaleDateString('en-GB', {
+      day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
+    });
+  }
+
+  /**
+   * How the marker was placed, said plainly.
+   *
+   * A point at a city centroid is a far weaker claim than one at the building,
+   * and a map that renders both identically is quietly overstating one of them.
+   *
+   * @param {string} precision
+   * @returns {string}
+   */
+  function precisionNote(precision) {
+    if (precision === 'venue') return 'Marker placed at the venue';
+    if (precision === 'area') return 'Marker placed at the surrounding area, not the exact site';
+    return 'Marker placed at the recorded location';
+  }
+
+  /** Hide the detail card. @returns {void} */
+  function closeCard() {
+    if (_card) _card.hidden = true;
+  }
+
+  /**
+   * Show one incident's details.
+   *
+   * @param {object} incident
+   * @returns {void}
+   */
+  function showCard(incident) {
+    if (!_card || !incident) return;
+    const set = (key, text) => {
+      const node = _card.querySelector(`[data-shooting="${key}"]`);
+      if (node) node.textContent = text;
+    };
+    set('date', formatDate(incident.date));
+    set('title', incident.placeName || 'Incident');
+    set('place', [incident.country].filter(Boolean).join(''));
+    // An unrecorded toll shows as an em dash rather than 0 — "0 killed" would
+    // be a claim, and a missing figure is not the same as a zero one.
+    set('killed', incident.killed > 0 ? String(incident.killed) : '—');
+    set('injured', incident.injured > 0 ? String(incident.injured) : '—');
+    set('precision', precisionNote(incident.precision));
+    const source = _card.querySelector('[data-shooting="source"]');
+    if (source) {
+      source.href = incident.sourceUrl || '#';
+      source.textContent = `Source · ${incident.sourceName || 'record'}`;
+      source.hidden = !incident.sourceUrl;
+    }
+    _card.hidden = false;
+  }
+
+  /**
+   * Wire clicks on markers to the detail card.
+   *
+   * @param {object} viewer
+   * @returns {void}
+   */
+  function installInteraction(viewer) {
+    if (_clickHandler || !viewer?.scene?.canvas) return;
+    _card = document.getElementById('shooting-detail');
+    _card?.querySelector('[data-shooting="close"]')
+      ?.addEventListener('click', closeCard);
+
+    _clickHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    _clickHandler.setInputAction((click) => {
+      if (!_enabled) return;
+      // drillPick, not pick. A plain pick returns the topmost primitive, which
+      // over photoreal tiles is the tile surface the marker is clamped to —
+      // measured returning the tileset first and the marker second, so every
+      // click on a marker read as a click on empty ground.
+      const hits = viewer.scene.drillPick(click.position, PICK_DEPTH);
+      let incident = null;
+      for (const hit of hits) {
+        const id = typeof hit?.id?.id === 'string' ? hit.id.id : null;
+        if (id && _byEntityId.has(id)) {
+          incident = _byEntityId.get(id);
+          break;
+        }
+      }
+      // A click on empty globe dismisses the card, which is what every map
+      // does and what people expect without being told.
+      if (incident) showCard(incident);
+      else closeCard();
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
   }
 
   const layer = {
@@ -225,14 +376,18 @@ export function createShootingsLayer() {
       _enabled = false;
     },
 
-    enable() {
+    enable(viewer) {
       _enabled = true;
       if (_dataSource) _dataSource.show = true;
+      installInteraction(viewer);
     },
 
     disable() {
       _enabled = false;
       if (_dataSource) _dataSource.show = false;
+      // The card belongs to the layer: leaving it up over a globe with no
+      // markers on it would be a detail panel for something invisible.
+      closeCard();
     },
 
     async update() {

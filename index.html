@@ -949,6 +949,31 @@
   </div>
 
 
+  <!-- ── Mass shootings: incident detail ──────────────────────────────────
+       Cesium's own InfoBox is disabled app-wide (infoBox: false), so clicking a
+       marker needs its own card. Carries no perpetrator information, because
+       the dataset does not hold any. -->
+  <div id="shooting-detail" class="shooting-detail" hidden role="dialog"
+       aria-labelledby="shooting-detail-title">
+    <button type="button" class="shooting-detail-close" data-shooting="close"
+            aria-label="Close incident details">×</button>
+    <div class="shooting-detail-date" data-shooting="date"></div>
+    <h3 class="shooting-detail-title" id="shooting-detail-title" data-shooting="title"></h3>
+    <div class="shooting-detail-place" data-shooting="place"></div>
+    <div class="shooting-detail-toll">
+      <div class="shooting-detail-stat">
+        <span class="shooting-detail-num" data-shooting="killed">—</span>
+        <span class="shooting-detail-lbl">killed</span>
+      </div>
+      <div class="shooting-detail-stat">
+        <span class="shooting-detail-num" data-shooting="injured">—</span>
+        <span class="shooting-detail-lbl">injured</span>
+      </div>
+    </div>
+    <div class="shooting-detail-precision" data-shooting="precision"></div>
+    <a class="shooting-detail-source" data-shooting="source" target="_blank" rel="noopener noreferrer">Source</a>
+  </div>
+
   <!-- ── Flight Sim: crash screen ────────────────────────────────────────
        Shown only in the LOST state. Three ways out, in order of how much
        progress they cost. -->

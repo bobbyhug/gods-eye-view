@@ -8230,13 +8230,24 @@ function shootingsData() {
       server.middlewares.use('/api/shootings', async (req, res) => {
         try {
           const payload = await load();
+          // Revalidate, do NOT cache hard. max-age=3600 meant a recompiled
+          // dataset did not reach anyone for an hour — observed a browser still
+          // serving 437 incidents after the file had grown to 654. The ETag
+          // makes revalidation cheap: unchanged data costs a 304, not a
+          // re-download of the whole set.
+          const body = JSON.stringify(payload);
+          const etag = `W/"shootings-${payload.incidents.length}-${cachedMtimeMs}"`;
+          if (req.headers['if-none-match'] === etag) {
+            res.writeHead(304, { ETag: etag, 'Cache-Control': 'no-cache' });
+            res.end();
+            return;
+          }
           res.writeHead(200, {
             'Content-Type': 'application/json',
-            // Historical records: safe to cache hard, and it keeps a reload
-            // from re-reading and re-filtering the whole file.
-            'Cache-Control': 'public, max-age=3600',
+            'Cache-Control': 'no-cache',
+            ETag: etag,
           });
-          res.end(JSON.stringify(payload));
+          res.end(body);
         } catch (error) {
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: String(error?.message || error) }));
