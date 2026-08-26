@@ -126,6 +126,8 @@ export function createFlightSimController({ viewer, hooks = {} }) {
   /** @type {object|null} */
   let snapshot = null;
   let startMode = 'air';
+  /** True from a ground spawn until the takeoff roll is genuinely under way. */
+  let awaitingGroundSettle = false;
   let heldRender = false;
   /** Scene render settings captured on entry, restored verbatim on exit. */
   let priorQuality = null;
@@ -347,6 +349,29 @@ export function createFlightSimController({ viewer, hooks = {} }) {
       hud.showLost(flight.lostReason);
       return;
     }
+    // A GROUND start spawns before the photoreal tiles under the aircraft have
+    // streamed in, so the terrain height available at spawn is provisional —
+    // observed 172 m at a runway that actually sits at -12 m, leaving the
+    // aeroplane parked 180 m in mid-air and flagged as on the ground. Until the
+    // takeoff roll is genuinely under way, keep re-seating it on whatever the
+    // terrain currently reports rather than trusting that first sample.
+    if (awaitingGroundSettle) {
+      // stepGroundRoll clears onGround at rotation. The moment it does, the
+      // aircraft owns its altitude and must never be pulled back down — which
+      // is why this checks the flag rather than only the speed. The speed gate
+      // uses the SAME constant the physics rotates on, so the two can never
+      // disagree about when the takeoff roll has ended.
+      if (!flight.onGround || flight.speedMps >= aircraft.vStallCleanMps * 1.15) {
+        awaitingGroundSettle = false;
+      } else {
+        flight.onGround = true;
+        flight.altitudeM = groundHeight + aircraft.gearHeightM;
+        flight.verticalSpeedMps = 0;
+        flight.altitudeAglM = 0;
+        return;
+      }
+    }
+
     if (contact.contact === 'touchdown' || contact.contact === 'rolling') {
       flight.onGround = true;
       flight.altitudeM = groundHeight + (flight.gearFraction > 0.9 ? aircraft.gearHeightM : aircraft.bellyOffsetM);
@@ -387,6 +412,7 @@ export function createFlightSimController({ viewer, hooks = {} }) {
     );
 
     const onGround = startMode === 'ground';
+    awaitingGroundSettle = onGround;
     flight = createFlightState({
       aircraft,
       latitudeRad: departure.latitudeRad,
@@ -535,7 +561,8 @@ export function createFlightSimController({ viewer, hooks = {} }) {
       resolutionScale: viewer.resolutionScale,
       msaaSamples: scene.msaaSamples,
       fxaa: scene.postProcessStages?.fxaa?.enabled,
-      cameraInputs: scene.screenSpaceCameraController?.enableInputs,
+      // NOTE: enableInputs is deliberately NOT captured for restore. See
+      // restoreRenderQuality for why.
       tileset,
       tilesetMse: tileset?.maximumScreenSpaceError,
       dynamicSse: tileset?.dynamicScreenSpaceError,
@@ -710,8 +737,18 @@ export function createFlightSimController({ viewer, hooks = {} }) {
     const scene = viewer?.scene;
     if (!scene || !priorQuality) return;
     viewer.resolutionScale = priorQuality.resolutionScale;
-    if (scene.screenSpaceCameraController && priorQuality.cameraInputs !== undefined) {
-      scene.screenSpaceCameraController.enableInputs = priorQuality.cameraInputs;
+    // enableInputs is restored to TRUE rather than to whatever was captured on
+    // entry, because it is a shared transient flag, not a stable setting:
+    // Cockpit (ui.js), the CCTV calibration gizmo and camera flights all switch
+    // it off for the duration of something and back on when finished.
+    //
+    // Capturing it meant that entering Flight Sim while any of those had it off
+    // recorded `false`, and exiting re-applied that `false` long after the
+    // owner had finished and re-enabled it — leaving the map permanently
+    // unpannable. Observed exactly that. Every owner of this flag re-enables it
+    // when done, so this one does too.
+    if (scene.screenSpaceCameraController) {
+      scene.screenSpaceCameraController.enableInputs = true;
     }
     if ('msaaSamples' in scene) scene.msaaSamples = priorQuality.msaaSamples;
     if (scene.postProcessStages?.fxaa && priorQuality.fxaa !== undefined) {

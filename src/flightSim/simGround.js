@@ -160,6 +160,20 @@ export function resolveGroundContact(state, aircraft, groundHeightM) {
     return { contact: 'airborne', altitudeAglM, verticalSpeedMps: state.verticalSpeedMps };
   }
 
+  // A LIFT-OFF in progress. stepGroundRoll clears onGround at rotation speed,
+  // but the wheels are still exactly at contact height for that frame, so
+  // without this the aircraft is immediately put back on the ground — and then
+  // rotates again, and again, pinned to the runway while pitch integrates
+  // upward every frame. Measured at 46 degrees nose-up still flagged as rolling,
+  // which is well past a tail strike, followed by a 7,700 fpm zoom once it
+  // finally broke free.
+  //
+  // Nothing that is not descending can be touching down, so a released aircraft
+  // with non-negative vertical speed is flying.
+  if (!state.onGround && state.verticalSpeedMps >= 0) {
+    return { contact: 'airborne', altitudeAglM, verticalSpeedMps: state.verticalSpeedMps };
+  }
+
   const descentRate = -state.verticalSpeedMps;
 
   // Gear up, or coming down far too fast, is not a landing.
