@@ -4456,6 +4456,66 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   width: 6px;
 }
 
+/* FLIGHT SIM launcher, pinned under the scrolling layer list.
+   Deliberately styled apart from .data-toggle-row: those rows toggle something
+   on the globe, this one hands the whole app over to another mode, and the
+   difference should be visible before it is clicked. */
+.data-panel-launch {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 9px 11px;
+  border: 1px solid rgba(0, 212, 255, 0.34);
+  border-radius: 7px;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 212, 255, 0.13),
+    rgba(0, 212, 255, 0.05)
+  );
+  color: #dff3ff;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.12s ease;
+}
+.data-panel-launch:hover {
+  border-color: rgba(0, 212, 255, 0.7);
+  background: linear-gradient(
+    180deg,
+    rgba(0, 212, 255, 0.22),
+    rgba(0, 212, 255, 0.09)
+  );
+}
+.data-panel-launch:active { transform: translateY(1px); }
+.data-panel-launch:focus-visible {
+  outline: 2px solid rgba(0, 212, 255, 0.85);
+  outline-offset: 2px;
+}
+.data-panel-launch .material-symbols-outlined {
+  font-size: 21px;
+  color: #4fd6ff;
+  flex: 0 0 auto;
+}
+.data-panel-launch-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.data-panel-launch-title {
+  font: 12px/1.1 var(--font-mono);
+  letter-spacing: 0.14em;
+  color: #eaf8ff;
+}
+.data-panel-launch-sub {
+  font: 9px/1.2 var(--font-mono);
+  letter-spacing: 0.05em;
+  color: rgba(180, 214, 235, 0.72);
+}
+/* The panel collapses to its header; the launcher must collapse with it. */
+#data-panel.collapsed .data-panel-launch { display: none; }
+
 .data-toggle-list::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.04);
   border-radius: 999px;
@@ -5275,19 +5335,29 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   letter-spacing: .08em;
 }
 .context-radio-mini-volume input { width: 100%; }
+/* This row holds a VARYING number of buttons: COCKPIT and the TR-3B chip each
+   come and go with the selected contact, and FLIGHT SIM sits between them. It
+   used to be a grid whose column count was restated by a chain of :has()
+   rules — one per combination of what happened to be visible. Adding FLIGHT SIM
+   as a fourth button silently overflowed the three-slot grid, because no rule
+   counted that high.
+
+   Wrapping flex has no count to get wrong: the wide buttons take just under
+   half the row so exactly two fit, any further button wraps to the next line,
+   and the chip hugs its icon at the end. Buttons can now be added or hidden
+   without touching this block. */
 .global-context-actions {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin: 0 0 8px;
 }
-.global-context-actions:has(#installations-search-btn) { grid-template-columns: minmax(0, 1fr); }
-.global-context-actions:has(#cockpit-entry:not([hidden])) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.global-context-actions:has(#cockpit-entry[hidden]) { grid-template-columns: 1fr; }
-/* TR-3B reclassify toggle rides an `auto` trailing column so the chip never
-   resizes the COCKPIT / SEARCH buttons beside it. */
-.global-context-actions:has(#tr3b-toggle:not([hidden])) { grid-template-columns: repeat(2, minmax(0, 1fr)) auto; }
-.global-context-actions:has(#cockpit-entry[hidden]):has(#tr3b-toggle:not([hidden])) { grid-template-columns: minmax(0, 1fr) auto; }
+.global-context-actions > button:not(.tr3b-toggle) {
+  flex: 1 1 calc(50% - 3px);
+  min-width: 0;
+}
+/* The chip never stretches, so it cannot resize the wide buttons beside it. */
+.global-context-actions > .tr3b-toggle { flex: 0 0 auto; }
 .tr3b-toggle {
   width: 26px;
   min-height: 30px;
@@ -9084,6 +9154,7 @@ body:not(.ui-clean-view):not(.recording-mode):has(#intel-hud[data-variant='minim
    holding a keyboard handler. Keep the two lists in step —
    EXCLUSIVE_SURFACE_CLASSES pins them together. */
 body.ui-clean-view #first-run-launcher,
+body.flight-sim-mode #first-run-launcher,
 body.recording-mode #first-run-launcher,
 body.cockpit-mode #first-run-launcher,
 body.scene-playback-mode #first-run-launcher {
@@ -9255,4 +9326,444 @@ body.scene-playback-mode #first-run-launcher {
 /* The panel preview advertises that it opens. */
 .cctv-frame-wrap.has-frame {
   cursor: zoom-in;
+}
+
+/* ── Flight Sim ──────────────────────────────────────────────────────────────
+   Uses the existing tokens (--glass-bg, --accent, --panel-radius, --btn-radius)
+   and the existing class vocabulary (.panel-collapsible, .scene-btn) so the
+   mode reads as part of the app rather than a bolted-on game. */
+
+/* The planner is placed and dressed HERE, in full.
+   It was originally written assuming `.panel-collapsible` carried the panel
+   chrome, the way the markup comment claims — but that class has no rules at
+   all. Every other panel is positioned by its own `#id` rule and dressed by its
+   own `*-inner` rule, and the shared look lives in the tokens, not in a base
+   class. Without those two rules this element fell back to `position: static`
+   with a transparent background, so it laid out in normal document flow and
+   printed its text straight over the map and the coordinate readout.
+
+   It is deliberately NOT a child of #left-panel-stack: the stack's flow owns
+   the ambient panels, and z-index 120 puts the planner above them while
+   flight-sim-mode hides them anyway. */
+#flightsim-panel {
+  --panel-expanded-width: 320px;
+  position: fixed;
+  top: var(--left-stack-top);
+  left: var(--left-stack-x);
+  right: auto;
+  bottom: auto;
+  z-index: 120;
+  width: var(--panel-expanded-width);
+  pointer-events: auto;
+}
+
+.flightsim-panel-inner {
+  position: relative;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--panel-radius);
+  padding: 14px 16px 16px;
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+    0 1px 0 rgba(255, 255, 255, 0.06) inset;
+  display: flex;
+  flex-direction: column;
+  /* The city list can outgrow a short window, so the panel scrolls rather than
+     running off the bottom of the screen. */
+  max-height: calc(100vh - var(--left-stack-top) - 36px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 212, 255, 0.46) rgba(255, 255, 255, 0.06);
+}
+
+.fs-title-group { display: flex; flex-direction: column; gap: 2px; }
+.fs-subtitle {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.fs-field-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin: 14px 0 7px;
+}
+
+/* Tap-to-pick: no typing anywhere in the planner. */
+.fs-cities { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.fs-city {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 10px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--btn-radius);
+  background: rgba(255, 255, 255, 0.03);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+.fs-city small { font-size: 8px; color: var(--text-dim); letter-spacing: 0.04em; }
+.fs-city:hover { border-color: var(--glass-border-hover); color: var(--text-primary); }
+.fs-city.is-selected {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+  box-shadow: 0 0 16px -5px var(--accent-glow);
+}
+
+.fs-maptap {
+  width: 100%;
+  margin-top: 6px;
+  padding: 9px;
+  border: 1px dashed rgba(0, 212, 255, 0.45);
+  border-radius: var(--btn-radius);
+  background: rgba(0, 212, 255, 0.06);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.fs-maptap.is-armed {
+  border-style: solid;
+  background: var(--accent-dim);
+  box-shadow: 0 0 18px -4px var(--accent-glow);
+}
+
+.fs-readout {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  margin-top: 13px;
+  border: 1px solid var(--hud-border);
+  border-radius: var(--btn-radius);
+  background: rgba(0, 212, 255, 0.04);
+}
+.fs-readout > div { display: flex; flex-direction: column; gap: 3px; }
+.fs-k { font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.2em; color: var(--text-secondary); }
+.fs-v { font-family: var(--font-mono); font-size: 13px; color: var(--accent); }
+
+.fs-aircraft {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--btn-radius);
+}
+.fs-aircraft.is-selected {
+  border-color: var(--accent);
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.12), rgba(0, 212, 255, 0.03));
+}
+.fs-aircraft-icon { font-size: 17px; }
+.fs-aircraft-text { display: flex; flex-direction: column; gap: 2px; }
+.fs-aircraft-name { font-family: var(--font-mono); font-size: 11px; color: var(--text-primary); }
+.fs-aircraft-meta { font-family: var(--font-mono); font-size: 9px; color: var(--text-secondary); }
+.fs-chip {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 212, 255, 0.4);
+  color: var(--accent);
+}
+
+.fs-seg { display: flex; gap: 6px; }
+.fs-seg .scene-btn { flex: 1; }
+.fs-seg .scene-btn.is-active,
+.fs-ap.is-on {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.fs-actions { display: flex; gap: 8px; margin-top: 14px; }
+.fs-actions .scene-btn { flex: 1; }
+.fs-primary {
+  border-color: var(--accent);
+  color: #04131a;
+  background: var(--accent);
+  font-weight: 600;
+}
+.fs-primary[disabled] { opacity: 0.35; cursor: not-allowed; }
+
+.fs-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--text-dim);
+}
+.fs-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+/* ── HUD ─────────────────────────────────────────────────────────────────── */
+#flightsim-hud {
+  position: fixed;
+  inset: 0;
+  z-index: 145;
+  pointer-events: none;
+  font-family: var(--font-mono);
+}
+#flightsim-hud[hidden] { display: none; }
+#flightsim-hud button { pointer-events: auto; }
+
+.fs-hud-id {
+  position: absolute; top: 14px; left: 18px;
+  font-size: 9px; letter-spacing: 0.18em; color: var(--text-secondary);
+}
+.fs-hud-id b { display: block; color: var(--text-primary); font-size: 11px; margin-top: 3px; }
+
+/* Never let a simulated aircraft read as live ADS-B. */
+.fs-hud-tag {
+  position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+  font-size: 9px; letter-spacing: 0.34em; color: #ffb020;
+  border: 1px solid rgba(255, 176, 32, 0.45); border-radius: 4px;
+  padding: 3px 10px; background: rgba(255, 176, 32, 0.12);
+}
+
+.fs-exit { position: absolute; top: 12px; right: 18px; }
+
+.fs-compass {
+  position: absolute; top: 46px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 14px; align-items: baseline;
+  font-size: 9px; letter-spacing: 0.16em; color: var(--text-secondary);
+}
+.fs-compass b { font-size: 15px; color: var(--accent); }
+
+.fs-tape { position: absolute; top: 48%; transform: translateY(-50%); width: 82px; }
+.fs-tape-left { left: 20px; }
+.fs-tape-right { right: 20px; }
+.fs-tape-cap { font-size: 8px; letter-spacing: 0.2em; color: var(--text-secondary); text-align: center; margin-bottom: 4px; }
+.fs-tape-val {
+  font-size: 22px; color: var(--accent); text-align: center; padding: 7px 0;
+  border-top: 1px solid var(--hud-border); border-bottom: 1px solid var(--hud-border);
+  background: rgba(0, 0, 0, 0.4);
+}
+.fs-tape-sub { font-size: 9px; color: var(--text-dim); text-align: center; margin-top: 4px; }
+
+.fs-waypoint {
+  position: absolute; bottom: 104px; left: 50%; transform: translateX(-50%);
+  text-align: center; font-size: 9px; letter-spacing: 0.16em; color: rgba(190, 235, 255, 0.8);
+}
+.fs-waypoint b { display: block; font-size: 12px; color: #fff; letter-spacing: 0.1em; margin-bottom: 2px; }
+
+.fs-warnings { position: absolute; left: 20px; bottom: 66px; display: flex; flex-direction: column; gap: 5px; }
+.fs-warn {
+  font-size: 9px; letter-spacing: 0.2em; padding: 4px 9px; border-radius: 4px;
+  border: 1px solid rgba(255, 176, 32, 0.5); color: #ffb020; background: rgba(255, 176, 32, 0.1);
+  animation: fs-pulse 1.6s ease-in-out infinite;
+}
+.fs-warn.is-critical {
+  border-color: rgba(255, 77, 77, 0.6); color: #ff4d4d; background: rgba(255, 77, 77, 0.12);
+}
+@keyframes fs-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+.fs-mouse, .fs-ap {
+  position: absolute; bottom: 66px;
+  font-size: 9px; letter-spacing: 0.18em; padding: 4px 10px; border-radius: 4px;
+  border: 1px solid var(--accent); color: var(--accent); background: var(--accent-dim);
+}
+.fs-mouse { left: 20px; }
+.fs-ap { right: 20px; font-family: var(--font-mono); cursor: pointer; }
+.fs-ap:not(.is-on) { border-color: var(--glass-border); color: var(--text-secondary); background: rgba(0, 0, 0, 0.4); }
+
+.fs-strip {
+  position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
+}
+.fs-cell {
+  min-width: 66px; padding: 6px 9px; border: 1px solid var(--glass-border);
+  border-radius: 8px; background: rgba(0, 0, 0, 0.55); text-align: center;
+  display: flex; flex-direction: column; gap: 3px;
+}
+.fs-cell.is-on .fs-v { color: var(--accent); }
+.fs-cell .fs-v { font-size: 12px; color: var(--text-primary); }
+
+.fs-help {
+  position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 4px; padding: 12px 14px;
+  border: 1px solid var(--glass-border); border-radius: var(--btn-radius);
+  background: var(--glass-bg); backdrop-filter: blur(12px);
+  font-size: 9px; letter-spacing: 0.1em; color: var(--text-secondary);
+}
+.fs-help b { color: var(--accent); letter-spacing: 0.2em; margin-bottom: 3px; }
+
+/* The QUALITY cell is a button but must sit flush with the read-only cells
+   beside it, so it inherits their box and only gains affordance on hover. */
+.fs-cell-btn {
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+.fs-cell-btn:hover {
+  border-color: rgba(0, 212, 255, 0.5);
+  background: rgba(0, 212, 255, 0.1);
+}
+.fs-cell-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Crash screen ──────────────────────────────────────────────────────────
+   A full-screen stop, not a HUD warning. The aircraft is gone and the only
+   question left is which way out you want, so the world dims and the three
+   choices are the only thing to look at. */
+.fs-lost {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(30, 0, 0, 0.55),
+    rgba(0, 0, 0, 0.86) 70%
+  );
+  backdrop-filter: blur(3px) saturate(0.7);
+  -webkit-backdrop-filter: blur(3px) saturate(0.7);
+  animation: fs-lost-in 0.28s ease both;
+}
+.fs-lost[hidden] { display: none; }
+
+@keyframes fs-lost-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fs-lost-card {
+  width: min(420px, 100%);
+  padding: 26px 26px 22px;
+  border: 1px solid rgba(255, 92, 92, 0.4);
+  border-radius: var(--panel-radius);
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  text-align: center;
+}
+.fs-lost-tag {
+  font: 9px/1 var(--font-mono);
+  letter-spacing: 0.3em;
+  color: #ff6b6b;
+  margin-bottom: 12px;
+}
+.fs-lost-title {
+  margin: 0 0 6px;
+  font: 22px/1.1 var(--font-mono);
+  letter-spacing: 0.16em;
+  color: #ffe9e9;
+}
+.fs-lost-reason {
+  margin: 0 0 22px;
+  font: 10px/1.4 var(--font-mono);
+  letter-spacing: 0.14em;
+  color: rgba(255, 190, 190, 0.8);
+  text-transform: uppercase;
+}
+.fs-lost-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fs-lost-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--btn-radius, 8px);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.16s ease, background 0.16s ease, transform 0.1s ease;
+}
+.fs-lost-btn:hover {
+  border-color: var(--glass-border-hover);
+  background: rgba(255, 255, 255, 0.08);
+}
+.fs-lost-btn:active { transform: translateY(1px); }
+.fs-lost-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* REVIVE is the cheapest way back into the air, so it is the default. */
+.fs-lost-btn.is-primary {
+  border-color: rgba(0, 212, 255, 0.45);
+  background: linear-gradient(180deg, rgba(0, 212, 255, 0.16), rgba(0, 212, 255, 0.06));
+}
+.fs-lost-btn.is-primary:hover {
+  border-color: rgba(0, 212, 255, 0.75);
+  background: linear-gradient(180deg, rgba(0, 212, 255, 0.24), rgba(0, 212, 255, 0.1));
+}
+.fs-lost-btn-label {
+  font: 12px/1.1 var(--font-mono);
+  letter-spacing: 0.16em;
+}
+.fs-lost-btn-sub {
+  font: 9px/1.2 var(--font-mono);
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+}
+/* The crash screen belongs to Flight Sim alone. */
+body.cockpit-mode #flightsim-lost { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fs-lost { animation: none; }
+  .fs-lost-btn { transition: none; }
+}
+
+/* Flight Sim owns the screen: quieten the ambient chrome, exactly as
+   cockpit-mode does, without destroying any of it. */
+body.flight-sim-mode #data-panel,
+body.flight-sim-mode #cctv-panel { display: none; }
+
+/* The planner belongs to Flight Sim alone — it must never bleed through into
+   Cockpit, which is a different exclusive mode with its own full-screen HUD. */
+body.cockpit-mode #flightsim-panel,
+body.cockpit-mode #flightsim-hud { display: none; }
+
+/* Smaller screens: keep the instruments, let the strip wrap, never cover the
+   Cesium credits. */
+@media (max-width: 900px) {
+  .fs-tape { width: 66px; }
+  .fs-tape-val { font-size: 18px; }
+  .fs-strip { bottom: 42px; max-width: 92vw; }
+  .fs-help { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fs-warn { animation: none; }
+  .fs-city, .fs-maptap { transition: none; }
 }

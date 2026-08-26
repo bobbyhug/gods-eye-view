@@ -8211,6 +8211,21 @@ export default defineConfig(({ mode }) => {
         ? true
         : ['localhost', '127.0.0.1', '.local'],
     },
+    // `vite preview` is the production server for a deployed build (DEPLOY.md).
+    // Vite rejects unrecognised Host headers by default, so a deployment has to
+    // name its own hostname or every request comes back 'Blocked request'.
+    // PREVIEW_ALLOWED_HOSTS is a comma-separated list, or 'true' to accept any
+    // host — safe only behind a platform proxy that sets the Host itself.
+    preview: {
+      host: env.HOST || 'localhost',
+      port: parseInt(env.PORT, 10) || 4173,
+      allowedHosts: (() => {
+        const raw = String(env.PREVIEW_ALLOWED_HOSTS || '').trim();
+        if (!raw) return ['localhost', '127.0.0.1', '.local'];
+        if (raw === 'true') return true;
+        return raw.split(',').map((host) => host.trim()).filter(Boolean);
+      })(),
+    },
     // Expose selected API keys to the browser via import.meta.env.*
     define: {
       'import.meta.env.GOOGLE_MAPS_API_KEY': JSON.stringify(env.GOOGLE_MAPS_API_KEY),

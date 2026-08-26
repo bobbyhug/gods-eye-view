@@ -16,6 +16,36 @@ under the license listed below.
 | `b789.glb` | “Boeing 787-9” by [Nobilis 2](https://sketchfab.com/nobilishornet2) | [Sketchfab model](https://sketchfab.com/3d-models/boeing-787-9-b6711e2e698e4e469675c1154a50b7a3) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | Optimized for God's Eye View: geometry/material simplification, textures resized to 256 px WebP, orientation/scale vertex-baked to real-world meters (Y-up, nose −X), origin centered. |
 | `atr72.glb` | “ATR 72 - 600” by [Oyan3D](https://sketchfab.com/oyan3D) | [Sketchfab model](https://sketchfab.com/3d-models/atr-72-600-1e1a7186f7444d288675262fcee44744) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | Optimized for God's Eye View: geometry/material simplification, textures removed with dominant material colors baked into PBR factors (flat “abstracted” style), orientation/scale vertex-baked to real-world meters (Y-up, nose −X), origin centered. |
 
+
+## Flight Sim aircraft — DIFFERENT LICENCE, READ THIS
+
+`flight-sim/boeing-747-8i.glb` is **GPL-2.0**, not CC BY. It is the only
+copyleft asset in this repository and the only one whose licence imposes
+obligations beyond attribution.
+
+| File | Original work | Source | License | Project modifications |
+|---|---|---|---|---|
+| `flight-sim/boeing-747-8i.glb` | Boeing 747-8i, FlightGear community aircraft, redistributed by the FlightAirMap project | [FlightAirMap-3dmodels](https://github.com/Ysurac/FlightAirMap-3dmodels/tree/master/b748) | **[GPL-2.0](./flight-sim/boeing-747-8i.LICENSE)** | None to the mesh. Used verbatim as published. `boeing-747-8i.hinges.json` is generated alongside it by `scripts/extract-hinges.mjs` and is our own work. |
+
+**Why it matters.** Every other asset here is CC BY 4.0: credit the author and
+you are done. GPL-2.0 is copyleft — it carries source-provision obligations,
+and whether bundling it into a distributed build makes that build a derivative
+work is genuinely unsettled. For running God's Eye View locally this is a
+non-issue. It becomes a real question if the project is relicensed, vendored,
+or packaged commercially.
+
+**Source provision.** `flight-sim/boeing-747-8i.blend` is the upstream Blender
+source, kept beside the GLB so GPL §3 ('the preferred form for modification')
+is genuinely satisfiable rather than theoretical.
+
+**No trademark exposure.** The asset ships blank white textures with no airline
+livery, so no carrier trade marks are redistributed. Upstream also publishes
+real airline liveries — those are trade marks and are deliberately NOT bundled.
+
+**Removing it.** Delete `public/models/flight-sim/` and Flight Sim reports
+`AIRCRAFT MODEL UNAVAILABLE` rather than starting an invisible aircraft. No
+other feature depends on it.
+
 CC BY 4.0 permits sharing and adaptation, including commercial use, provided
 appropriate credit is retained, the license is linked, and modifications are
 identified. These credits do not imply endorsement by the original creators.

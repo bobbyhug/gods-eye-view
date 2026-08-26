@@ -1,4 +1,9 @@
 import * as Cesium from 'cesium';
+import {
+  loadRenderQuality,
+  setRenderQuality,
+  applyRenderQuality as applySceneQuality,
+} from './renderQuality.js';
 import { StyleManager } from './ui.js';
 import { flyToAustin } from './camera.js';
 import { DataLayerManager } from './data/manager.js';
@@ -12,6 +17,8 @@ import cctvLayer from './data/cctv.js';
 import radioLayer from './data/radio.js';
 import bikeshareLayer from './data/bikeshare.js';
 import mapLabelsLayer from './data/mapLabels.js';
+import { createFlightSimController } from './flightSim/flightSimController.js';
+import { createFlightSimPanel } from './flightSim/flightSimPanel.js';
 import aisLiveVesselsLayer from './data/aisLiveVessels.js';
 import militaryInstallationsLayer from './data/militaryInstallations.js';
 import militaryAwarenessLayer from './data/militaryAwareness.js';
@@ -253,6 +260,113 @@ async function init() {
     // Initialize the voice "whiteboard" annotation engine (world-space renderer)
     const annotations = initAnnotations({ viewer, tileset });
 
+    // Flight Sim — a self-contained simulator mode. It owns the camera and the
+    // render loop only while ACTIVE, and hands both back on exit. Camera
+    // ownership is claimed through styleManager so it can never fight Cockpit:
+    // claimCamera returning false is what refuses entry while Cockpit is up.
+    const flightSim = createFlightSimController({
+      viewer,
+      hooks: {
+        claimCamera: () => styleManager.runImmediateNavigation?.('flight sim', () => true) !== false,
+        releaseCamera: () => { viewer.trackedEntity = undefined; },
+        snapshotState: () => ({ camera: styleManager.getCameraState?.() }),
+        restoreState: (snapshot) => {
+          // Put the user back where they were, rather than wherever the
+          // aircraft happened to be when they exited.
+          if (snapshot?.camera) styleManager.applyCameraState?.(snapshot.camera);
+        },
+        onStateChange: (next) => {
+          if (next === 'OFF') flightSimPanel.close();
+          // The crash screen is driven purely by state, so any route into or
+          // out of LOST — crash, revive, restart, exit — shows and hides it
+          // without each of those paths having to remember to.
+          updateFlightSimLostScreen(next);
+        },
+      },
+    });
+    const flightSimPanel = createFlightSimPanel({ viewer, controller: flightSim });
+    // ── Render quality ──────────────────────────────────────────────────
+    // Captured BEFORE anything changes them, so 'Auto' can put the scene back
+    // to whatever the app actually shipped rather than numbers guessed here.
+    const qualityDefaults = {
+      resolutionScale: viewer.resolutionScale,
+      tileError: tileset?.maximumScreenSpaceError,
+      dynamicScreenSpaceError: tileset?.dynamicScreenSpaceError,
+    };
+    const qualitySelect = document.getElementById('render-quality-select');
+    const initialQuality = loadRenderQuality();
+    if (qualitySelect) qualitySelect.value = initialQuality;
+    applySceneQuality({ viewer, tileset, id: initialQuality, defaults: qualityDefaults });
+    qualitySelect?.addEventListener('change', () => {
+      const id = setRenderQuality(qualitySelect.value);
+      applySceneQuality({ viewer, tileset, id, defaults: qualityDefaults });
+      governorRequestRender('render-quality');
+    });
+
+    const lostScreen = document.getElementById('flightsim-lost');
+
+    /**
+     * Show or hide the crash screen for a Flight Sim state.
+     *
+     * @param {string} next - The state just entered.
+     * @returns {void}
+     */
+    function updateFlightSimLostScreen(next) {
+      if (!lostScreen) return;
+      if (next !== 'LOST') {
+        lostScreen.hidden = true;
+        return;
+      }
+      const reasonEl = lostScreen.querySelector('[data-fs-lost="reason"]');
+      if (reasonEl) {
+        reasonEl.textContent = flightSim.getFlight()?.lostReason || 'TERRAIN IMPACT';
+      }
+      lostScreen.hidden = false;
+      // Focus the cheapest way back into the air, so Enter just works.
+      lostScreen.querySelector('[data-fs-lost="revive"]')?.focus();
+    }
+
+    lostScreen?.addEventListener('click', (event) => {
+      const action = event.target.closest('[data-fs-lost]')?.dataset.fsLost;
+      if (!action || action === 'reason') return;
+      if (action === 'revive') {
+        flightSim.revive();
+      } else if (action === 'restart') {
+        flightSim.restart();
+      } else if (action === 'menu') {
+        flightSim.exit();
+        flightSim.openPlanner();
+        flightSimPanel.open();
+      }
+    });
+
+    // Two entry points, one handler: the CONTEXT panel beside COCKPIT (the two
+    // flying modes belong together) and the DATA LAYERS panel, which is where
+    // people actually go looking for things to turn on. Sharing the callback
+    // keeps them from drifting apart as the open sequence changes.
+    const openFlightSim = () => {
+      flightSim.openPlanner();
+      flightSimPanel.open();
+    };
+    for (const id of ['flightsim-entry', 'flightsim-entry-layers']) {
+      document.getElementById(id)?.addEventListener('click', openFlightSim);
+    }
+    document.getElementById('flightsim-hud')
+      ?.querySelector('[data-fs="exit"]')
+      ?.addEventListener('click', () => flightSim.exit());
+    // The HUD's QUALITY cell cycles the same global setting the DISPLAY panel
+    // holds, so the two can never disagree.
+    document.getElementById('flightsim-hud')
+      ?.querySelector('[data-fs="quality-btn"]')
+      ?.addEventListener('click', () => {
+        const next = flightSim.cycleQuality();
+        if (qualitySelect) qualitySelect.value = next;
+      });
+    document.getElementById('flightsim-hud')
+      ?.querySelector('[data-fs="ap"]')
+      ?.addEventListener('click', () => flightSim.toggleAutopilot());
+
+
     // Keep startup chrome truthful: a share is not restored until camera,
     // visual/map/panel lanes, and every requested layer have terminated.
     void Promise.all([
@@ -328,6 +442,8 @@ async function init() {
       cockpitCloudEffects,
       getRenderGovernorDiagnostics,
       requestRender: governorRequestRender,
+      flightSim,
+      openFlightSim: () => { flightSim.openPlanner(); flightSimPanel.open(); },
     };
     window.__godsEyeView.voiceCommands = initGevVoiceCommands({ viewer, styleManager, dataManager, sceneDirector, annotations });
 

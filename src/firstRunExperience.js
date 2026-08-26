@@ -284,6 +284,7 @@ export async function runFirstRunChoice(choice, { setContextMode, setLayerEnable
  */
 export const EXCLUSIVE_SURFACE_CLASSES = Object.freeze([
   'cockpit-mode',
+  'flight-sim-mode',
   'scene-playback-mode',
   'recording-mode',
   'ui-clean-view',

@@ -374,6 +374,20 @@
         </select>
       </div>
     </div>
+    <!-- Render quality. Sits in DISPLAY because it is a property of the
+         picture, not of any one data layer or mode. -->
+    <div class="pp-toggle-group">
+      <div class="pp-slider-row">
+        <span class="pp-slider-mini-label">Render</span>
+        <select id="render-quality-select" class="pp-select" aria-label="Render quality">
+          <option value="auto">Auto</option>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+          <option value="ultra">Ultra</option>
+        </select>
+      </div>
+    </div>
     <div class="pp-toggle-group">
       <button class="pp-toggle-btn" id="detection-toggle" title="Detection Overlay (D)" aria-label="Detection overlay" aria-pressed="false">
         <span class="pp-icon">&#x25A3;</span>
@@ -584,6 +598,18 @@
         <button class="panel-collapse-btn" data-collapse-target="data-panel" title="Collapse panel">+</button>
       </div>
       <div id="data-toggles" class="data-toggle-list"></div>
+      <!-- FLIGHT SIM is a MODE, not a data layer: it takes over the camera and
+           the render loop rather than drawing something onto the globe. It sits
+           OUTSIDE #data-toggles because _renderToggles() clears that
+           container's innerHTML on every rebuild, and after the scrolling list
+           so it stays pinned in view rather than scrolling away. -->
+      <button id="flightsim-entry-layers" class="data-panel-launch" type="button">
+        <span class="material-symbols-outlined" aria-hidden="true">flight_takeoff</span>
+        <span class="data-panel-launch-text">
+          <span class="data-panel-launch-title">FLIGHT SIM</span>
+          <span class="data-panel-launch-sub">fly a 747 yourself</span>
+        </span>
+      </button>
     </div>
   </div>
 
@@ -741,6 +767,12 @@
             <button id="cockpit-entry" type="button" hidden>
               <span class="material-symbols-outlined" aria-hidden="true">flight</span>
               <span>COCKPIT</span>
+            </button>
+            <!-- COCKPIT rides a live ADS-B contact; FLIGHT SIM flies your own
+                 simulated aircraft. Two different modes, deliberately both here. -->
+            <button id="flightsim-entry" class="panel-layer-toggle" type="button">
+              <span class="material-symbols-outlined" aria-hidden="true">flight_takeoff</span>
+              <span>FLIGHT SIM</span>
             </button>
             <button id="installations-search-btn" class="panel-layer-toggle" type="button">SEARCH NEARBY SITES</button>
             <button id="tr3b-toggle" class="tr3b-toggle" type="button" aria-pressed="false" hidden aria-label="Reclassify tracked contact as TR-3B" title="Reclassify as TR-3B">🛸</button>
@@ -913,6 +945,143 @@
         <button id="cctv-lightbox-save" class="scene-btn">SAVE PNG</button>
         <span id="cctv-lightbox-meta" class="cctv-lightbox-meta"></span>
       </div>
+    </div>
+  </div>
+
+
+  <!-- ── Flight Sim: crash screen ────────────────────────────────────────
+       Shown only in the LOST state. Three ways out, in order of how much
+       progress they cost. -->
+  <div id="flightsim-lost" class="fs-lost" hidden role="dialog" aria-modal="true"
+       aria-labelledby="fs-lost-title">
+    <div class="fs-lost-card">
+      <div class="fs-lost-tag">SIM CONTACT LOST</div>
+      <h2 class="fs-lost-title" id="fs-lost-title">AIRCRAFT DOWN</h2>
+      <p class="fs-lost-reason" data-fs-lost="reason">TERRAIN IMPACT</p>
+      <div class="fs-lost-actions">
+        <button type="button" class="fs-lost-btn is-primary" data-fs-lost="revive">
+          <span class="fs-lost-btn-label">REVIVE</span>
+          <span class="fs-lost-btn-sub">back in the air, right here</span>
+        </button>
+        <button type="button" class="fs-lost-btn" data-fs-lost="restart">
+          <span class="fs-lost-btn-label">RESTART FLIGHT</span>
+          <span class="fs-lost-btn-sub">from the departure city</span>
+        </button>
+        <button type="button" class="fs-lost-btn" data-fs-lost="menu">
+          <span class="fs-lost-btn-label">MAIN MENU</span>
+          <span class="fs-lost-btn-sub">pick a new route</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Flight Sim: route planner ────────────────────────────────────────
+       Left rail, same panel grammar as #data-panel / #cctv-panel. -->
+  <div id="flightsim-panel" class="panel-collapsible collapsed" data-panel-id="flightsim-panel" hidden>
+    <div class="panel-glow"></div>
+    <div class="flightsim-panel-inner">
+      <div class="panel-header">
+        <div class="fs-title-group">
+          <span class="panel-title">FLIGHT SIM</span>
+          <span class="fs-subtitle">ROUTE PLANNER</span>
+        </div>
+        <span class="panel-divider"></span>
+        <button class="panel-collapse-btn" data-collapse-target="flightsim-panel" title="Collapse panel">+</button>
+      </div>
+
+      <div class="fs-field-label">FROM — TAP A CITY</div>
+      <div class="fs-cities" data-fs-cities="from"></div>
+      <button class="fs-maptap" data-fs-pick="from">＋ OR TAP ANYWHERE ON THE GLOBE</button>
+
+      <div class="fs-field-label">TO — TAP A CITY</div>
+      <div class="fs-cities" data-fs-cities="to"></div>
+      <button class="fs-maptap" data-fs-pick="to">＋ OR TAP ANYWHERE ON THE GLOBE</button>
+
+      <div class="fs-readout" data-fs="plan-readout" hidden>
+        <div><span class="fs-k">DISTANCE</span><span class="fs-v" data-fs="plan-distance">—</span></div>
+        <div><span class="fs-k">BEARING</span><span class="fs-v" data-fs="plan-bearing">—</span></div>
+        <div><span class="fs-k">ETE</span><span class="fs-v" data-fs="plan-ete">—</span></div>
+      </div>
+
+      <div class="fs-field-label">AIRCRAFT</div>
+      <div class="fs-aircraft is-selected">
+        <span class="fs-aircraft-icon">✈</span>
+        <span class="fs-aircraft-text">
+          <span class="fs-aircraft-name">Boeing 747-8i</span>
+          <span class="fs-aircraft-meta">FlightGear · GPL-2.0</span>
+        </span>
+        <span class="fs-chip">AVAILABLE</span>
+      </div>
+
+      <div class="fs-field-label">START</div>
+      <div class="fs-seg">
+        <button class="scene-btn is-active" data-fs-start="air">AIR START</button>
+        <button class="scene-btn" data-fs-start="ground">GROUND START</button>
+      </div>
+
+      <div class="fs-actions">
+        <button class="scene-btn fs-primary" data-fs="start-flight" disabled>START FLIGHT</button>
+        <button class="scene-btn" data-fs="cancel">CANCEL</button>
+      </div>
+      <div class="fs-status" data-fs="status"><span class="fs-dot"></span> SELECT A ROUTE</div>
+    </div>
+  </div>
+
+  <!-- ── Flight Sim: in-flight HUD ───────────────────────────────────────
+       Edges only. The centre stays clear so the aircraft and world show. -->
+  <div id="flightsim-hud" hidden>
+    <div class="fs-hud-id">SIM CONTACT<b>SIM-001</b></div>
+    <div class="fs-hud-tag">SIMULATED</div>
+    <button class="scene-btn fs-exit" data-fs="exit">EXIT SIM</button>
+
+    <div class="fs-compass">
+      <span>HDG</span><b data-fs="hdg">000°</b><span data-fs="trk">TRK 000°</span>
+    </div>
+
+    <div class="fs-tape fs-tape-left">
+      <div class="fs-tape-cap">IAS KT</div>
+      <div class="fs-tape-val" data-fs="ias">0</div>
+      <div class="fs-tape-sub" data-fs="mach">M 0.00</div>
+    </div>
+    <div class="fs-tape fs-tape-right">
+      <div class="fs-tape-cap">ALT FT</div>
+      <div class="fs-tape-val" data-fs="alt">0</div>
+      <div class="fs-tape-sub" data-fs="vs">▲ +0 FPM</div>
+    </div>
+
+    <div class="fs-waypoint">
+      <b data-fs="wp-name">—</b>
+      <span data-fs="wp-info">NO ACTIVE WAYPOINT</span>
+    </div>
+
+    <div class="fs-warnings" data-fs="warnings"></div>
+    <div class="fs-mouse" data-fs="mouse" hidden>⇧ MOUSE LOCKED</div>
+    <button class="fs-ap" data-fs="ap">AP OFF</button>
+
+    <div class="fs-strip">
+      <div class="fs-cell is-on"><span class="fs-k">THR</span><span class="fs-v" data-fs="thr">0%</span></div>
+      <div class="fs-cell"><span class="fs-k">GEAR</span><span class="fs-v" data-fs="gear">UP</span></div>
+      <div class="fs-cell"><span class="fs-k">FLAPS</span><span class="fs-v" data-fs="flaps">0</span></div>
+      <div class="fs-cell"><span class="fs-k">SPOIL</span><span class="fs-v" data-fs="spoilers">—</span></div>
+      <div class="fs-cell"><span class="fs-k">BANK</span><span class="fs-v" data-fs="bank">0°</span></div>
+      <div class="fs-cell"><span class="fs-k">CAM</span><span class="fs-v" data-fs="cam">CHASE</span></div>
+      <!-- Reachable in flight. The DISPLAY panel carries the same setting, but
+           it is behind Clean View and off-screen while flying, which is exactly
+           when the trade between smooth and sharp actually matters. -->
+      <button class="fs-cell fs-cell-btn" type="button" data-fs="quality-btn"
+              title="Render quality — click to cycle (Q toggles nothing else)">
+        <span class="fs-k">QUALITY</span><span class="fs-v" data-fs="quality">AUTO</span>
+      </button>
+      <div class="fs-cell"><span class="fs-k">FPS</span><span class="fs-v" data-fs="fps">--</span></div>
+    </div>
+
+    <div class="fs-help" data-fs="help" hidden>
+      <b>CONTROLS</b>
+      <span>W / S pitch · A / D roll · Q / E rudder</span>
+      <span>= / − throttle · G gear · F flaps · B spoilers</span>
+      <span>SPACE brakes · C camera · P pause · SHIFT mouse lock</span>
+      <span>DRAG look around · SCROLL zoom</span>
+      <span>H toggles this · ESC exits</span>
     </div>
   </div>
 
