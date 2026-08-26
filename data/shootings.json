@@ -1,7 +1,7 @@
 {
  "_comment": "Compiled by scripts/compile-shootings.mjs. Perpetrator names are never queried, stored or served.",
  "generated": "2026-08-26",
- "coverageNote": "654 incidents across 60 countries, 2001-present, from Wikidata (CC0). Coverage is uneven: it reflects where incidents are catalogued, not where they occur. The best-known national databases (Gun Violence Archive, Mother Jones, The Violence Project, Everytown, GTD, ACLED) all forbid redistribution, so none of them are included.",
+ "coverageNote": "679 incidents across 59 countries, 2001-present, from Wikidata (CC0). Coverage is uneven: it reflects where incidents are catalogued, not where they occur. The best-known national databases (Gun Violence Archive, Mother Jones, The Violence Project, Everytown, GTD, ACLED) all forbid redistribution, so none of them are included.",
  "sources": [
   {
    "name": "Wikidata",
@@ -20,16 +20,16 @@
   }
  ],
  "stats": {
-  "wikidataIncidents": 495,
-  "stanfordAdded": 202,
-  "stanfordDuplicates": 52,
-  "plotted": 654,
-  "droppedNoLocation": 43,
-  "countries": 60,
+  "wikidataIncidents": 526,
+  "stanfordAdded": 201,
+  "stanfordDuplicates": 53,
+  "plotted": 679,
+  "droppedNoLocation": 48,
+  "countries": 59,
   "precision": {
-   "exact": 352,
-   "venue": 91,
-   "area": 9
+   "exact": 375,
+   "venue": 95,
+   "area": 8
   }
  },
  "incidents": [
@@ -60,6 +60,20 @@
    "precision": "exact",
    "sourceName": "Stanford MSA",
    "sourceUrl": "https://github.com/StanfordGeospatialCenter/MSA"
+  },
+  {
+   "id": "Q487163",
+   "date": "2001-06-01",
+   "lat": 27.7156,
+   "lon": 85.32,
+   "placeName": "Nepalese royal massacre",
+   "country": "Nepal",
+   "killed": 10,
+   "injured": 5,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q487163"
   },
   {
    "id": "Q228368",
@@ -174,20 +188,6 @@
    "sourceUrl": "https://www.wikidata.org/wiki/Q6898265"
   },
   {
-   "id": "Q131753760",
-   "date": "2002-10-28",
-   "lat": 32.23194,
-   "lon": -110.9525,
-   "placeName": "2002 University of Arizona shooting",
-   "country": "United States",
-   "killed": 4,
-   "injured": 0,
-   "venueType": "",
-   "precision": "venue",
-   "sourceName": "Wikidata",
-   "sourceUrl": "https://www.wikidata.org/wiki/Q131753760"
-  },
-  {
    "id": "Q100917866",
    "date": "2002-10-28",
    "lat": -12.98304,
@@ -200,6 +200,20 @@
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q100917866"
+  },
+  {
+   "id": "Q131753760",
+   "date": "2002-10-28",
+   "lat": 32.23194,
+   "lon": -110.9525,
+   "placeName": "2002 University of Arizona shooting",
+   "country": "United States",
+   "killed": 4,
+   "injured": 0,
+   "venueType": "",
+   "precision": "venue",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q131753760"
   },
   {
    "id": "Q137967905",
@@ -300,6 +314,20 @@
    "sourceUrl": "https://www.wikidata.org/wiki/Q7501043"
   },
   {
+   "id": "Q8081639",
+   "date": "2004-09-16",
+   "lat": 33.01189,
+   "lon": 130.44617,
+   "placeName": "Ōmuta murders",
+   "country": "Japan",
+   "killed": 4,
+   "injured": 0,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q8081639"
+  },
+  {
    "id": "Q6005233",
    "date": "2004-09-28",
    "lat": -40.8025,
@@ -354,6 +382,20 @@
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q7860196"
+  },
+  {
+   "id": "Q6797090",
+   "date": "2005-03-03",
+   "lat": 54.01528,
+   "lon": -115.02167,
+   "placeName": "Mayerthorpe tragedy",
+   "country": "Canada",
+   "killed": 5,
+   "injured": 0,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q6797090"
   },
   {
    "id": "msa-2005-03-12-43.064--88.123",
@@ -818,6 +860,20 @@
    "sourceUrl": "https://github.com/StanfordGeospatialCenter/MSA"
   },
   {
+   "id": "Q600836",
+   "date": "2007-11-07",
+   "lat": 60.54889,
+   "lon": 24.96361,
+   "placeName": "Jokela school shooting",
+   "country": "Finland",
+   "killed": 9,
+   "injured": 12,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q600836"
+  },
+  {
    "id": "Q2712908",
    "date": "2007-12-05",
    "lat": 41.26639,
@@ -986,18 +1042,18 @@
    "sourceUrl": "https://www.wikidata.org/wiki/Q7895229"
   },
   {
-   "id": "msa-2008-12-24-34.090--117.882",
+   "id": "Q4818899",
    "date": "2008-12-24",
-   "lat": 34.09027,
-   "lon": -117.882,
-   "placeName": "Covina, California",
+   "lat": 34.0814,
+   "lon": -117.867,
+   "placeName": "Covina massacre",
    "country": "United States",
    "killed": 10,
-   "injured": 2,
+   "injured": 0,
    "venueType": "",
    "precision": "exact",
-   "sourceName": "Stanford MSA",
-   "sourceUrl": "https://github.com/StanfordGeospatialCenter/MSA"
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q4818899"
   },
   {
    "id": "Q80125759",
@@ -1518,6 +1574,20 @@
    "sourceUrl": "https://www.wikidata.org/wiki/Q3377611"
   },
   {
+   "id": "Q79967",
+   "date": "2011-07-22",
+   "lat": 60.02361,
+   "lon": 10.24806,
+   "placeName": "2011 Norway attacks",
+   "country": "Norway",
+   "killed": 77,
+   "injured": 319,
+   "venueType": "",
+   "precision": "venue",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q79967"
+  },
+  {
    "id": "Q4620823",
    "date": "2011-08-07",
    "lat": 41.09,
@@ -1572,6 +1642,20 @@
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q4443728"
+  },
+  {
+   "id": "Q473893",
+   "date": "2011-12-13",
+   "lat": 50.645,
+   "lon": 5.57278,
+   "placeName": "2011 Liège attack",
+   "country": "Belgium",
+   "killed": 6,
+   "injured": 125,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q473893"
   },
   {
    "id": "Q3975721",
@@ -1910,6 +1994,20 @@
    "sourceUrl": "https://www.wikidata.org/wiki/Q15092916"
   },
   {
+   "id": "Q3211577",
+   "date": "2013-01-16",
+   "lat": 27.92694,
+   "lon": 9.11472,
+   "placeName": "In Aménas hostage crisis",
+   "country": "Algeria",
+   "killed": 67,
+   "injured": 0,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q3211577"
+  },
+  {
    "id": "msa-2013-01-19-35.153--106.779",
    "date": "2013-01-19",
    "lat": 35.15291,
@@ -2062,6 +2160,20 @@
    "precision": "exact",
    "sourceName": "Stanford MSA",
    "sourceUrl": "https://github.com/StanfordGeospatialCenter/MSA"
+  },
+  {
+   "id": "Q13530561",
+   "date": "2013-06-22",
+   "lat": 35.23917,
+   "lon": 74.59,
+   "placeName": "2013 Nanga Parbat massacre",
+   "country": "Pakistan",
+   "killed": 11,
+   "injured": 0,
+   "venueType": "",
+   "precision": "venue",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q13530561"
   },
   {
    "id": "Q16210065",
@@ -2386,6 +2498,20 @@
    "sourceUrl": "https://www.wikidata.org/wiki/Q18217387"
   },
   {
+   "id": "Q19843207",
+   "date": "2014-07-25",
+   "lat": 11.06667,
+   "lon": 7.7,
+   "placeName": "Zaria Quds Day Massacres",
+   "country": "Nigeria",
+   "killed": 25,
+   "injured": 0,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q19843207"
+  },
+  {
    "id": "msa-2014-08-08-35.153--106.779",
    "date": "2014-08-08",
    "lat": 35.15291,
@@ -2652,20 +2778,6 @@
    "sourceUrl": "https://github.com/StanfordGeospatialCenter/MSA"
   },
   {
-   "id": "Q19867464",
-   "date": "2015-02-10",
-   "lat": 46.23861,
-   "lon": -119.10861,
-   "placeName": "Shooting of Antonio Zambrano-Montes",
-   "country": "",
-   "killed": 0,
-   "injured": 0,
-   "venueType": "",
-   "precision": "venue",
-   "sourceName": "Wikidata",
-   "sourceUrl": "https://www.wikidata.org/wiki/Q19867464"
-  },
-  {
    "id": "Q19158877",
    "date": "2015-02-10",
    "lat": 35.9083,
@@ -2680,18 +2792,18 @@
    "sourceUrl": "https://www.wikidata.org/wiki/Q19158877"
   },
   {
-   "id": "Q19878509",
-   "date": "2015-02-14",
-   "lat": 44.64778,
-   "lon": -63.57139,
-   "placeName": "Halifax mass shooting plot",
-   "country": "Canada",
-   "killed": 1,
+   "id": "Q19867464",
+   "date": "2015-02-10",
+   "lat": 46.23861,
+   "lon": -119.10861,
+   "placeName": "Shooting of Antonio Zambrano-Montes",
+   "country": "",
+   "killed": 0,
    "injured": 0,
    "venueType": "",
    "precision": "venue",
    "sourceName": "Wikidata",
-   "sourceUrl": "https://www.wikidata.org/wiki/Q19878509"
+   "sourceUrl": "https://www.wikidata.org/wiki/Q19867464"
   },
   {
    "id": "Q19260515",
@@ -2706,6 +2818,20 @@
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q19260515"
+  },
+  {
+   "id": "Q19878509",
+   "date": "2015-02-14",
+   "lat": 44.64778,
+   "lon": -63.57139,
+   "placeName": "Halifax mass shooting plot",
+   "country": "Canada",
+   "killed": 1,
+   "injured": 0,
+   "venueType": "",
+   "precision": "venue",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q19878509"
   },
   {
    "id": "msa-2015-02-22-34.610--83.529",
@@ -2930,20 +3056,6 @@
    "precision": "exact",
    "sourceName": "Stanford MSA",
    "sourceUrl": "https://github.com/StanfordGeospatialCenter/MSA"
-  },
-  {
-   "id": "Q19750438",
-   "date": "2015-04-02",
-   "lat": -0.45139,
-   "lon": 39.66139,
-   "placeName": "Garissa University College attack",
-   "country": "Kenya",
-   "killed": 148,
-   "injured": 79,
-   "venueType": "",
-   "precision": "exact",
-   "sourceName": "Wikidata",
-   "sourceUrl": "https://www.wikidata.org/wiki/Q19750438"
   },
   {
    "id": "msa-2015-04-03-29.193--81.102",
@@ -3198,6 +3310,34 @@
    "sourceUrl": "https://github.com/StanfordGeospatialCenter/MSA"
   },
   {
+   "id": "Q20295077",
+   "date": "2015-06-26",
+   "lat": 35.9124,
+   "lon": 10.5806,
+   "placeName": "2015 Sousse attack",
+   "country": "Tunisia",
+   "killed": 39,
+   "injured": 36,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q20295077"
+  },
+  {
+   "id": "Q20717774",
+   "date": "2015-06-29",
+   "lat": 32.04221,
+   "lon": 35.34983,
+   "placeName": "2015 Shuvat Rachel shooting",
+   "country": "Palestine",
+   "killed": 1,
+   "injured": 3,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q20717774"
+  },
+  {
    "id": "msa-2015-07-12-41.895--87.819",
    "date": "2015-07-12",
    "lat": 41.895,
@@ -3408,6 +3548,20 @@
    "sourceUrl": "https://www.wikidata.org/wiki/Q96396444"
   },
   {
+   "id": "Q21154256",
+   "date": "2015-10-18",
+   "lat": 31.2425,
+   "lon": 34.79667,
+   "placeName": "Beersheva bus station shooting",
+   "country": "Israel",
+   "killed": 3,
+   "injured": 11,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q21154256"
+  },
+  {
    "id": "msa-2015-10-21-39.253--84.600",
    "date": "2015-10-21",
    "lat": 39.25327,
@@ -3504,20 +3658,6 @@
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q21510090"
-  },
-  {
-   "id": "Q21516923",
-   "date": "2015-11-20",
-   "lat": 12.6352,
-   "lon": -8.0308,
-   "placeName": "2015 Bamako hotel attack",
-   "country": "Mali",
-   "killed": 20,
-   "injured": 9,
-   "venueType": "",
-   "precision": "exact",
-   "sourceName": "Wikidata",
-   "sourceUrl": "https://www.wikidata.org/wiki/Q21516923"
   },
   {
    "id": "msa-2015-11-23-39.989--82.989",
@@ -4206,20 +4346,6 @@
    "sourceUrl": "https://github.com/StanfordGeospatialCenter/MSA"
   },
   {
-   "id": "Q23045756",
-   "date": "2016-03-13",
-   "lat": 5.2,
-   "lon": -3.73333,
-   "placeName": "2016 Grand-Bassam shootings",
-   "country": "Ivory Coast",
-   "killed": 22,
-   "injured": 33,
-   "venueType": "",
-   "precision": "exact",
-   "sourceName": "Wikidata",
-   "sourceUrl": "https://www.wikidata.org/wiki/Q23045756"
-  },
-  {
    "id": "msa-2016-03-13-26.641--81.872",
    "date": "2016-03-13",
    "lat": 26.64063,
@@ -4682,6 +4808,20 @@
    "sourceUrl": "https://github.com/StanfordGeospatialCenter/MSA"
   },
   {
+   "id": "Q24352468",
+   "date": "2016-05-08",
+   "lat": 55.3833,
+   "lon": 39.0333,
+   "placeName": "massacre in Yegoryevsky District",
+   "country": "Russia",
+   "killed": 5,
+   "injured": 0,
+   "venueType": "",
+   "precision": "venue",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q24352468"
+  },
+  {
    "id": "msa-2016-05-08-30.267--97.743",
    "date": "2016-05-08",
    "lat": 30.26715,
@@ -4948,20 +5088,6 @@
    "sourceUrl": "https://github.com/StanfordGeospatialCenter/MSA"
   },
   {
-   "id": "Q25250323",
-   "date": "2016-07-01",
-   "lat": 23.80251,
-   "lon": 90.41669,
-   "placeName": "2016 Gulshan, Dhaka attack",
-   "country": "Bangladesh",
-   "killed": 28,
-   "injured": 50,
-   "venueType": "",
-   "precision": "exact",
-   "sourceName": "Wikidata",
-   "sourceUrl": "https://www.wikidata.org/wiki/Q25250323"
-  },
-  {
    "id": "Q25631175",
    "date": "2016-07-07",
    "lat": 32.77956,
@@ -4988,6 +5114,20 @@
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q25814757"
+  },
+  {
+   "id": "Q25893254",
+   "date": "2016-07-14",
+   "lat": 43.69111,
+   "lon": 7.2475,
+   "placeName": "2016 Nice attack",
+   "country": "France",
+   "killed": 87,
+   "injured": 434,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q25893254"
   },
   {
    "id": "Q25923010",
@@ -5228,6 +5368,20 @@
    "sourceUrl": "https://www.wikidata.org/wiki/Q30646305"
   },
   {
+   "id": "Q30147595",
+   "date": "2017-06-07",
+   "lat": 35.69611,
+   "lon": 51.42306,
+   "placeName": "2017 Tehran attacks",
+   "country": "Iran",
+   "killed": 17,
+   "injured": 43,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q30147595"
+  },
+  {
    "id": "Q30646585",
    "date": "2017-06-08",
    "lat": 41.5291,
@@ -5354,6 +5508,20 @@
    "sourceUrl": "https://www.wikidata.org/wiki/Q42530020"
   },
   {
+   "id": "Q41522095",
+   "date": "2017-10-01",
+   "lat": 36.09556,
+   "lon": -115.17167,
+   "placeName": "2017 Las Vegas shooting",
+   "country": "United States",
+   "killed": 60,
+   "injured": 867,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q41522095"
+  },
+  {
    "id": "Q42550993",
    "date": "2017-11-01",
    "lat": 39.9031,
@@ -5396,6 +5564,20 @@
    "sourceUrl": "https://www.wikidata.org/wiki/Q43177417"
   },
   {
+   "id": "Q43544477",
+   "date": "2017-11-24",
+   "lat": 31.01664,
+   "lon": 33.01433,
+   "placeName": "2017 Sinai mosque attack",
+   "country": "Egypt",
+   "killed": 311,
+   "injured": 127,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q43544477"
+  },
+  {
    "id": "Q45178445",
    "date": "2017-12-07",
    "lat": 36.82,
@@ -5436,6 +5618,20 @@
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q47487873"
+  },
+  {
+   "id": "Q47691943",
+   "date": "2018-02-03",
+   "lat": 43.30025,
+   "lon": 13.4533,
+   "placeName": "Macerata shooting",
+   "country": "Italy",
+   "killed": 0,
+   "injured": 6,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q47691943"
   },
   {
    "id": "Q48714898",
@@ -5562,6 +5758,20 @@
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q55032258"
+  },
+  {
+   "id": "Q54411616",
+   "date": "2018-05-29",
+   "lat": 50.63528,
+   "lon": 5.5675,
+   "placeName": "2018 Liège shooting",
+   "country": "Belgium",
+   "killed": 4,
+   "injured": 2,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q54411616"
   },
   {
    "id": "Q60775866",
@@ -5774,20 +5984,6 @@
    "sourceUrl": "https://www.wikidata.org/wiki/Q115813246"
   },
   {
-   "id": "Q59647120",
-   "date": "2018-12-11",
-   "lat": 48.58261,
-   "lon": 7.74889,
-   "placeName": "2018 Strasbourg attack",
-   "country": "France",
-   "killed": 5,
-   "injured": 11,
-   "venueType": "",
-   "precision": "exact",
-   "sourceName": "Wikidata",
-   "sourceUrl": "https://www.wikidata.org/wiki/Q59647120"
-  },
-  {
    "id": "Q60441954",
    "date": "2019-01-04",
    "lat": 33.82398,
@@ -5828,6 +6024,20 @@
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q62055402"
+  },
+  {
+   "id": "Q62066211",
+   "date": "2019-03-15",
+   "lat": -43.5329,
+   "lon": 172.6118,
+   "placeName": "Christchurch mosque shootings",
+   "country": "New Zealand",
+   "killed": 51,
+   "injured": 40,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q62066211"
   },
   {
    "id": "Q62090804",
@@ -5984,6 +6194,20 @@
    "sourceUrl": "https://www.wikidata.org/wiki/Q112123791"
   },
   {
+   "id": "Q66363708",
+   "date": "2019-08-10",
+   "lat": 59.92,
+   "lon": 10.4595,
+   "placeName": "Bærum mosque shooting",
+   "country": "Norway",
+   "killed": 1,
+   "injured": 2,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q66363708"
+  },
+  {
    "id": "Q98799276",
    "date": "2019-08-25",
    "lat": 60.39306,
@@ -6094,6 +6318,20 @@
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q78090929"
+  },
+  {
+   "id": "Q79332957",
+   "date": "2019-12-19",
+   "lat": 54.0566,
+   "lon": 47.1171,
+   "placeName": "Moscow FSB headquarters shooting",
+   "country": "Russia",
+   "killed": 3,
+   "injured": 5,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q79332957"
   },
   {
    "id": "Q100308132",
@@ -6320,6 +6558,20 @@
    "sourceUrl": "https://www.wikidata.org/wiki/Q116453607"
   },
   {
+   "id": "Q105580577",
+   "date": "2021-02-02",
+   "lat": 35.73209,
+   "lon": -95.34805,
+   "placeName": "2021 Muskogee shooting",
+   "country": "United States",
+   "killed": 0,
+   "injured": 0,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q105580577"
+  },
+  {
    "id": "Q105416780",
    "date": "2021-02-09",
    "lat": 45.17845,
@@ -6430,6 +6682,20 @@
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q106609907"
+  },
+  {
+   "id": "Q111252343",
+   "date": "2021-05-02",
+   "lat": 32.1162,
+   "lon": 35.25731,
+   "placeName": "2021 Tapuah Junction shooting",
+   "country": "West Bank",
+   "killed": 1,
+   "injured": 2,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q111252343"
   },
   {
    "id": "Q106776978",
@@ -6684,6 +6950,20 @@
    "sourceUrl": "https://www.wikidata.org/wiki/Q111383118"
   },
   {
+   "id": "Q111395619",
+   "date": "2022-03-27",
+   "lat": 19.86815,
+   "lon": -100.81761,
+   "placeName": "Las Tinajas massacre",
+   "country": "Mexico",
+   "killed": 19,
+   "injured": 0,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q111395619"
+  },
+  {
    "id": "Q111487697",
    "date": "2022-03-28",
    "lat": 10.33333,
@@ -6696,6 +6976,20 @@
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q111487697"
+  },
+  {
+   "id": "Q111420818",
+   "date": "2022-03-29",
+   "lat": 32.09397,
+   "lon": 34.83575,
+   "placeName": "2022 Bnei Brak shootings",
+   "country": "Israel",
+   "killed": 5,
+   "injured": 10,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q111420818"
   },
   {
    "id": "Q111472179",
@@ -6794,6 +7088,20 @@
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q112036857"
+  },
+  {
+   "id": "Q112016492",
+   "date": "2022-05-15",
+   "lat": 42.90972,
+   "lon": -78.85278,
+   "placeName": "2022 Buffalo shooting",
+   "country": "United States",
+   "killed": 10,
+   "injured": 3,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q112016492"
   },
   {
    "id": "Q112109175",
@@ -7538,6 +7846,20 @@
    "sourceUrl": "https://www.wikidata.org/wiki/Q116914049"
   },
   {
+   "id": "Q117019216",
+   "date": "2023-02-27",
+   "lat": 31.79975,
+   "lon": 35.49018,
+   "placeName": "Beit HaArava shooting",
+   "country": "Israel",
+   "killed": 1,
+   "injured": 0,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q117019216"
+  },
+  {
    "id": "Q117038068",
    "date": "2023-03-09",
    "lat": 53.6025,
@@ -7788,6 +8110,20 @@
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q120197158"
+  },
+  {
+   "id": "Q120442669",
+   "date": "2023-07-06",
+   "lat": 32.21849,
+   "lon": 35.16021,
+   "placeName": "2023 Kedumim shooting",
+   "country": "",
+   "killed": 0,
+   "injured": 0,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q120442669"
   },
   {
    "id": "Q120498425",
@@ -8056,18 +8392,32 @@
    "sourceUrl": "https://www.wikidata.org/wiki/Q124538269"
   },
   {
-   "id": "Q125092492",
-   "date": "2024-03-22",
-   "lat": 55.82583,
-   "lon": 37.39056,
-   "placeName": "Crocus City Hall attack",
-   "country": "Russia",
-   "killed": 144,
-   "injured": 360,
+   "id": "Q124568074",
+   "date": "2024-02-16",
+   "lat": 31.76068,
+   "lon": 34.78459,
+   "placeName": "2024 Kiryat Malakhi attack",
+   "country": "Israel",
+   "killed": 2,
+   "injured": 4,
    "venueType": "",
    "precision": "exact",
    "sourceName": "Wikidata",
-   "sourceUrl": "https://www.wikidata.org/wiki/Q125092492"
+   "sourceUrl": "https://www.wikidata.org/wiki/Q124568074"
+  },
+  {
+   "id": "Q124632021",
+   "date": "2024-02-22",
+   "lat": 31.78417,
+   "lon": 35.26056,
+   "placeName": "The shooting attack near Maale Adumim 2024",
+   "country": "Israel",
+   "killed": 1,
+   "injured": 11,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q124632021"
   },
   {
    "id": "Q125266320",
@@ -8082,20 +8432,6 @@
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q125266320"
-  },
-  {
-   "id": "Q125990489",
-   "date": "2024-05-17",
-   "lat": 34.75,
-   "lon": 67.25,
-   "placeName": "2024 Bamyan shooting",
-   "country": "Afghanistan",
-   "killed": 6,
-   "injured": 8,
-   "venueType": "",
-   "precision": "area",
-   "sourceName": "Wikidata",
-   "sourceUrl": "https://www.wikidata.org/wiki/Q125990489"
   },
   {
    "id": "Q126616606",
@@ -8196,6 +8532,20 @@
    "sourceUrl": "https://www.wikidata.org/wiki/Q130236251"
   },
   {
+   "id": "Q130240352",
+   "date": "2024-09-05",
+   "lat": 48.14522,
+   "lon": 11.56753,
+   "placeName": "shooting in September 2024 in Munich",
+   "country": "Germany",
+   "killed": 1,
+   "injured": 0,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q130240352"
+  },
+  {
    "id": "Q131824362",
    "date": "2024-09-13",
    "lat": 51.91537,
@@ -8252,20 +8602,6 @@
    "sourceUrl": "https://www.wikidata.org/wiki/Q131455297"
   },
   {
-   "id": "Q131617247",
-   "date": "2025-01-01",
-   "lat": 42.40033,
-   "lon": 18.89544,
-   "placeName": "2025 Cetinje shooting",
-   "country": "Montenegro",
-   "killed": 14,
-   "injured": 3,
-   "venueType": "",
-   "precision": "exact",
-   "sourceName": "Wikidata",
-   "sourceUrl": "https://www.wikidata.org/wiki/Q131617247"
-  },
-  {
    "id": "Q133091761",
    "date": "2025-01-01",
    "lat": 3.10978,
@@ -8292,6 +8628,20 @@
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q137661824"
+  },
+  {
+   "id": "Q131617247",
+   "date": "2025-01-01",
+   "lat": 42.40033,
+   "lon": 18.89544,
+   "placeName": "2025 Cetinje shooting",
+   "country": "Montenegro",
+   "killed": 14,
+   "injured": 3,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q131617247"
   },
   {
    "id": "Q132083483",
@@ -8378,6 +8728,20 @@
    "sourceUrl": "https://www.wikidata.org/wiki/Q133891657"
   },
   {
+   "id": "Q135426413",
+   "date": "2025-05-31",
+   "lat": 43.45583,
+   "lon": 6.68417,
+   "placeName": "murder of Hichem Miraoui",
+   "country": "France",
+   "killed": 1,
+   "injured": 1,
+   "venueType": "",
+   "precision": "venue",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q135426413"
+  },
+  {
    "id": "Q134821352",
    "date": "2025-06-10",
    "lat": 47.07778,
@@ -8404,20 +8768,6 @@
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q134895058"
-  },
-  {
-   "id": "Q135012367",
-   "date": "2025-06-22",
-   "lat": 33.5032,
-   "lon": 36.3199,
-   "placeName": "Mar Elias Church attack",
-   "country": "Syria",
-   "killed": 25,
-   "injured": 63,
-   "venueType": "",
-   "precision": "exact",
-   "sourceName": "Wikidata",
-   "sourceUrl": "https://www.wikidata.org/wiki/Q135012367"
   },
   {
    "id": "Q135139417",
@@ -9022,20 +9372,6 @@
    "sourceUrl": "https://www.wikidata.org/wiki/Q139679029"
   },
   {
-   "id": "Q139844425",
-   "date": "2026-05-18",
-   "lat": 32.82054,
-   "lon": -117.16555,
-   "placeName": "2026 Islamic Center of San Diego shooting",
-   "country": "United States",
-   "killed": 5,
-   "injured": 0,
-   "venueType": "",
-   "precision": "exact",
-   "sourceName": "Wikidata",
-   "sourceUrl": "https://www.wikidata.org/wiki/Q139844425"
-  },
-  {
    "id": "Q140043464",
    "date": "2026-05-18",
    "lat": 27.26667,
@@ -9048,6 +9384,20 @@
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q140043464"
+  },
+  {
+   "id": "Q139844425",
+   "date": "2026-05-18",
+   "lat": 32.82054,
+   "lon": -117.16555,
+   "placeName": "2026 Islamic Center of San Diego shooting",
+   "country": "United States",
+   "killed": 5,
+   "injured": 0,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q139844425"
   },
   {
    "id": "Q140121661",

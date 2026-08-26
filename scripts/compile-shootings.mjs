@@ -72,10 +72,27 @@ const SINCE_YEAR = 2001;
  * per request costs four round trips and always completes.
  */
 const CLASSES = [
-  { qid: 'Q21480300', label: 'mass shooting' },
-  { qid: 'Q473853', label: 'school shooting' },
-  { qid: 'Q118188839', label: 'spree shooting' },
-  { qid: 'Q42915628', label: 'mass shooting in the United States' },
+  // Tier 1: already unambiguously a shooting. No further qualification needed.
+  { qid: 'Q21480300', label: 'mass shooting', requireWeapon: false },
+  { qid: 'Q473853', label: 'school shooting', requireWeapon: false },
+  { qid: 'Q118188839', label: 'spree shooting', requireWeapon: false },
+  { qid: 'Q42915628', label: 'mass shooting in the US', requireWeapon: false },
+
+  // Tier 2: broader crime classes, qualified by a RECORDED WEAPON (P520).
+  //
+  // These exist because the shooting classes alone miss some of the most
+  // significant incidents of the period. Wikidata does not type Christchurch
+  // (51 dead) as a mass shooting at all — it is "terrorist attack" plus "mass
+  // murder". The Buffalo Tops supermarket attack is typed "massacre". Neither
+  // appeared, which is what prompted this tier.
+  //
+  // The armament requirement is what keeps the scope honest: "mass murder"
+  // unqualified returns 1,244 items including bombings, arson and vehicle
+  // attacks. Requiring that someone recorded a weapon narrows it to armed
+  // attacks, which is the subject of this layer.
+  { qid: 'Q750215', label: 'mass murder (armed)', requireWeapon: true },
+  { qid: 'Q2223653', label: 'terrorist attack (armed)', requireWeapon: true },
+  { qid: 'Q3199915', label: 'massacre (armed)', requireWeapon: true },
 ];
 
 /**
@@ -87,10 +104,27 @@ const CLASSES = [
  * @param {string} qid
  * @returns {string}
  */
-function queryForClass(qid) {
+function queryForClass(qid, requireWeapon = false) {
+  // The weapon must be a FIREARM, not merely recorded. P520 alone counts bombs,
+  // vehicles and aircraft as "armament", which let the September 11 attacks
+  // (2,996 dead), the Madrid train bombings, the Nice truck attack and the Sri
+  // Lanka bombings into a dataset about shootings. Walking P279* from the
+  // weapon to Q12796 "firearm" cuts that from 436 items to 139 — and keeps
+  // Christchurch and Buffalo, which is the whole point of this tier.
+  const weaponClause = requireWeapon
+    ? '?item wdt:P520 ?weapon . ?weapon wdt:P279* wd:Q12796 .'
+    : '';
+  // Tier-2 classes match DIRECTLY, without the subclass walk. Q750215 "mass
+  // murder" has an enormous subclass tree, and walking it while also joining
+  // the armament and every OPTIONAL put the query over the endpoint's budget —
+  // 504 on all four retries. The incidents this tier exists for carry these
+  // types directly anyway: Christchurch is P31 terrorist attack AND mass
+  // murder, Buffalo is P31 massacre. Direct matching costs nothing real here.
+  const typePath = requireWeapon ? 'wdt:P31' : 'wdt:P31/wdt:P279*';
   return `
 SELECT ?item ?itemLabel ?date ?coord ?locCoord ?admCoord ?countryLabel ?locLabel ?killed ?injured WHERE {
-  ?item wdt:P31/wdt:P279* wd:${qid} .
+  ?item ${typePath} wd:${qid} .
+  ${weaponClause}
   { ?item wdt:P585 ?date . } UNION { ?item wdt:P580 ?date . }
   FILTER(YEAR(?date) >= ${SINCE_YEAR})
 
@@ -100,7 +134,12 @@ SELECT ?item ?itemLabel ?date ?coord ?locCoord ?admCoord ?countryLabel ?locLabel
   # 2015 Zaria massacre (Nigerian Army, ~1,000 dead), the Zaki Biam army
   # reprisal, and the 2021 Kabul airport bombing. Those are war and state
   # violence, not a mall or a school.
-  FILTER NOT EXISTS { ?item wdt:P31 wd:Q3199915 . }    # also a "massacre" — group-on-group
+  # NOTE: "massacre" (Q3199915) is deliberately NOT excluded. It reads as a war
+  # word but is applied just as often to civilian mass shootings — excluding it
+  # deleted the 2017 Las Vegas shooting (60 dead) and the Buffalo Tops
+  # supermarket attack from this dataset. Conflict events are caught by the
+  # part-of-a-named-conflict check instead, which is what actually distinguishes
+  # them.
   FILTER NOT EXISTS { ?item wdt:P31 wd:Q198 . }        # also a "war"
   FILTER NOT EXISTS { ?item wdt:P31 wd:Q18493502 . }   # a suicide bombing, not a shooting
   FILTER NOT EXISTS { ?item wdt:P31 wd:Q645883 . }     # a military operation
@@ -238,6 +277,63 @@ async function runQuery(sparql, attempts = 4) {
 }
 
 /**
+ * Just the QIDs matching a class — no OPTIONALs, no labels.
+ *
+ * Tier-2 classes cannot be fetched in one go: the firearm walk plus the seven
+ * OPTIONALs in the detail query put them over the endpoint's time budget and
+ * returned 504 on every retry. Asking "which items match" and "what are they"
+ * as two cheap questions always completes.
+ *
+ * @param {string} qid
+ * @param {boolean} requireWeapon
+ * @returns {Promise<Array<string>>}
+ */
+async function fetchClassQids(qid, requireWeapon) {
+  const weaponClause = requireWeapon
+    ? '?item wdt:P520 ?weapon . ?weapon wdt:P279* wd:Q12796 .'
+    : '';
+  const rows = await runQuery(`
+SELECT DISTINCT ?item WHERE {
+  ?item wdt:P31 wd:${qid} .
+  ${weaponClause}
+  { ?item wdt:P585 ?d } UNION { ?item wdt:P580 ?d }
+  FILTER(YEAR(?d) >= ${SINCE_YEAR})
+}
+`);
+  return rows.map((row) => String(row.item?.value || '').split('/').pop()).filter(Boolean);
+}
+
+/**
+ * Full detail rows for a bounded set of QIDs.
+ *
+ * @param {Array<string>} qids
+ * @returns {Promise<Array<object>>}
+ */
+async function fetchDetailsFor(qids) {
+  const out = [];
+  const BATCH = 180;
+  for (let start = 0; start < qids.length; start += BATCH) {
+    const values = qids.slice(start, start + BATCH).map((qid) => `wd:${qid}`).join(' ');
+    const rows = await runQuery(`
+SELECT ?item ?itemLabel ?date ?coord ?locCoord ?admCoord ?countryLabel ?locLabel ?killed ?injured WHERE {
+  VALUES ?item { ${values} }
+  { ?item wdt:P585 ?date . } UNION { ?item wdt:P580 ?date . }
+  OPTIONAL { ?item wdt:P625 ?coord . }
+  OPTIONAL { ?item wdt:P276 ?loc . OPTIONAL { ?loc wdt:P625 ?locCoord . } }
+  OPTIONAL { ?item wdt:P131 ?adm . OPTIONAL { ?adm wdt:P625 ?admCoord . } }
+  OPTIONAL { ?item wdt:P17 ?country . }
+  OPTIONAL { ?item wdt:P1120 ?killed . }
+  OPTIONAL { ?item wdt:P1339 ?injured . }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+}
+`);
+    out.push(...rows);
+    process.stdout.write('.');
+  }
+  return out;
+}
+
+/**
  * Of a set of incident QIDs, which are armed-conflict events.
  *
  * Run as a SEPARATE query, deliberately. The thorough version of this check
@@ -268,13 +364,31 @@ SELECT DISTINCT ?item WHERE {
     ?conflict wdt:P31/wdt:P279* ?type .
     VALUES ?type { wd:Q350604 wd:Q198 wd:Q645883 }
   } UNION {
+    # Or carried out by an ORGANISATION rather than an individual.
+    #
+    # This is the discriminator that actually separates the two subjects. A
+    # civilian mass shooting is committed by a person; an armed group or a
+    # state army committing one is a conflict event, whatever it is filed
+    # under. It catches the Zaki Biam massacre (Nigerian Army) and the Garissa
+    # University attack (Al-Shabaab) while leaving Christchurch, Las Vegas and
+    # Buffalo — all lone individuals — untouched.
+    #
+    # NOTE ON PERPETRATORS: this reads the perpetrator's TYPE, never their
+    # identity, and nothing from this query is stored or served. Using "was
+    # this an organisation" to decide scope is a different act from naming
+    # someone, and the no-notoriety rule is about the latter.
+    { ?item wdt:P8031 ?actor } UNION { ?item wdt:P710 ?actor }
+    ?actor wdt:P31/wdt:P279* wd:Q43229 .
+  } UNION {
     # Or typed as one itself, via any subclass.
     ?item wdt:P31/wdt:P279* ?selfType .
     # Q135010 "war crime" is a definitive conflict marker: the term only has
-    # meaning inside an armed conflict. It is what finally caught the Gaza aid
-    # site killings (766 dead), which carried no P361 at all and so survived
-    # every other check.
-    VALUES ?selfType { wd:Q350604 wd:Q198 wd:Q645883 wd:Q3199915 wd:Q135010 }
+    # meaning inside an armed conflict. It is what caught the Gaza aid site
+    # killings (766 dead), which carried no P361 at all.
+    #
+    # Q3199915 "massacre" is NOT here, for the reason given in the main query:
+    # it removed Las Vegas 2017 and Buffalo along with the conflict events.
+    VALUES ?selfType { wd:Q350604 wd:Q198 wd:Q645883 wd:Q135010 }
   }
 }
 `;
@@ -412,7 +526,9 @@ async function main() {
   const byItem = new Map();
   for (const cls of CLASSES) {
     process.stdout.write(`Querying Wikidata: ${cls.label}…`);
-    const bindings = await runQuery(queryForClass(cls.qid));
+    const bindings = cls.requireWeapon
+      ? await fetchDetailsFor(await fetchClassQids(cls.qid, true))
+      : await runQuery(queryForClass(cls.qid, false));
     let fresh = 0;
     for (const row of bindings) {
       const uri = row.item?.value;
