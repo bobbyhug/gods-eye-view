@@ -18,6 +18,16 @@ services:
       # Render's free tier runs Node 22 by default; this app requires 24.14.x or 26.x.
       - key: NODE_VERSION
         value: 24.15.0
+      # Vite's preview server rejects unrecognised Host headers, so without this
+      # every request to the Render URL comes back "Blocked request". The
+      # leading dot is a suffix match, which covers whatever subdomain Render
+      # assigns without having to know it in advance.
+      - key: PREVIEW_ALLOWED_HOSTS
+        value: ".onrender.com"
+      # Render terminates TLS and forwards on this port.
+      - key: HOST
+        value: "0.0.0.0"
+
       # REQUIRED. Paste your key in the Render dashboard — never commit it.
       # RESTRICT IT FIRST: Google Cloud Console -> Credentials -> your key ->
       # Application restrictions -> Websites -> add your Render URL. An
