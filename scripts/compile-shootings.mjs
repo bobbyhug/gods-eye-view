@@ -122,7 +122,7 @@ function queryForClass(qid, requireWeapon = false) {
   // murder, Buffalo is P31 massacre. Direct matching costs nothing real here.
   const typePath = requireWeapon ? 'wdt:P31' : 'wdt:P31/wdt:P279*';
   return `
-SELECT ?item ?itemLabel ?date ?coord ?locCoord ?admCoord ?countryLabel ?locLabel ?killed ?injured WHERE {
+SELECT ?item ?itemLabel ?date ?coord ?locCoord ?admCoord ?countryLabel ?locLabel ?killed ?injured ?venuePhoto ?photoLocLabel WHERE {
   ?item ${typePath} wd:${qid} .
   ${weaponClause}
   { ?item wdt:P585 ?date . } UNION { ?item wdt:P580 ?date . }
@@ -160,10 +160,33 @@ SELECT ?item ?itemLabel ?date ?coord ?locCoord ?admCoord ?countryLabel ?locLabel
   OPTIONAL { ?item wdt:P17 ?country . }
   OPTIONAL { ?item wdt:P1120 ?killed . }
   OPTIONAL { ?item wdt:P1339 ?injured . }
+${VENUE_PHOTO_CLAUSE}
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
 }
 `;
 }
+
+/**
+ * A photograph OF THE PLACE, never of the incident.
+ *
+ * The incident's own P18 is deliberately not used: on Wikidata it is frequently
+ * a photograph of the perpetrator, which this project does not publish under
+ * any circumstances. The venue's P18 is a picture of the building or the island
+ * or the shopping centre — Utoya, the Olympia-Einkaufszentrum, the UVA Rotunda.
+ *
+ * Settlements and administrative areas are excluded as venues. Their photo is a
+ * city skyline, which would imply a precision the record does not have: a
+ * generic Copenhagen view beside an incident is not a picture of where it
+ * happened.
+ */
+const VENUE_PHOTO_CLAUSE = `
+  OPTIONAL {
+    ?item wdt:P276 ?photoLoc .
+    ?photoLoc wdt:P18 ?venuePhoto .
+    FILTER NOT EXISTS { ?photoLoc wdt:P31/wdt:P279* wd:Q486972 . }
+    FILTER NOT EXISTS { ?photoLoc wdt:P31/wdt:P279* wd:Q56061 . }
+    OPTIONAL { ?photoLoc rdfs:label ?photoLocLabel . FILTER(LANG(?photoLocLabel) = "en") }
+  }`;
 
 /** Stanford Mass Shootings in America — CC BY 4.0, US only, 1966-2016. */
 const MSA_CSV_URL = 'https://raw.githubusercontent.com/StanfordGeospatialCenter/MSA/master/Data/Stanford_MSA_Database.csv';
@@ -315,7 +338,7 @@ async function fetchDetailsFor(qids) {
   for (let start = 0; start < qids.length; start += BATCH) {
     const values = qids.slice(start, start + BATCH).map((qid) => `wd:${qid}`).join(' ');
     const rows = await runQuery(`
-SELECT ?item ?itemLabel ?date ?coord ?locCoord ?admCoord ?countryLabel ?locLabel ?killed ?injured WHERE {
+SELECT ?item ?itemLabel ?date ?coord ?locCoord ?admCoord ?countryLabel ?locLabel ?killed ?injured ?venuePhoto ?photoLocLabel WHERE {
   VALUES ?item { ${values} }
   { ?item wdt:P585 ?date . } UNION { ?item wdt:P580 ?date . }
   OPTIONAL { ?item wdt:P625 ?coord . }
@@ -324,6 +347,7 @@ SELECT ?item ?itemLabel ?date ?coord ?locCoord ?admCoord ?countryLabel ?locLabel
   OPTIONAL { ?item wdt:P17 ?country . }
   OPTIONAL { ?item wdt:P1120 ?killed . }
   OPTIONAL { ?item wdt:P1339 ?injured . }
+${VENUE_PHOTO_CLAUSE}
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
 }
 `);
@@ -351,7 +375,10 @@ SELECT ?item ?itemLabel ?date ?coord ?locCoord ?admCoord ?countryLabel ?locLabel
  */
 async function findConflictEvents(qids) {
   const exclude = new Set();
-  const BATCH = 220;
+  // Small batches on purpose. This query walks P279* twice and 220 items per
+  // request intermittently tipped the endpoint into a 504 — which, after
+  // retries, failed the whole compile. 90 completes reliably even under load.
+  const BATCH = 90;
   for (let start = 0; start < qids.length; start += BATCH) {
     const batch = qids.slice(start, start + BATCH);
     const values = batch.map((qid) => `wd:${qid}`).join(' ');
@@ -563,6 +590,7 @@ async function main() {
     precisionCounts[point.precision] += 1;
 
     const qid = uri.split('/').pop();
+    const photo = firstValue(rows, 'venuePhoto');
     const label = firstValue(rows, 'itemLabel');
     const date = firstValue(rows, 'date').slice(0, 10);
 
@@ -578,6 +606,10 @@ async function main() {
       killed: maxNumber(rows, 'killed'),
       injured: maxNumber(rows, 'injured'),
       venueType: '',
+      // Thumbnail width keeps the card light: the originals are often several
+      // megabytes, and Commons resizes on demand.
+      venuePhoto: photo ? `${photo}?width=480` : '',
+      venueName: firstValue(rows, 'photoLocLabel'),
       precision: point.precision,
       sourceName: 'Wikidata',
       sourceUrl: `https://www.wikidata.org/wiki/${qid}`,

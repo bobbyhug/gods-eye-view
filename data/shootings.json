@@ -1,7 +1,7 @@
 {
  "_comment": "Compiled by scripts/compile-shootings.mjs. Perpetrator names are never queried, stored or served.",
  "generated": "2026-08-26",
- "coverageNote": "679 incidents across 59 countries, 2001-present, from Wikidata (CC0). Coverage is uneven: it reflects where incidents are catalogued, not where they occur. The best-known national databases (Gun Violence Archive, Mother Jones, The Violence Project, Everytown, GTD, ACLED) all forbid redistribution, so none of them are included.",
+ "coverageNote": "680 incidents across 59 countries, 2001-present, from Wikidata (CC0). Coverage is uneven: it reflects where incidents are catalogued, not where they occur. The best-known national databases (Gun Violence Archive, Mother Jones, The Violence Project, Everytown, GTD, ACLED) all forbid redistribution, so none of them are included.",
  "sources": [
   {
    "name": "Wikidata",
@@ -21,9 +21,9 @@
  ],
  "stats": {
   "wikidataIncidents": 526,
-  "stanfordAdded": 201,
-  "stanfordDuplicates": 53,
-  "plotted": 679,
+  "stanfordAdded": 202,
+  "stanfordDuplicates": 52,
+  "plotted": 680,
   "droppedNoLocation": 48,
   "countries": 59,
   "precision": {
@@ -43,6 +43,8 @@
    "killed": 5,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q127326851"
@@ -71,6 +73,8 @@
    "killed": 10,
    "injured": 5,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Narayanhiti%20Palace%20Museum%2C%20crop.jpg?width=480",
+   "venueName": "Narayanhiti Palace",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q487163"
@@ -85,6 +89,8 @@
    "killed": 15,
    "injured": 18,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q228368"
@@ -99,6 +105,8 @@
    "killed": 3,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q4780857"
@@ -113,6 +121,8 @@
    "killed": 12,
    "injured": 6,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q124784599"
@@ -127,6 +137,8 @@
    "killed": 3,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q473872"
@@ -141,6 +153,8 @@
    "killed": 8,
    "injured": 19,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q473894"
@@ -155,6 +169,8 @@
    "killed": 17,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Gutenberg-Gymnasium.JPG?width=480",
+   "venueName": "Gutenberg-Gymnasium Erfurt",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q473877"
@@ -169,6 +185,8 @@
    "killed": 6,
    "injured": 10,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q16211962"
@@ -183,6 +201,8 @@
    "killed": 2,
    "injured": 5,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q6898265"
@@ -197,6 +217,8 @@
    "killed": 2,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q100917866"
@@ -211,6 +233,8 @@
    "killed": 4,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/ASU%20nima%20%283%29.JPG?width=480",
+   "venueName": "University of Arizona",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q131753760"
@@ -225,6 +249,8 @@
    "killed": 4,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q137967905"
@@ -239,6 +265,8 @@
    "killed": 1,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q6247674"
@@ -267,6 +295,8 @@
    "killed": 0,
    "injured": 8,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q6665623"
@@ -295,6 +325,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q14693017"
@@ -309,13 +341,15 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q7501043"
   },
   {
    "id": "Q8081639",
-   "date": "2004-09-16",
+   "date": "2004-09-18",
    "lat": 33.01189,
    "lon": 130.44617,
    "placeName": "Ōmuta murders",
@@ -323,6 +357,8 @@
    "killed": 4,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Suwagawa%20River%20from%20Usuibashi%20Bridge%20%28east%29.jpg?width=480",
+   "venueName": "Suwa River",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q8081639"
@@ -337,6 +373,8 @@
    "killed": 3,
    "injured": 5,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q6005233"
@@ -365,6 +403,8 @@
    "killed": 5,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q97328498"
@@ -379,6 +419,8 @@
    "killed": 0,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q7860196"
@@ -393,6 +435,8 @@
    "killed": 5,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q6797090"
@@ -421,6 +465,8 @@
    "killed": 7,
    "injured": 5,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q2120749"
@@ -449,6 +495,8 @@
    "killed": 0,
    "injured": 18,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "area",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q139340120"
@@ -463,6 +511,8 @@
    "killed": 1,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q5028040"
@@ -477,6 +527,8 @@
    "killed": 0,
    "injured": 6,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q7673998"
@@ -491,6 +543,8 @@
    "killed": 12,
    "injured": 19,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q6958579"
@@ -505,6 +559,8 @@
    "killed": 1,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q7855252"
@@ -519,6 +575,8 @@
    "killed": 8,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q16017561"
@@ -533,6 +591,8 @@
    "killed": 0,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Roseburg%20High%20School%20%28Roseburg%2C%20Oregon%29.jpg?width=480",
+   "venueName": "Roseburg High School",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q30745303"
@@ -547,6 +607,8 @@
    "killed": 0,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q7195269"
@@ -561,6 +623,8 @@
    "killed": 7,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q5035895"
@@ -575,6 +639,8 @@
    "killed": 2,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q131481425"
@@ -589,6 +655,8 @@
    "killed": 1,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q7442121"
@@ -631,6 +699,8 @@
    "killed": 2,
    "injured": 19,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q64112"
@@ -659,6 +729,8 @@
    "killed": 4,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q120355540"
@@ -673,6 +745,8 @@
    "killed": 6,
    "injured": 5,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q3241047"
@@ -687,6 +761,8 @@
    "killed": 1,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q473874"
@@ -701,6 +777,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q64828591"
@@ -715,6 +793,8 @@
    "killed": 4,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/BAU%20Beirut%20Campus.jpg?width=480",
+   "venueName": "Beirut Arab University",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q3091172"
@@ -743,6 +823,8 @@
    "killed": 3,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q97373456"
@@ -771,6 +853,8 @@
    "killed": 33,
    "injured": 25,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q188799"
@@ -785,6 +869,8 @@
    "killed": 4,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q15275868"
@@ -799,6 +885,8 @@
    "killed": 9,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q153399"
@@ -813,6 +901,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q5253370"
@@ -869,6 +959,8 @@
    "killed": 9,
    "injured": 12,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Finland%20Jokela%20HighSchool-yard.JPG?width=480",
+   "venueName": "Jokela High School",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q600836"
@@ -883,6 +975,8 @@
    "killed": 9,
    "injured": 5,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/RaveWestroadsOmaha.jpg?width=480",
+   "venueName": "Westroads Mall",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q2712908"
@@ -939,6 +1033,8 @@
    "killed": 4,
    "injured": 8,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q123577581"
@@ -953,6 +1049,8 @@
    "killed": 7,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q6415888"
@@ -967,6 +1065,8 @@
    "killed": 5,
    "injured": 21,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q2978443"
@@ -1009,6 +1109,8 @@
    "killed": 6,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q28137118"
@@ -1023,6 +1125,8 @@
    "killed": 11,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q473889"
@@ -1037,6 +1141,8 @@
    "killed": 2,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Oldmainuca.JPG?width=480",
+   "venueName": "University of Central Arkansas",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q7895229"
@@ -1051,6 +1157,8 @@
    "killed": 10,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q4818899"
@@ -1065,6 +1173,8 @@
    "killed": 5,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q80125759"
@@ -1093,6 +1203,8 @@
    "killed": 16,
    "injured": 11,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Winnenden%202009%20-Albertville-Realschule-%20by-RaBoe%20005.jpg?width=480",
+   "venueName": "Albertville-Realschule",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q158102"
@@ -1107,6 +1219,8 @@
    "killed": 8,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q5047309"
@@ -1135,6 +1249,8 @@
    "killed": 14,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q2658753"
@@ -1149,6 +1265,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q4614177"
@@ -1163,6 +1281,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q7072284"
@@ -1177,6 +1297,8 @@
    "killed": 13,
    "injured": 13,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/%D0%90%D0%B7%D0%B5%D1%80%D0%B1%D0%B0%D0%B9%D0%B4%D0%B6%D0%B0%D0%BD%D1%81%D0%BA%D0%B8%D0%B9%20%D0%B3%D0%BE%D1%81%D1%83%D0%B4%D0%B0%D1%80%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%BD%D1%8B%D0%B9%20%D1%83%D0%BD%D0%B8%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%82%D0%B5%D1%82%20%D0%BD%D0%B5%D1%84%D1%82%D0%B8%20%D0%B8%20%D0%BF%D1%80%D0%BE%D0%BC%D1%8B%D1%88%D0%BB%D0%B5%D0%BD%D0%BD%D0%BE%D1%81%D1%82%D0%B8.jpg?width=480",
+   "venueName": "Azerbaijan State Oil and Industrial University",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q634913"
@@ -1191,6 +1313,8 @@
    "killed": 1,
    "injured": 15,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q56064178"
@@ -1205,6 +1329,8 @@
    "killed": 1,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/United%20States%20Holocaust%20Memorial%20Museum.jpeg?width=480",
+   "venueName": "United States Holocaust Memorial Museum",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q7889924"
@@ -1219,6 +1345,8 @@
    "killed": 4,
    "injured": 9,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q4284226"
@@ -1247,6 +1375,8 @@
    "killed": 0,
    "injured": 9,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q4614704"
@@ -1261,6 +1391,8 @@
    "killed": 4,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q125407893"
@@ -1275,6 +1407,8 @@
    "killed": 1,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Rector%27s%20Office%2C%20University%20of%20P%C3%A9cs.JPG?width=480",
+   "venueName": "University of Pécs",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q1242865"
@@ -1303,6 +1437,8 @@
    "killed": 6,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Kauppakeskus%20Sello3%20Espoo%20Finland.jpg?width=480",
+   "venueName": "Sello",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q2458178"
@@ -1317,6 +1453,8 @@
    "killed": 8,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q4616603"
@@ -1331,6 +1469,8 @@
    "killed": 0,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q4617717"
@@ -1345,6 +1485,8 @@
    "killed": 4,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q4618166"
@@ -1359,6 +1501,8 @@
    "killed": 3,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q2071916"
@@ -1373,6 +1517,8 @@
    "killed": 8,
    "injured": 5,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q13651871"
@@ -1387,6 +1533,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q4636463"
@@ -1394,13 +1542,15 @@
   {
    "id": "Q123069",
    "date": "2010-06-02",
-   "lat": 54.556,
-   "lon": -3.471,
+   "lat": 54.5,
+   "lon": -3.25,
    "placeName": "Cumbria shootings",
    "country": "United Kingdom",
    "killed": 13,
    "injured": 11,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q123069"
@@ -1415,6 +1565,8 @@
    "killed": 9,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q4284242"
@@ -1429,6 +1581,8 @@
    "killed": 4,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Gilo%20Beit%20Jala.jpg?width=480",
+   "venueName": "Highway 60",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q4820585"
@@ -1443,6 +1597,8 @@
    "killed": 4,
    "injured": 18,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q473886"
@@ -1457,6 +1613,8 @@
    "killed": 5,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q6155791"
@@ -1471,6 +1629,8 @@
    "killed": 6,
    "injured": 12,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q757986"
@@ -1513,6 +1673,8 @@
    "killed": 7,
    "injured": 17,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/De%20Ridderhof%20%282026%29.png?width=480",
+   "venueName": "De Ridderhof",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q473866"
@@ -1527,6 +1689,8 @@
    "killed": 2,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q2298504"
@@ -1541,6 +1705,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q2516602"
@@ -1569,6 +1735,8 @@
    "killed": 69,
    "injured": 110,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Ut%C3%B8ya%20from%20Utstranda.jpg?width=480",
+   "venueName": "Utøya",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q3377611"
@@ -1576,13 +1744,15 @@
   {
    "id": "Q79967",
    "date": "2011-07-22",
-   "lat": 60.02361,
-   "lon": 10.24806,
+   "lat": 59.91333,
+   "lon": 10.73889,
    "placeName": "2011 Norway attacks",
    "country": "Norway",
    "killed": 77,
    "injured": 319,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Ut%C3%B8ya%20from%20Utstranda.jpg?width=480",
+   "venueName": "Utøya",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q79967"
@@ -1597,6 +1767,8 @@
    "killed": 8,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q4620823"
@@ -1625,6 +1797,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q139820767"
@@ -1639,6 +1813,8 @@
    "killed": 8,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q4443728"
@@ -1653,6 +1829,8 @@
    "killed": 6,
    "injured": 125,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q473893"
@@ -1667,6 +1845,8 @@
    "killed": 0,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q3975721"
@@ -1709,6 +1889,8 @@
    "killed": 3,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q2341831"
@@ -1723,6 +1905,8 @@
    "killed": 7,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q17554"
@@ -1751,6 +1935,8 @@
    "killed": 2,
    "injured": 7,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q428045"
@@ -1793,6 +1979,8 @@
    "killed": 3,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Convocation%20Hall%20University%20of%20Alberta%20Edmonton%20Alberta%20Canada%2002.jpg?width=480",
+   "venueName": "University of Alberta",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q85847902"
@@ -1807,6 +1995,8 @@
    "killed": 2,
    "injured": 24,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q39058130"
@@ -1821,6 +2011,8 @@
    "killed": 12,
    "injured": 70,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q202512"
@@ -1835,6 +2027,8 @@
    "killed": 7,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q2121187"
@@ -1849,6 +2043,8 @@
    "killed": 19,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q2680335"
@@ -1863,6 +2059,8 @@
    "killed": 3,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q15273533"
@@ -1905,6 +2103,8 @@
    "killed": 0,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q4624844"
@@ -1919,6 +2119,8 @@
    "killed": 6,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q550756"
@@ -1947,6 +2149,8 @@
    "killed": 29,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/This%20AR-15%20was%20found%20in%20classroom%2010%20after%20the%20shooting.jpg?width=480",
+   "venueName": "Sandy Hook Elementary School",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q906933"
@@ -1961,6 +2165,8 @@
    "killed": 27,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q1703835"
@@ -1975,6 +2181,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q11773636"
@@ -1989,6 +2197,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q15092916"
@@ -2003,6 +2213,8 @@
    "killed": 67,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q3211577"
@@ -2073,6 +2285,8 @@
    "killed": 10,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q16209538"
@@ -2080,13 +2294,15 @@
   {
    "id": "Q104847436",
    "date": "2013-03-13",
-   "lat": 43.0261,
-   "lon": -74.9903,
+   "lat": 43.0103,
+   "lon": -75.005,
    "placeName": "Herkimer County shootings",
    "country": "United States",
    "killed": 5,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q104847436"
@@ -2101,6 +2317,8 @@
    "killed": 2,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q121872179"
@@ -2143,6 +2361,8 @@
    "killed": 5,
    "injured": 5,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q13374219"
@@ -2171,13 +2391,15 @@
    "killed": 11,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Nanga%20parbat%2C%20fairy%20medow%2C%20Pak%20by%20gul791.jpg?width=480",
+   "venueName": "Nanga Parbat",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q13530561"
   },
   {
    "id": "Q16210065",
-   "date": "2013-07-26",
+   "date": "2013-07-01",
    "lat": 25.86428,
    "lon": -80.3109,
    "placeName": "2013 Hialeah shooting",
@@ -2185,9 +2407,25 @@
    "killed": 7,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q16210065"
+  },
+  {
+   "id": "msa-2013-07-26-25.853--80.283",
+   "date": "2013-07-26",
+   "lat": 25.85295,
+   "lon": -80.28317,
+   "placeName": "Hialeah Apartments",
+   "country": "United States",
+   "killed": 7,
+   "injured": 0,
+   "venueType": "",
+   "precision": "exact",
+   "sourceName": "Stanford MSA",
+   "sourceUrl": "https://github.com/StanfordGeospatialCenter/MSA"
   },
   {
    "id": "msa-2013-08-05-39.753--79.084",
@@ -2227,6 +2465,8 @@
    "killed": 10,
    "injured": 30,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q15983388"
@@ -2255,6 +2495,8 @@
    "killed": 13,
    "injured": 14,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q14918135"
@@ -2283,6 +2525,8 @@
    "killed": 1,
    "injured": 7,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/LAX2.jpg?width=480",
+   "venueName": "Los Angeles International Airport",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q15121730"
@@ -2297,6 +2541,8 @@
    "killed": 2,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q15272111"
@@ -2311,6 +2557,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q15304708"
@@ -2339,6 +2587,8 @@
    "killed": 2,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Moscow%2C%20Otradnaya%20Street%20%2831683862545%29.jpg?width=480",
+   "venueName": "Otradnaya Street",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q15708337"
@@ -2381,6 +2631,8 @@
    "killed": 0,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q17109712"
@@ -2395,6 +2647,8 @@
    "killed": 4,
    "injured": 14,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q16016666"
@@ -2409,6 +2663,8 @@
    "killed": 3,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q16326847"
@@ -2493,6 +2749,8 @@
    "killed": 6,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q18217387"
@@ -2507,6 +2765,8 @@
    "killed": 25,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q19843207"
@@ -2535,6 +2795,8 @@
    "killed": 5,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Marysville-Pilchuck%20High%20School%2C%20Art%20Mural%20in%20Forum%2C%20October%202009.jpeg?width=480",
+   "venueName": "Marysville Pilchuck High School",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q18341089"
@@ -2549,6 +2811,8 @@
    "killed": 1,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q18345398"
@@ -2591,6 +2855,8 @@
    "killed": 0,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q18640985"
@@ -2619,6 +2885,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q22132984"
@@ -2633,6 +2901,8 @@
    "killed": 12,
    "injured": 11,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q18718876"
@@ -2759,6 +3029,8 @@
    "killed": 0,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Lacastellane-16-marseille.JPG?width=480",
+   "venueName": "La Castellane",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q19605428"
@@ -2787,6 +3059,8 @@
    "killed": 3,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q19158877"
@@ -2801,6 +3075,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q19867464"
@@ -2815,6 +3091,8 @@
    "killed": 3,
    "injured": 5,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/THE%20GREAT%20SYNAGOGUE%2CCOPENHAGEN%2C%20DENMARK.jpg?width=480",
+   "venueName": "Great Synagogue",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q19260515"
@@ -2829,6 +3107,8 @@
    "killed": 1,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q19878509"
@@ -2871,6 +3151,8 @@
    "killed": 9,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q19358494"
@@ -2913,6 +3195,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q19429033"
@@ -2955,6 +3239,8 @@
    "killed": 5,
    "injured": 9,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q19600326"
@@ -3011,6 +3297,8 @@
    "killed": 2,
    "injured": 8,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q31899288"
@@ -3207,6 +3495,8 @@
    "killed": 7,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q97473784"
@@ -3291,6 +3581,8 @@
    "killed": 9,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Emanuel%20African%20Methodist%20Episcopal%20%28AME%29%20Church.jpg?width=480",
+   "venueName": "Emanuel African Methodist Episcopal Church",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q20154675"
@@ -3319,6 +3611,8 @@
    "killed": 39,
    "injured": 36,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q20295077"
@@ -3333,6 +3627,8 @@
    "killed": 1,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Alon2148.JPG?width=480",
+   "venueName": "Allon Road",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q20717774"
@@ -3354,13 +3650,15 @@
   {
    "id": "Q20671234",
    "date": "2015-07-16",
-   "lat": 35.09509,
-   "lon": -85.2543,
+   "lat": 35.0327,
+   "lon": -85.18461,
    "placeName": "2015 Chattanooga shootings",
    "country": "United States",
    "killed": 6,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q20671234"
@@ -3403,6 +3701,8 @@
    "killed": 1,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q20767863"
@@ -3515,6 +3815,8 @@
    "killed": 10,
    "injured": 9,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Umpqua%20Community%20College.PNG?width=480",
+   "venueName": "Umpqua Community College",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q21036673"
@@ -3543,6 +3845,8 @@
    "killed": 1,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/NAU%20Campus.jpg?width=480",
+   "venueName": "Northern Arizona University",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q96396444"
@@ -3557,6 +3861,8 @@
    "killed": 3,
    "injured": 11,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Beersheba%20Central%20Bus%20Station%202.jpg?width=480",
+   "venueName": "Beersheba Central Bus Station",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q21154256"
@@ -3655,6 +3961,8 @@
    "killed": 3,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q21510090"
@@ -3711,6 +4019,8 @@
    "killed": 16,
    "injured": 24,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q21613643"
@@ -3739,13 +4049,15 @@
    "killed": 3,
    "injured": 7,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q21923384"
   },
   {
    "id": "Q21931407",
-   "date": "2016-01-02",
+   "date": "2016-01-05",
    "lat": 32.23361,
    "lon": 75.63444,
    "placeName": "2016 Pathankot attack",
@@ -3753,6 +4065,8 @@
    "killed": 13,
    "injured": 20,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q21931407"
@@ -3823,6 +4137,8 @@
    "killed": 4,
    "injured": 7,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Dene%20High%20School.JPG?width=480",
+   "venueName": "La Loche Community School",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q22241734"
@@ -3935,6 +4251,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q23562527"
@@ -4047,6 +4365,8 @@
    "killed": 6,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q22910769"
@@ -4131,6 +4451,8 @@
    "killed": 0,
    "injured": 14,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q23012840"
@@ -4215,6 +4537,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q23199079"
@@ -4299,6 +4623,8 @@
    "killed": 6,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q23055181"
@@ -4817,6 +5143,8 @@
    "killed": 5,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q24352468"
@@ -4957,6 +5285,8 @@
    "killed": 3,
    "injured": 11,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q24909721"
@@ -5041,6 +5371,8 @@
    "killed": 4,
    "injured": 21,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q24454786"
@@ -5069,6 +5401,8 @@
    "killed": 50,
    "injured": 53,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Orlando%20FL%20Pulse%20Nightclub01.jpg?width=480",
+   "venueName": "Pulse",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q24561572"
@@ -5097,6 +5431,8 @@
    "killed": 5,
    "injured": 7,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q25631175"
@@ -5111,6 +5447,8 @@
    "killed": 3,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q25814757"
@@ -5125,6 +5463,8 @@
    "killed": 87,
    "injured": 434,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Nice%20abc%201.jpg?width=480",
+   "venueName": "Promenade des Anglais",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q25893254"
@@ -5139,6 +5479,8 @@
    "killed": 5,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q25923010"
@@ -5153,6 +5495,8 @@
    "killed": 10,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q25930688"
@@ -5167,6 +5511,8 @@
    "killed": 10,
    "injured": 36,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Olympia-Einkaufszentrum%2C%20M%C3%BCnchen%20%E2%80%93%20Architekten%20%28Erweiterung%2C%20Modernisierung%201994%29%20Hans%20Baumgarten%2C%20Curt%20O.%20Schaller.JPG?width=480",
+   "venueName": "Olympia-Einkaufszentrum",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q25980145"
@@ -5181,6 +5527,8 @@
    "killed": 3,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q27629576"
@@ -5195,6 +5543,8 @@
    "killed": 12,
    "injured": 16,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "area",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q26220302"
@@ -5209,6 +5559,8 @@
    "killed": 6,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q27629584"
@@ -5223,13 +5575,15 @@
    "killed": 5,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q27000234"
   },
   {
    "id": "Q27956602",
-   "date": "2016-12-03",
+   "date": "2016-12-04",
    "lat": 61.17125,
    "lon": 28.76955,
    "placeName": "Imatra shooting",
@@ -5237,6 +5591,8 @@
    "killed": 3,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q27956602"
@@ -5251,6 +5607,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q28803042"
@@ -5265,6 +5623,8 @@
    "killed": 0,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q65145827"
@@ -5279,6 +5639,8 @@
    "killed": 5,
    "injured": 8,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Fort%20Lauderdale-Hollywood%20International%20Airport%20%28cropped%29.JPG?width=480",
+   "venueName": "Fort Lauderdale–Hollywood",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q28133931"
@@ -5293,6 +5655,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q28445448"
@@ -5307,6 +5671,8 @@
    "killed": 6,
    "injured": 19,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q28549976"
@@ -5321,6 +5687,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q30323823"
@@ -5335,6 +5703,8 @@
    "killed": 8,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q30120730"
@@ -5349,6 +5719,8 @@
    "killed": 6,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q30323897"
@@ -5363,6 +5735,8 @@
    "killed": 3,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q30646305"
@@ -5377,6 +5751,8 @@
    "killed": 17,
    "injured": 43,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q30147595"
@@ -5391,6 +5767,8 @@
    "killed": 4,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q30646585"
@@ -5405,6 +5783,8 @@
    "killed": 1,
    "injured": 6,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q30278163"
@@ -5419,6 +5799,8 @@
    "killed": 4,
    "injured": 5,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q30323925"
@@ -5433,6 +5815,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q31372631"
@@ -5447,6 +5831,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q33000144"
@@ -5461,6 +5847,8 @@
    "killed": 2,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q38806978"
@@ -5475,6 +5863,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q40890638"
@@ -5489,6 +5879,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q137782391"
@@ -5503,6 +5895,8 @@
    "killed": 1,
    "injured": 8,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q42530020"
@@ -5517,6 +5911,8 @@
    "killed": 60,
    "injured": 867,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/2017%20Las%20Vegas%20Strip%20shooting%20location.jpg?width=480",
+   "venueName": "Las Vegas Village",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q41522095"
@@ -5531,6 +5927,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q42550993"
@@ -5545,20 +5943,24 @@
    "killed": 47,
    "injured": 20,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q42725753"
   },
   {
    "id": "Q43177417",
-   "date": "2017-11-13",
-   "lat": 40.0007,
-   "lon": -122.458,
+   "date": "2017-11-14",
+   "lat": 40.00101,
+   "lon": -122.39972,
    "placeName": "Rancho Tehama Reserve shootings",
    "country": "United States",
    "killed": 6,
    "injured": 10,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q43177417"
@@ -5573,6 +5975,8 @@
    "killed": 311,
    "injured": 127,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q43544477"
@@ -5587,6 +5991,8 @@
    "killed": 3,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q45178445"
@@ -5601,6 +6007,8 @@
    "killed": 2,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q48810169"
@@ -5615,6 +6023,8 @@
    "killed": 2,
    "injured": 18,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q47487873"
@@ -5629,6 +6039,8 @@
    "killed": 0,
    "injured": 6,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q47691943"
@@ -5643,6 +6055,8 @@
    "killed": 17,
    "injured": 17,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/MarjoryStonemanDouglasHS%2022Jun2008.jpg?width=480",
+   "venueName": "Marjory Stoneman Douglas High School",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q48714898"
@@ -5657,6 +6071,8 @@
    "killed": 5,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q49181837"
@@ -5664,13 +6080,15 @@
   {
    "id": "Q50842170",
    "date": "2018-03-23",
-   "lat": 43.20972,
-   "lon": 2.44139,
+   "lat": 43.21583,
+   "lon": 2.35139,
    "placeName": "Carcassonne and Trèbes attack",
    "country": "France",
    "killed": 5,
    "injured": 15,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q50842170"
@@ -5685,6 +6103,8 @@
    "killed": 1,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q51339458"
@@ -5699,6 +6119,8 @@
    "killed": 4,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q134937253"
@@ -5713,6 +6135,8 @@
    "killed": 0,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Forest%20High%20School%2C%20Marion%20County.jpg?width=480",
+   "venueName": "Forest High School (Florida)",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q137125722"
@@ -5727,6 +6151,8 @@
    "killed": 7,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q53561433"
@@ -5741,6 +6167,8 @@
    "killed": 10,
    "injured": 14,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q53725630"
@@ -5755,6 +6183,8 @@
    "killed": 0,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q55032258"
@@ -5769,6 +6199,8 @@
    "killed": 4,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q54411616"
@@ -5783,6 +6215,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q60775866"
@@ -5797,6 +6231,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q55392014"
@@ -5811,6 +6247,8 @@
    "killed": 5,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q55239340"
@@ -5825,6 +6263,8 @@
    "killed": 3,
    "injured": 13,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q55723938"
@@ -5839,6 +6279,8 @@
    "killed": 4,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q56043189"
@@ -5853,6 +6295,8 @@
    "killed": 4,
    "injured": 11,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/The%20Jacksonville%20Landing%2C%20Jacksonville%20FL%2C%20Southeast%20view%2020160706%201.jpg?width=480",
+   "venueName": "Jacksonville Landing",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q56256213"
@@ -5867,6 +6311,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Fifth%20Third%20Bank%20Headquarters.jpg?width=480",
+   "venueName": "Fifth Third Center",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q60742863"
@@ -5881,6 +6327,8 @@
    "killed": 1,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q111709646"
@@ -5895,6 +6343,8 @@
    "killed": 4,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q56678661"
@@ -5909,6 +6359,8 @@
    "killed": 21,
    "injured": 70,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q57417004"
@@ -5923,23 +6375,11 @@
    "killed": 11,
    "injured": 6,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Tree%20of%20Life%20%E2%80%93%20Or%20L%27Simcha%20synagogue%20facade.jpg?width=480",
+   "venueName": "Tree of Life – Or L'Simcha Congregation",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q57830735"
-  },
-  {
-   "id": "Q60751540",
-   "date": "2018-11-02",
-   "lat": 30.4672,
-   "lon": -84.269,
-   "placeName": "Tallahassee shooting",
-   "country": "United States",
-   "killed": 0,
-   "injured": 0,
-   "venueType": "",
-   "precision": "exact",
-   "sourceName": "Wikidata",
-   "sourceUrl": "https://www.wikidata.org/wiki/Q60751540"
   },
   {
    "id": "Q58101451",
@@ -5951,9 +6391,27 @@
    "killed": 7,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q58101451"
+  },
+  {
+   "id": "Q60751540",
+   "date": "2018-11-02",
+   "lat": 30.4672,
+   "lon": -84.269,
+   "placeName": "Tallahassee shooting",
+   "country": "United States",
+   "killed": 0,
+   "injured": 0,
+   "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q60751540"
   },
   {
    "id": "Q58345424",
@@ -5965,6 +6423,8 @@
    "killed": 13,
    "injured": 10,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q58345424"
@@ -5979,6 +6439,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q115813246"
@@ -5993,6 +6455,8 @@
    "killed": 3,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q60441954"
@@ -6007,6 +6471,8 @@
    "killed": 6,
    "injured": 6,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q61742015"
@@ -6021,6 +6487,8 @@
    "killed": 10,
    "injured": 11,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q62055402"
@@ -6035,6 +6503,8 @@
    "killed": 51,
    "injured": 40,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Christchurch%20Mosque%2C%20New%20Zealand.jpg?width=480",
+   "venueName": "Al Noor Mosque",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q62066211"
@@ -6049,6 +6519,8 @@
    "killed": 4,
    "injured": 6,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Utrecht%20-%20Sneltramhalte%2024%20Oktoberplein-Zuid.jpg?width=480",
+   "venueName": "24 Oktoberplein-Zuid",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q62090804"
@@ -6063,6 +6535,8 @@
    "killed": 1,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q63353827"
@@ -6077,6 +6551,8 @@
    "killed": 1,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q63590016"
@@ -6091,6 +6567,8 @@
    "killed": 13,
    "injured": 5,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q64214898"
@@ -6105,6 +6583,8 @@
    "killed": 4,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q64362231"
@@ -6119,6 +6599,8 @@
    "killed": 1,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Earl%20Cabell%20Federal%20Building%2C%20cropped.jpg?width=480",
+   "venueName": "Earle Cabell Federal Building and Courthouse",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q65049028"
@@ -6133,6 +6615,8 @@
    "killed": 4,
    "injured": 15,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q65966131"
@@ -6147,6 +6631,8 @@
    "killed": 7,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q66095667"
@@ -6161,6 +6647,8 @@
    "killed": 23,
    "injured": 23,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q66108236"
@@ -6175,6 +6663,8 @@
    "killed": 10,
    "injured": 27,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q66120984"
@@ -6189,6 +6679,8 @@
    "killed": 2,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q112123791"
@@ -6203,6 +6695,8 @@
    "killed": 1,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Al-Noor%20Islamic%20Centre%20%282%29.jpg?width=480",
+   "venueName": "Al-Noor Islamic Centre",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q66363708"
@@ -6217,6 +6711,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q98799276"
@@ -6231,6 +6727,8 @@
    "killed": 8,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q72308468"
@@ -6245,6 +6743,8 @@
    "killed": 2,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q86674567"
@@ -6259,6 +6759,8 @@
    "killed": 3,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Saugus%20High%20School%2C%20November%202014.jpg?width=480",
+   "venueName": "Saugus High School",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q75034713"
@@ -6273,6 +6775,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q80339387"
@@ -6287,6 +6791,8 @@
    "killed": 4,
    "injured": 8,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q77597184"
@@ -6301,6 +6807,8 @@
    "killed": 7,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q78030156"
@@ -6315,6 +6823,8 @@
    "killed": 6,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q78090929"
@@ -6329,6 +6839,8 @@
    "killed": 3,
    "injured": 5,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Lubyanka%20CDM%20view%20from%20Panoramic%20view%20point%2005-2015%20img03.jpg?width=480",
+   "venueName": "Lubyanka Building",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q79332957"
@@ -6343,6 +6855,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q100308132"
@@ -6357,6 +6871,8 @@
    "killed": 6,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q84725257"
@@ -6371,6 +6887,8 @@
    "killed": 30,
    "injured": 58,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Terminal21%20after%20a%20rainy%20day.jpg?width=480",
+   "venueName": "Terminal 21 Korat",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q84599740"
@@ -6385,6 +6903,8 @@
    "killed": 10,
    "injured": 5,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q85636305"
@@ -6399,6 +6919,8 @@
    "killed": 6,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q86465784"
@@ -6413,6 +6935,8 @@
    "killed": 0,
    "injured": 10,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q97101278"
@@ -6427,20 +6951,24 @@
    "killed": 5,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q111372945"
   },
   {
    "id": "Q91129213",
-   "date": "2020-04-18",
-   "lat": 44.94333,
-   "lon": -63.53583,
+   "date": "2020-04-01",
+   "lat": 45.36472,
+   "lon": -63.28,
    "placeName": "2020 Nova Scotia shooting",
    "country": "Canada",
    "killed": 23,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q91129213"
@@ -6455,6 +6983,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q95000225"
@@ -6469,6 +6999,8 @@
    "killed": 2,
    "injured": 14,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q104857710"
@@ -6483,6 +7015,8 @@
    "killed": 54,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q101282541"
@@ -6497,6 +7031,8 @@
    "killed": 4,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q111381358"
@@ -6511,6 +7047,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q104872228"
@@ -6525,6 +7063,8 @@
    "killed": 4,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q104512235"
@@ -6539,6 +7079,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q104830035"
@@ -6546,13 +7088,15 @@
   {
    "id": "Q116453607",
    "date": "2021-01-25",
-   "lat": 41.10889,
-   "lon": -83.79194,
+   "lat": 39.96222,
+   "lon": -83.00056,
    "placeName": "2021 Columbus shootings",
    "country": "United States",
    "killed": 1,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q116453607"
@@ -6567,6 +7111,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q105580577"
@@ -6581,6 +7127,8 @@
    "killed": 1,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q105416780"
@@ -6588,13 +7136,15 @@
   {
    "id": "Q105982031",
    "date": "2021-03-16",
-   "lat": 31.8547,
-   "lon": -83.7189,
+   "lat": 34.0882,
+   "lon": -84.5811,
    "placeName": "2021 Atlanta spa shootings",
    "country": "United States",
    "killed": 8,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q105982031"
@@ -6609,6 +7159,8 @@
    "killed": 10,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q106122126"
@@ -6623,6 +7175,8 @@
    "killed": 5,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q111700925"
@@ -6637,6 +7191,8 @@
    "killed": 4,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q106310643"
@@ -6651,6 +7207,8 @@
    "killed": 6,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q106421390"
@@ -6665,6 +7223,8 @@
    "killed": 9,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q106514963"
@@ -6679,6 +7239,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q106609907"
@@ -6693,6 +7255,8 @@
    "killed": 1,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q111252343"
@@ -6707,6 +7271,8 @@
    "killed": 7,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q106776978"
@@ -6721,6 +7287,8 @@
    "killed": 9,
    "injured": 23,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/After%20Kazan%20school%20attack%20%282021-05-12%29%2075.jpg?width=480",
+   "venueName": "Gymnasium 175, Qazan",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q106797978"
@@ -6735,6 +7303,8 @@
    "killed": 10,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/VTA%20Guadalupe%20Division.jpg?width=480",
+   "venueName": "Guadalupe Light Rail Division",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q106991061"
@@ -6749,6 +7319,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q107039078"
@@ -6763,6 +7335,8 @@
    "killed": 0,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Nationals%20Park%20Panorama%202011.05.02%20-%20Washington%20Nationals%20v%20San%20Francisco%20Giants.jpg?width=480",
+   "venueName": "Nationals Park",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q107562302"
@@ -6777,6 +7351,8 @@
    "killed": 6,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q108063861"
@@ -6791,6 +7367,8 @@
    "killed": 6,
    "injured": 60,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/%D0%9F%D0%B5%D1%80%D0%BC%D1%81%D0%BA%D0%B8%D0%B9%20%D0%B3%D0%BE%D1%81%D1%83%D0%B4%D0%B0%D1%80%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%BD%D1%8B%D0%B9%20%D1%83%D0%BD%D0%B8%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%82%D0%B5%D1%82.%20%D0%9A%D0%BE%D1%80%D0%BF%D1%83%D1%81%20%E2%84%965.jpg?width=480",
+   "venueName": "Perm State National Research University",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q108608149"
@@ -6805,6 +7383,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q108829168"
@@ -6819,6 +7399,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q109283906"
@@ -6833,6 +7415,8 @@
    "killed": 4,
    "injured": 7,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Oxford%20High%20School%20December%2030%202007.jpg?width=480",
+   "venueName": "Oxford High School",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q109837841"
@@ -6847,6 +7431,8 @@
    "killed": 2,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q110016197"
@@ -6861,6 +7447,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q114383634"
@@ -6875,6 +7463,8 @@
    "killed": 2,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q110670375"
@@ -6889,6 +7479,8 @@
    "killed": 5,
    "injured": 5,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/%D0%94%D0%BD%D0%B5%D0%BF%D1%80%20%D0%AE%D0%B6%D0%BC%D0%B0%D1%88%20-%20%D0%93%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F%20%D0%BF%D1%80%D0%BE%D1%85%D0%BE%D0%B4%D0%BD%D0%B0%D1%8F.jpg?width=480",
+   "venueName": "Pivdenmash",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q110713908"
@@ -6903,6 +7495,8 @@
    "killed": 1,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q112065169"
@@ -6917,6 +7511,8 @@
    "killed": 2,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q111942422"
@@ -6931,23 +7527,11 @@
    "killed": 1,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/EHSWestEntry%20-%20Des%20Moines%2C%20IA.jpg?width=480",
+   "venueName": "East High School",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q111944527"
-  },
-  {
-   "id": "Q111383118",
-   "date": "2022-03-27",
-   "lat": 32.43806,
-   "lon": 34.91194,
-   "placeName": "2022 Hadera shooting",
-   "country": "Israel",
-   "killed": 2,
-   "injured": 5,
-   "venueType": "",
-   "precision": "exact",
-   "sourceName": "Wikidata",
-   "sourceUrl": "https://www.wikidata.org/wiki/Q111383118"
   },
   {
    "id": "Q111395619",
@@ -6959,9 +7543,27 @@
    "killed": 19,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q111395619"
+  },
+  {
+   "id": "Q111383118",
+   "date": "2022-03-27",
+   "lat": 32.43806,
+   "lon": 34.91194,
+   "placeName": "2022 Hadera shooting",
+   "country": "Israel",
+   "killed": 2,
+   "injured": 5,
+   "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/%D7%94%D7%A8%D7%91%D7%A8%D7%98%20%D7%A1%D7%9E%D7%95%D7%90%D7%9C%201.jpg?width=480",
+   "venueName": "Herbert Samuel Street, Hadera",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q111383118"
   },
   {
    "id": "Q111487697",
@@ -6973,6 +7575,8 @@
    "killed": 60,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q111487697"
@@ -6987,6 +7591,8 @@
    "killed": 5,
    "injured": 10,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q111420818"
@@ -7001,6 +7607,8 @@
    "killed": 6,
    "injured": 12,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q111472179"
@@ -7015,6 +7623,8 @@
    "killed": 3,
    "injured": 6,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Dizengoff%20Street.jpg?width=480",
+   "venueName": "Dizengoff Street",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q111524362"
@@ -7029,6 +7639,8 @@
    "killed": 150,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q111647170"
@@ -7043,6 +7655,8 @@
    "killed": 0,
    "injured": 13,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/36th%20Street%20-%20Northbound%20Platform.jpg?width=480",
+   "venueName": "36th Street station",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q111588702"
@@ -7057,6 +7671,8 @@
    "killed": 0,
    "injured": 15,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q111631451"
@@ -7071,6 +7687,8 @@
    "killed": 1,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q111700788"
@@ -7085,6 +7703,8 @@
    "killed": 1,
    "injured": 5,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q112036857"
@@ -7099,6 +7719,8 @@
    "killed": 10,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Tops%20supermarket%2C%20Jefferson%20Avenue%2C%20Buffalo%2C%20New%20York%20-%2020220220%20%28cropped%29.jpg?width=480",
+   "venueName": "Tops supermarket, Buffalo, New York",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q112016492"
@@ -7113,6 +7735,8 @@
    "killed": 2,
    "injured": 8,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q112109175"
@@ -7127,6 +7751,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q112081173"
@@ -7141,6 +7767,8 @@
    "killed": 22,
    "injured": 18,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Robb%20Elementary%20School%20Uvalde%20Texas%202015.jpg?width=480",
+   "venueName": "Robb Elementary School",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q112123052"
@@ -7155,6 +7783,8 @@
    "killed": 5,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q112200017"
@@ -7169,6 +7799,8 @@
    "killed": 3,
    "injured": 12,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/SouthStreetPhilly.jpg?width=480",
+   "venueName": "South Street",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q112338466"
@@ -7183,6 +7815,8 @@
    "killed": 50,
    "injured": 61,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q112246920"
@@ -7197,6 +7831,8 @@
    "killed": 3,
    "injured": 14,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q112338389"
@@ -7211,6 +7847,8 @@
    "killed": 2,
    "injured": 21,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Herr%20Nilsen.jpg?width=480",
+   "venueName": "Herr Nilsen Jazz Club",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q112695273"
@@ -7225,6 +7863,8 @@
    "killed": 3,
    "injured": 7,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Field%27s%2002.jpg?width=480",
+   "venueName": "Field's",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q112876241"
@@ -7239,6 +7879,8 @@
    "killed": 7,
    "injured": 24,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q112898269"
@@ -7253,6 +7895,8 @@
    "killed": 16,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q113004589"
@@ -7267,6 +7911,8 @@
    "killed": 4,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q113133286"
@@ -7281,6 +7927,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q113209267"
@@ -7295,6 +7943,8 @@
    "killed": 3,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Ateneogradeschooljf1960%2001.JPG?width=480",
+   "venueName": "Ateneo de Manila University",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q113274656"
@@ -7309,6 +7959,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q113560700"
@@ -7323,6 +7975,8 @@
    "killed": 11,
    "injured": 6,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q113502850"
@@ -7337,6 +7991,8 @@
    "killed": 0,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q133252653"
@@ -7351,6 +8007,8 @@
    "killed": 3,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q114000986"
@@ -7365,6 +8023,8 @@
    "killed": 4,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q113826718"
@@ -7379,6 +8039,8 @@
    "killed": 2,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q114495073"
@@ -7393,6 +8055,8 @@
    "killed": 18,
    "injured": 24,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Pushkinskaya%20street%20%28Izhevsk%29.jpg?width=480",
+   "venueName": "Pushkinskaya street",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q114233610"
@@ -7400,13 +8064,15 @@
   {
    "id": "Q114687958",
    "date": "2022-09-26",
-   "lat": 58,
-   "lon": 102.66667,
+   "lat": 57.36667,
+   "lon": 106,
    "placeName": "Ust-Ilimsk military commissariat shooting",
    "country": "",
    "killed": 0,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q114687958"
@@ -7421,6 +8087,8 @@
    "killed": 38,
    "injured": 12,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q114435170"
@@ -7435,6 +8103,8 @@
    "killed": 5,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q114672876"
@@ -7449,6 +8119,8 @@
    "killed": 13,
    "injured": 15,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q114686825"
@@ -7463,6 +8135,8 @@
    "killed": 3,
    "injured": 7,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Central%20High%20School%2C%20St.%20Louis%2C%20Missouri.jpg?width=480",
+   "venueName": "Central Visual and Performing Arts High School",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q114844346"
@@ -7477,6 +8151,8 @@
    "killed": 1,
    "injured": 9,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q115036627"
@@ -7491,13 +8167,15 @@
    "killed": 3,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/University%20of%20Virginia%20Rotunda%202006.jpg?width=480",
+   "venueName": "University of Virginia",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q115366932"
   },
   {
    "id": "Q115301112",
-   "date": "2022-11-19",
+   "date": "2022-11-20",
    "lat": 38.88111,
    "lon": -104.75839,
    "placeName": "Colorado Springs nightclub shooting",
@@ -7505,6 +8183,8 @@
    "killed": 5,
    "injured": 19,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q115301112"
@@ -7519,6 +8199,8 @@
    "killed": 7,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q115366568"
@@ -7533,6 +8215,8 @@
    "killed": 4,
    "injured": 11,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q115438090"
@@ -7547,6 +8231,8 @@
    "killed": 6,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q115687363"
@@ -7561,6 +8247,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "area",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q116730583"
@@ -7575,6 +8263,8 @@
    "killed": 0,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q116844802"
@@ -7589,6 +8279,8 @@
    "killed": 3,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q115819309"
@@ -7603,6 +8295,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q115864237"
@@ -7617,6 +8311,8 @@
    "killed": 8,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q116034002"
@@ -7631,6 +8327,8 @@
    "killed": 0,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q116432807"
@@ -7645,6 +8343,8 @@
    "killed": 6,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q116736302"
@@ -7659,6 +8359,8 @@
    "killed": 5,
    "injured": 5,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q116269500"
@@ -7673,6 +8375,8 @@
    "killed": 11,
    "injured": 9,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q116291297"
@@ -7687,6 +8391,8 @@
    "killed": 7,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q116369825"
@@ -7701,6 +8407,8 @@
    "killed": 4,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q116384488"
@@ -7715,6 +8423,8 @@
    "killed": 1,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q116449092"
@@ -7729,6 +8439,8 @@
    "killed": 7,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q116455185"
@@ -7743,6 +8455,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q118463511"
@@ -7757,6 +8471,8 @@
    "killed": 1,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Potomac%20Avenue%20Station%202.jpg?width=480",
+   "venueName": "Potomac Avenue Station",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q116653264"
@@ -7771,6 +8487,8 @@
    "killed": 3,
    "injured": 5,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/MSU%20Computer%20Center.jpg?width=480",
+   "venueName": "Michigan State University",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q116775755"
@@ -7785,6 +8503,8 @@
    "killed": 1,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q116787542"
@@ -7799,6 +8519,8 @@
    "killed": 6,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q116814010"
@@ -7813,6 +8535,8 @@
    "killed": 1,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q116860746"
@@ -7827,6 +8551,8 @@
    "killed": 3,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q116872462"
@@ -7841,6 +8567,8 @@
    "killed": 2,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q116914049"
@@ -7855,6 +8583,8 @@
    "killed": 1,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q117019216"
@@ -7869,6 +8599,8 @@
    "killed": 8,
    "injured": 8,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/K%C3%B6nigreichssaal%20Alsterdorf%202023.1.nnw.jpg?width=480",
+   "venueName": "Kingdom Hall",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q117038068"
@@ -7883,6 +8615,8 @@
    "killed": 7,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q117314558"
@@ -7897,6 +8631,8 @@
    "killed": 6,
    "injured": 9,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q117486057"
@@ -7911,6 +8647,8 @@
    "killed": 4,
    "injured": 32,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q117744421"
@@ -7925,6 +8663,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q117801975"
@@ -7932,13 +8672,15 @@
   {
    "id": "Q117866526",
    "date": "2023-04-18",
-   "lat": 44.04806,
-   "lon": -69.96833,
+   "lat": 43.8006,
+   "lon": -70.1867,
    "placeName": "2023 Bowdoin–Yarmouth shootings",
    "country": "United States",
    "killed": 4,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q117866526"
@@ -7953,6 +8695,8 @@
    "killed": 5,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q118086552"
@@ -7967,6 +8711,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q118150030"
@@ -7981,6 +8727,8 @@
    "killed": 10,
    "injured": 6,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/O%C5%A0%20Vladislav%20Ribnikar%20Beograd%20%282%29%2001.jpg?width=480",
+   "venueName": "Experimental elementary school \"Vladislav Ribnikar\"",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q118138142"
@@ -7988,13 +8736,15 @@
   {
    "id": "Q118152086",
    "date": "2023-05-04",
-   "lat": 44.5214,
-   "lon": 20.7303,
+   "lat": 44.81778,
+   "lon": 20.45694,
    "placeName": "Mladenovac and Smederevo shootings",
    "country": "Serbia",
    "killed": 8,
    "injured": 14,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q118152086"
@@ -8009,6 +8759,8 @@
    "killed": 9,
    "injured": 7,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q118188868"
@@ -8023,6 +8775,8 @@
    "killed": 6,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/ISD%20highres%20ISS002%20ISS002-749-82%203.JPG?width=480",
+   "venueName": "Djerba",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q118255771"
@@ -8037,6 +8791,8 @@
    "killed": 4,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q118390867"
@@ -8051,6 +8807,8 @@
    "killed": 4,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q118690344"
@@ -8065,6 +8823,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q119455196"
@@ -8079,6 +8839,8 @@
    "killed": 2,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Gorge%20Amphitheatre.jpg?width=480",
+   "venueName": "The Gorge Amphitheatre",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q119712717"
@@ -8086,13 +8848,15 @@
   {
    "id": "Q119703060",
    "date": "2023-06-18",
-   "lat": 41.76972,
-   "lon": -87.93583,
+   "lat": 41.7672,
+   "lon": -87.9492,
    "placeName": "2023 Willowbrook shooting",
    "country": "United States",
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q119703060"
@@ -8107,6 +8871,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q120197158"
@@ -8121,6 +8887,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q120442669"
@@ -8135,6 +8903,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Bekaa%20Valley%20fields%20and%20sheep%2015%20September%202021%20by%20Diana%20Salloum.jpg?width=480",
+   "venueName": "Bekaa Valley",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q120498425"
@@ -8149,6 +8919,8 @@
    "killed": 3,
    "injured": 10,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Air%20New%20Zealand%20House%2C%20Auckland.jpg?width=480",
+   "venueName": "1 Queen Street",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q120757209"
@@ -8156,13 +8928,15 @@
   {
    "id": "Q121302340",
    "date": "2023-07-31",
-   "lat": 19.7,
-   "lon": 72.77,
+   "lat": 26.915,
+   "lon": 75.82,
    "placeName": "2023 Jaipur Express killings",
    "country": "India",
    "killed": 4,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q121302340"
@@ -8177,6 +8951,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q121879763"
@@ -8191,6 +8967,8 @@
    "killed": 4,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q121879706"
@@ -8205,6 +8983,8 @@
    "killed": 3,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q122853663"
@@ -8219,6 +8999,8 @@
    "killed": 2,
    "injured": 5,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Siam%20Paragon%2006.23.jpg?width=480",
+   "venueName": "Siam Paragon",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q122923597"
@@ -8233,6 +9015,8 @@
    "killed": 18,
    "injured": 13,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q123188898"
@@ -8247,6 +9031,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q123428814"
@@ -8261,6 +9047,8 @@
    "killed": 6,
    "injured": 16,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Begin%20054.jpg?width=480",
+   "venueName": "Givat Shaul Interchange",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q123586179"
@@ -8275,6 +9063,8 @@
    "killed": 4,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/University%20of%20Las%20Vegas.JPG?width=480",
+   "venueName": "University of Nevada, Las Vegas",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q123692449"
@@ -8289,6 +9079,8 @@
    "killed": 2,
    "injured": 5,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q123744878"
@@ -8303,6 +9095,8 @@
    "killed": 16,
    "injured": 25,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/FFUK%20Praha.JPG?width=480",
+   "venueName": "main building of the Faculty of Arts of Charles University",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q123952055"
@@ -8317,6 +9111,8 @@
    "killed": 4,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q126870892"
@@ -8331,6 +9127,8 @@
    "killed": 3,
    "injured": 6,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Perry%20High%20School%20Cosmetology%20Building.jpg?width=480",
+   "venueName": "Perry High School",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q124150254"
@@ -8345,6 +9143,8 @@
    "killed": 9,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q124347516"
@@ -8359,6 +9159,8 @@
    "killed": 1,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/B%C3%BCy%C3%BCkdere%20Meryem%20Ana%20Do%C4%9Fu%C5%9F%20Kilisesi.jpg?width=480",
+   "venueName": "Church of Santa Maria",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q124369728"
@@ -8373,6 +9175,8 @@
    "killed": 21,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q124536504"
@@ -8387,6 +9191,8 @@
    "killed": 1,
    "injured": 22,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/KCUnionStation.jpg?width=480",
+   "venueName": "Union Station",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q124538269"
@@ -8401,6 +9207,8 @@
    "killed": 2,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q124568074"
@@ -8415,6 +9223,8 @@
    "killed": 1,
    "injured": 11,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Olives%20Interchange.jpg?width=480",
+   "venueName": "Olives Interchange",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q124632021"
@@ -8429,6 +9239,8 @@
    "killed": 1,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Viertolan%20koulu1%20-%20Viertola%20-%20Vantaa%20-%20m.jpg?width=480",
+   "venueName": "Viertola School",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q125266320"
@@ -8443,6 +9255,8 @@
    "killed": 4,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q126616606"
@@ -8457,6 +9271,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q126737094"
@@ -8471,6 +9287,8 @@
    "killed": 0,
    "injured": 8,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q126690015"
@@ -8485,6 +9303,8 @@
    "killed": 5,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q127256267"
@@ -8499,6 +9319,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q127513184"
@@ -8513,6 +9335,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q129580893"
@@ -8527,6 +9351,8 @@
    "killed": 4,
    "injured": 30,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Apalachee%20HS.jpg?width=480",
+   "venueName": "Apalachee High School",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q130236251"
@@ -8541,6 +9367,8 @@
    "killed": 1,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q130240352"
@@ -8555,6 +9383,8 @@
    "killed": 3,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q131824362"
@@ -8569,6 +9399,8 @@
    "killed": 1,
    "injured": 24,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q130443421"
@@ -8583,6 +9415,8 @@
    "killed": 1,
    "injured": 16,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q131149094"
@@ -8597,6 +9431,8 @@
    "killed": 3,
    "injured": 5,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Abundant%20Life%20Christian%20School%20exterior%202024.jpg?width=480",
+   "venueName": "Abundant Life Christian School",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q131455297"
@@ -8611,6 +9447,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q133091761"
@@ -8625,6 +9463,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q137661824"
@@ -8639,6 +9479,8 @@
    "killed": 14,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q131617247"
@@ -8653,6 +9495,8 @@
    "killed": 2,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q132083483"
@@ -8667,6 +9511,8 @@
    "killed": 11,
    "injured": 5,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Risbergska%20skolan%201920.jpg?width=480",
+   "venueName": "Campus Risbergska",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q132132116"
@@ -8681,6 +9527,8 @@
    "killed": 2,
    "injured": 7,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q132767286"
@@ -8695,6 +9543,8 @@
    "killed": 5,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q136199382"
@@ -8709,6 +9559,8 @@
    "killed": 3,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q134072814"
@@ -8723,6 +9575,8 @@
    "killed": 2,
    "injured": 6,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/FSUWestcottBuilding.jpg?width=480",
+   "venueName": "Florida State University",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q133891657"
@@ -8737,6 +9591,8 @@
    "killed": 1,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q135426413"
@@ -8751,6 +9607,8 @@
    "killed": 11,
    "injured": 11,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Bundesoberstufenrealgymnasium%20Dreiersch%C3%BCtzengasse%20in%20Graz%2C%20Styria%2C%20Austria-entrance%20PNr%C2%B01157.jpg?width=480",
+   "venueName": "Bundesoberstufenrealgymnasium Dreierschützengasse",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q134821352"
@@ -8758,13 +9616,15 @@
   {
    "id": "Q134895058",
    "date": "2025-06-14",
-   "lat": 45.0942,
-   "lon": -93.3564,
+   "lat": 45.1889,
+   "lon": -93.3975,
    "placeName": "2025 shootings of Minnesota legislators",
    "country": "United States",
    "killed": 2,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q134895058"
@@ -8779,6 +9639,8 @@
    "killed": 3,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q135139417"
@@ -8793,6 +9655,8 @@
    "killed": 4,
    "injured": 14,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q135204082"
@@ -8807,6 +9671,8 @@
    "killed": 3,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Richmond%20Road%20Baptist%20Church%2C%205897%20Old%20Richmond%20Road%2C%20Lexington%2C%20Kentucky%20-%20panoramio.jpg?width=480",
+   "venueName": "Richmond Road Baptist Church",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q135307879"
@@ -8821,23 +9687,11 @@
    "killed": 5,
    "injured": 6,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Blackstone%20HQ%20-%20345%20Park%20Avenu.jpg?width=480",
+   "venueName": "345 Park Avenue",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q135491832"
-  },
-  {
-   "id": "Q135491839",
-   "date": "2025-07-28",
-   "lat": 39.52285,
-   "lon": -119.77922,
-   "placeName": "Grand Sierra Resort shooting",
-   "country": "United States",
-   "killed": 3,
-   "injured": 8,
-   "venueType": "",
-   "precision": "exact",
-   "sourceName": "Wikidata",
-   "sourceUrl": "https://www.wikidata.org/wiki/Q135491839"
   },
   {
    "id": "Q135506601",
@@ -8849,9 +9703,27 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q135506601"
+  },
+  {
+   "id": "Q135491839",
+   "date": "2025-07-28",
+   "lat": 39.52285,
+   "lon": -119.77922,
+   "placeName": "Grand Sierra Resort shooting",
+   "country": "United States",
+   "killed": 3,
+   "injured": 8,
+   "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/EM%20Grand%20Sierra%20Hotel%20and%20Casino%20%282357197732%29.jpg?width=480",
+   "venueName": "Grand Sierra Resort",
+   "precision": "exact",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q135491839"
   },
   {
    "id": "Q135726202",
@@ -8863,6 +9735,8 @@
    "killed": 4,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q135726202"
@@ -8877,6 +9751,8 @@
    "killed": 0,
    "injured": 5,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q135683021"
@@ -8891,6 +9767,8 @@
    "killed": 3,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q135896907"
@@ -8905,6 +9783,8 @@
    "killed": 2,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q135974690"
@@ -8919,6 +9799,8 @@
    "killed": 1,
    "injured": 6,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Cristo%20Rey%20Jesuit%20High%20School%20%28Minneapolis%29.jpg?width=480",
+   "venueName": "Cristo Rey Jesuit High School",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q135985109"
@@ -8933,6 +9815,8 @@
    "killed": 3,
    "injured": 20,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Annunciation%20Catholic%20Church%2C%20Minneapolis%2C%20Minnesota.jpg?width=480",
+   "venueName": "Annunciation Catholic Church",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q135983688"
@@ -8947,6 +9831,8 @@
    "killed": 6,
    "injured": 16,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q136158492"
@@ -8961,6 +9847,8 @@
    "killed": 1,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q136214137"
@@ -8975,6 +9863,8 @@
    "killed": 0,
    "injured": 6,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q136214101"
@@ -8989,6 +9879,8 @@
    "killed": 1,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Campus%20Fall%20Shots%20%282312881301%29%20%282%29.jpg?width=480",
+   "venueName": "Utah Valley University",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q136210698"
@@ -9003,6 +9895,8 @@
    "killed": 1,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/EvergreenHighSchoolColorado.jpg?width=480",
+   "venueName": "Evergreen High School",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q136214047"
@@ -9017,6 +9911,8 @@
    "killed": 4,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q136323377"
@@ -9031,6 +9927,8 @@
    "killed": 2,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Allenby-Br%C3%BCcke.jpg?width=480",
+   "venueName": "Allenby Bridge",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q136325011"
@@ -9045,6 +9943,8 @@
    "killed": 3,
    "injured": 8,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q136390914"
@@ -9059,6 +9959,8 @@
    "killed": 5,
    "injured": 8,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q136394520"
@@ -9073,6 +9975,8 @@
    "killed": 7,
    "injured": 25,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q136479163"
@@ -9087,6 +9991,8 @@
    "killed": 4,
    "injured": 20,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q136671001"
@@ -9101,6 +10007,8 @@
    "killed": 1,
    "injured": 6,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Amos%20Hall%20Lincoln%20U%20PA.JPG?width=480",
+   "venueName": "Lincoln University",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q136670793"
@@ -9115,6 +10023,8 @@
    "killed": 2,
    "injured": 11,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "area",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q136670975"
@@ -9129,6 +10039,8 @@
    "killed": 4,
    "injured": 11,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q137167364"
@@ -9143,6 +10055,8 @@
    "killed": 2,
    "injured": 9,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Brown%20University%20Barus%20and%20Holley%20and%20Applied%20Mathematics.jpg?width=480",
+   "venueName": "Barus and Holley Building",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q137382041"
@@ -9157,6 +10071,8 @@
    "killed": 16,
    "injured": 40,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Bondi%20from%20above.jpg?width=480",
+   "venueName": "Bondi Beach",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q137383251"
@@ -9171,6 +10087,8 @@
    "killed": 9,
    "injured": 10,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "area",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q137510496"
@@ -9185,6 +10103,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q138129375"
@@ -9199,6 +10119,8 @@
    "killed": 2,
    "injured": 6,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q137733178"
@@ -9213,6 +10135,8 @@
    "killed": 6,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q137916426"
@@ -9227,6 +10151,8 @@
    "killed": 0,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Tarixi%20abid%C9%991.jpg?width=480",
+   "venueName": "Azadlig Avenue",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q138048182"
@@ -9234,13 +10160,15 @@
   {
    "id": "Q138131899",
    "date": "2026-02-10",
-   "lat": 55.1238,
-   "lon": -121.0016,
+   "lat": 55.1326,
+   "lon": -121.0018,
    "placeName": "2026 Tumbler Ridge shootings",
    "country": "Canada",
    "killed": 9,
    "injured": 27,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q138131899"
@@ -9248,13 +10176,15 @@
   {
    "id": "Q138223097",
    "date": "2026-02-11",
-   "lat": 7.20528,
-   "lon": 100.59694,
+   "lat": 7.00167,
+   "lon": 100.45667,
    "placeName": "2026 Hat Yai school shooting",
    "country": "Thailand",
    "killed": 1,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "area",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q138223097"
@@ -9269,6 +10199,8 @@
    "killed": 3,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q138319998"
@@ -9283,6 +10215,8 @@
    "killed": 3,
    "injured": 14,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q138520646"
@@ -9297,6 +10231,8 @@
    "killed": 2,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q138657831"
@@ -9311,6 +10247,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q139377828"
@@ -9325,6 +10263,8 @@
    "killed": 11,
    "injured": 12,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q139373327"
@@ -9339,6 +10279,8 @@
    "killed": 6,
    "injured": 14,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/%D0%92%D0%B5%D0%BB%D0%BC%D0%B0%D1%80%D1%82.jpg?width=480",
+   "venueName": "Velmart",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q139415676"
@@ -9353,6 +10295,8 @@
    "killed": 9,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "area",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q139473755"
@@ -9367,23 +10311,11 @@
    "killed": 2,
    "injured": 3,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q139679029"
-  },
-  {
-   "id": "Q140043464",
-   "date": "2026-05-18",
-   "lat": 27.26667,
-   "lon": 31.15,
-   "placeName": "Abnub shooting",
-   "country": "",
-   "killed": 0,
-   "injured": 0,
-   "venueType": "",
-   "precision": "venue",
-   "sourceName": "Wikidata",
-   "sourceUrl": "https://www.wikidata.org/wiki/Q140043464"
   },
   {
    "id": "Q139844425",
@@ -9395,9 +10327,27 @@
    "killed": 5,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q139844425"
+  },
+  {
+   "id": "Q140043464",
+   "date": "2026-05-18",
+   "lat": 27.26667,
+   "lon": 31.15,
+   "placeName": "Abnub shooting",
+   "country": "",
+   "killed": 0,
+   "injured": 0,
+   "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
+   "precision": "venue",
+   "sourceName": "Wikidata",
+   "sourceUrl": "https://www.wikidata.org/wiki/Q140043464"
   },
   {
    "id": "Q140121661",
@@ -9409,6 +10359,8 @@
    "killed": 0,
    "injured": 12,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q140121661"
@@ -9423,6 +10375,8 @@
    "killed": 3,
    "injured": 2,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q140322238"
@@ -9437,6 +10391,8 @@
    "killed": 3,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q140340941"
@@ -9451,6 +10407,8 @@
    "killed": 3,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "http://commons.wikimedia.org/wiki/Special:FilePath/Seattle%20-%20International%20Fountain%20%26%20Space%20Needle.jpg?width=480",
+   "venueName": "Seattle Center",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q140714973"
@@ -9465,6 +10423,8 @@
    "killed": 4,
    "injured": 7,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q140817396"
@@ -9479,6 +10439,8 @@
    "killed": 10,
    "injured": 22,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q140929444"
@@ -9493,6 +10455,8 @@
    "killed": 6,
    "injured": 1,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "area",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q141085735"
@@ -9507,6 +10471,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q141085727"
@@ -9521,6 +10487,8 @@
    "killed": 1,
    "injured": 4,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "venue",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q141103795"
@@ -9535,6 +10503,8 @@
    "killed": 0,
    "injured": 0,
    "venueType": "",
+   "venuePhoto": "",
+   "venueName": "",
    "precision": "exact",
    "sourceName": "Wikidata",
    "sourceUrl": "https://www.wikidata.org/wiki/Q141131015"

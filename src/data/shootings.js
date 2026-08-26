@@ -117,6 +117,8 @@ export function normalizeIncident(raw, index = 0) {
     injured,
     venueType: typeof raw.venueType === 'string' ? raw.venueType : '',
     precision: typeof raw.precision === 'string' ? raw.precision : 'exact',
+    venuePhoto: typeof raw.venuePhoto === 'string' ? raw.venuePhoto : '',
+    venueName: typeof raw.venueName === 'string' ? raw.venueName : '',
     sourceName: typeof raw.sourceName === 'string' ? raw.sourceName : '',
     sourceUrl: typeof raw.sourceUrl === 'string' ? raw.sourceUrl : '',
   };
@@ -313,6 +315,24 @@ export function createShootingsLayer() {
     set('killed', incident.killed > 0 ? String(incident.killed) : '—');
     set('injured', incident.injured > 0 ? String(incident.injured) : '—');
     set('precision', precisionNote(incident.precision));
+
+    // The photograph is of the PLACE. Hidden entirely when there is none —
+    // a broken image frame would be worse than no image.
+    const figure = _card.querySelector('[data-shooting="figure"]');
+    const photo = _card.querySelector('[data-shooting="photo"]');
+    if (figure && photo) {
+      if (incident.venuePhoto) {
+        photo.src = incident.venuePhoto;
+        photo.alt = incident.venueName ? `${incident.venueName}` : 'Location';
+        set('caption', incident.venueName || 'Location');
+        figure.hidden = false;
+        // A dead Commons link must not leave an empty grey box on the card.
+        photo.onerror = () => { figure.hidden = true; };
+      } else {
+        figure.hidden = true;
+        photo.removeAttribute('src');
+      }
+    }
     const source = _card.querySelector('[data-shooting="source"]');
     if (source) {
       source.href = incident.sourceUrl || '#';

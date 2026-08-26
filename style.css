@@ -9694,6 +9694,31 @@ body.scene-playback-mode #first-run-launcher {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* A photograph of the PLACE — the school, the mall, the island — never of the
+   incident or anyone involved in it. Muted slightly so the card does not read
+   as a news splash. */
+.shooting-detail-figure {
+  margin: 0 0 13px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+}
+.shooting-detail-figure[hidden] { display: none; }
+.shooting-detail-photo {
+  display: block;
+  width: 100%;
+  height: 132px;
+  object-fit: cover;
+  filter: saturate(0.85) brightness(0.9);
+}
+.shooting-detail-caption {
+  padding: 6px 9px 7px;
+  font: 8px/1.35 var(--font-mono);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
 .shooting-detail-close {
   position: absolute;
   top: 8px;
