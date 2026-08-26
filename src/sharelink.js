@@ -118,7 +118,7 @@ export class ShareLinkManager {
     // Feather opens on a soft 11% scope-mask edge (final value 2026-08-24,
     // superseding the 08-22 hard-crop and 08-23 8% rulings) — mirrors
     // SCOPE_FEATHER_RATIO_DEFAULT in scopeMask.js and the slider's markup value.
-    this._scopeFeatherPct = 11;
+    this._scopeFeatherPct = 100;
     // null = the altitude-adaptive terminus (the default). A number pins the
     // outside-fill opacity as a percent, 94..100. (`sce`, 2026-08-17)
     this._scopeTerminusPct = null;

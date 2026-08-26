@@ -71,27 +71,27 @@ function managerForHash(hash) {
 // 2. Scope feather — a subtle soft edge on a first run
 // ---------------------------------------------------------------------------
 
-test('first run opens with a subtle scope feather, at every surface that decides it', () => {
-  assert.equal(SCOPE_FEATHER_RATIO_DEFAULT, 0.11,
-    'final value 2026-08-24, superseding the 08-22 hard-crop and 08-23 8% rulings');
-  assert.equal(getScopeMaskFeather(), 0.11,
+test('first run opens with a fully feathered scope, at every surface that decides it', () => {
+  assert.equal(SCOPE_FEATHER_RATIO_DEFAULT, 1.0,
+    'final value 2026-08-26, superseding the 08-24 11%, 08-23 8% and 08-22 hard-crop rulings');
+  assert.equal(getScopeMaskFeather(), 1.0,
     'and the live module starts there, not merely documents it');
 
   // The slider and its readout are the same default rendered as markup — a
   // fresh boot applies no restore, so a stale value here would show one number
   // over a mask drawn at another.
-  assert.match(indexHtml, /id="scope-feather-slider"[^>]*\svalue="11"/,
-    'index.html: the feather slider ships at 11');
-  assert.match(indexHtml, /id="scope-feather-value"[^>]*>11%</,
+  assert.match(indexHtml, /id="scope-feather-slider"[^>]*\svalue="100"/,
+    'index.html: the feather slider ships at 100');
+  assert.match(indexHtml, /id="scope-feather-value"[^>]*>100%</,
     'index.html: and its readout agrees with the handle');
 
   // The link this session generates must describe the mask this session draws,
   // for the window before the first _syncShareState.
-  assert.match(shareSource, /this\._scopeFeatherPct = 11;/,
+  assert.match(shareSource, /this\._scopeFeatherPct = 100;/,
     'sharelink.js: the generator starts from the same value the mask starts at');
 });
 
-test('an explicit feather still wins over the subtle default', () => {
+test('an explicit feather still wins over the full-feather default', () => {
   // A link is authored state. The new default governs a session that said
   // nothing; it must never overwrite one that said something.
   assert.equal(managerForHash('#lat=10&lon=20&scf=35').parseInitialHash().scopeFeatherPct, 35);

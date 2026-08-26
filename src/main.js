@@ -269,11 +269,34 @@ async function init() {
       hooks: {
         claimCamera: () => styleManager.runImmediateNavigation?.('flight sim', () => true) !== false,
         releaseCamera: () => { viewer.trackedEntity = undefined; },
-        snapshotState: () => ({ camera: styleManager.getCameraState?.() }),
+        snapshotState: () => {
+          // Captures what the mode is about to take over, and takes it over.
+          //
+          // CCTV is suspended for the duration. Its enable-time queue walks
+          // EVERY camera in the catalog — thousands of them — sampling terrain
+          // to place each viewshed on the ground ("LOADING FRAMES 356/3000").
+          // That work competes directly with the photoreal tiles the aircraft
+          // is flying over, for bandwidth and for the same terrain sampler, so
+          // it both slows the world in and costs frames mid-flight. Ground
+          // cameras are also of no use whatsoever from the cockpit of a 747.
+          //
+          // Live flights are deliberately LEFT ON: other aircraft in the sky
+          // are worth seeing while flying, and that layer is orders of
+          // magnitude smaller.
+          const cctvWasEnabled = dataManager.isEnabled?.('cctv') === true;
+          if (cctvWasEnabled) {
+            dataManager.setEnabled('cctv', false, { origin: 'programmatic' });
+          }
+          return { camera: styleManager.getCameraState?.(), cctvWasEnabled };
+        },
         restoreState: (snapshot) => {
           // Put the user back where they were, rather than wherever the
           // aircraft happened to be when they exited.
           if (snapshot?.camera) styleManager.applyCameraState?.(snapshot.camera);
+          // Only re-enable what we ourselves switched off.
+          if (snapshot?.cctvWasEnabled) {
+            dataManager.setEnabled('cctv', true, { origin: 'programmatic' });
+          }
         },
         onStateChange: (next) => {
           if (next === 'OFF') flightSimPanel.close();

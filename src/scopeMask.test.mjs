@@ -76,11 +76,20 @@ test('an omitted feather argument uses the module default, whatever it is', () =
   assert.equal(omitted.outerR, explicit.outerR);
   // And it is not simply ignoring the argument: a different ratio must differ,
   // and must still derive its band from the keyhole radius.
-  const wider = scopeMaskGeometry(1200, 900, SCOPE_FEATHER_RATIO_DEFAULT + 0.4);
+  //
+  // The probe steps AWAY from whichever end the default sits at, because
+  // scopeMaskGeometry clamps to [0,1]. A fixed `+ 0.4` silently stopped testing
+  // anything when the default reached 1.0 on 2026-08-26 — 1.4 clamps straight
+  // back to the default, so both sides matched and the assertion failed. Same
+  // class of vacuousness the `+ 0.4` form was itself introduced to fix when the
+  // default was 0.
+  const probe = SCOPE_FEATHER_RATIO_DEFAULT > 0.5
+    ? SCOPE_FEATHER_RATIO_DEFAULT - 0.4
+    : SCOPE_FEATHER_RATIO_DEFAULT + 0.4;
+  const wider = scopeMaskGeometry(1200, 900, probe);
   assert.notEqual(wider.outerR - wider.innerR, omitted.outerR - omitted.innerR);
   const keyholeR = 900 * 0.5 * KEYHOLE_OUTER_RADIUS;
-  assert.ok(Math.abs((wider.outerR - wider.innerR)
-    - keyholeR * (SCOPE_FEATHER_RATIO_DEFAULT + 0.4)) < 1e-9);
+  assert.ok(Math.abs((wider.outerR - wider.innerR) - keyholeR * probe) < 1e-9);
   // The default's VALUE (hidden feather, product invariant 2026-08-22) is pinned
   // with the rest of the first-run batch in reasonableDefaults.test.mjs.
 });
