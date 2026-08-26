@@ -2079,6 +2079,15 @@ export class DataLayerManager {
         rowModule.setRowControlsListener?.(() => this._refreshTogglePanel());
         const controls = document.createElement('div');
         controls.className = 'data-toggle-controls';
+        controls.addEventListener('input', (event) => {
+          const input = event.target?.closest?.('.data-toggle-slider-input');
+          if (!input) return;
+          const descriptor = this._rowControlsFor(layer.id)?.sliders
+            ?.find((entry) => entry.id === input.dataset.sliderId);
+          if (!descriptor?.paramKey) return;
+          this.setLayerParams(layer.id, { [descriptor.paramKey]: Number(input.value) },
+            { origin: 'user' });
+        });
         controls.addEventListener('click', (event) => {
           const button = event.target?.closest?.('.data-toggle-chip');
           if (!button || button.disabled) return;
@@ -2132,11 +2141,60 @@ export class DataLayerManager {
     const controls = layer.enabled ? this._rowControlsFor(layer.id) : null;
     const chips = controls?.chips || [];
     const legend = controls?.legend || [];
-    container.hidden = chips.length === 0 && legend.length === 0;
+    const sliders = controls?.sliders || [];
+    container.hidden = chips.length === 0 && legend.length === 0 && sliders.length === 0;
 
     for (const node of [...container.children]) {
       if (String(node.className).split(/\s+/).includes('data-toggle-legend-item')) node.remove();
     }
+
+    // Sliders are keyed and updated IN PLACE rather than rebuilt. Replacing the
+    // element mid-drag would drop the pointer capture and the drag with it, so
+    // a filter would jump instead of sweeping.
+    const staleSliders = new Map();
+    for (const node of [...container.children]) {
+      if (node.dataset?.sliderId) staleSliders.set(node.dataset.sliderId, node);
+    }
+    for (const slider of sliders) {
+      let wrap = staleSliders.get(slider.id);
+      staleSliders.delete(slider.id);
+      let input;
+      let value;
+      if (!wrap) {
+        wrap = document.createElement('label');
+        wrap.className = 'data-toggle-slider';
+        wrap.dataset.sliderId = slider.id;
+        const name = document.createElement('span');
+        name.className = 'data-toggle-slider-label';
+        input = document.createElement('input');
+        input.type = 'range';
+        input.className = 'data-toggle-slider-input';
+        input.dataset.sliderId = slider.id;
+        value = document.createElement('span');
+        value.className = 'data-toggle-slider-value';
+        wrap.append(name, input, value);
+        container.appendChild(wrap);
+      } else {
+        input = wrap.querySelector('.data-toggle-slider-input');
+        value = wrap.querySelector('.data-toggle-slider-value');
+      }
+      const label = wrap.querySelector('.data-toggle-slider-label');
+      if (label && label.textContent !== slider.label) label.textContent = slider.label;
+      if (input) {
+        input.min = String(slider.min ?? 0);
+        input.max = String(slider.max ?? 100);
+        input.step = String(slider.step ?? 1);
+        input.title = slider.title || '';
+        // Never fight the user's own drag.
+        if (document.activeElement !== input && input.value !== String(slider.value)) {
+          input.value = String(slider.value);
+        }
+      }
+      if (value && value.textContent !== slider.valueLabel) {
+        value.textContent = slider.valueLabel ?? String(slider.value);
+      }
+    }
+    for (const node of staleSliders.values()) node.remove();
 
     const stale = new Map();
     for (const node of [...container.children]) {

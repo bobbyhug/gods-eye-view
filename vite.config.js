@@ -8154,6 +8154,98 @@ function normalizeAisTimestamp(value) {
  * @param {import('vite').Plugin} plugin
  * @returns {import('vite').Plugin}
  */
+/**
+ * Civilian mass-shooting incidents.
+ *
+ * Serves a COMPILED dataset from disk rather than proxying the upstream
+ * catalogues live. These are historical records that do not change, several of
+ * the sources are rate-limited or key-gated, and compiling once means the
+ * normalisation and the licence filtering happen in one auditable place instead
+ * of on every page load.
+ *
+ * The perpetrator strip below is deliberate and belongs HERE, at the boundary,
+ * not in the browser: several upstream datasets carry attacker names, and the
+ * project's position is that they are never served. Doing it at the edge means
+ * no client can ask for them, and a future caller of this endpoint inherits the
+ * guarantee for free.
+ *
+ * @returns {import('vite').Plugin}
+ */
+function shootingsData() {
+  const DATA_PATH = path.resolve(__dirname, 'data/shootings.json');
+  /** Fields dropped on the way out, whatever a source happened to include. */
+  const FORBIDDEN_FIELDS = [
+    'perpetrator', 'perpetrators', 'shooter', 'shooters', 'suspect', 'suspects',
+    'attacker', 'attackers', 'assailant', 'offender', 'offenderName', 'name',
+  ];
+  let cached = null;
+  /** mtime the cache was built from, so a rewritten file is picked up. */
+  let cachedMtimeMs = -1;
+
+  /** @returns {Promise<object>} */
+  async function load() {
+    // Keyed on mtime rather than cached forever: recompiling the dataset should
+    // take effect without restarting the server, and a deploy that changes only
+    // this file should not silently serve the previous build's data.
+    let mtimeMs = -1;
+    try {
+      mtimeMs = (await fs.promises.stat(DATA_PATH)).mtimeMs;
+    } catch {
+      mtimeMs = -1;
+    }
+    if (cached && mtimeMs === cachedMtimeMs) return cached;
+
+    let parsed = { incidents: [], sources: [], coverageNote: '' };
+    try {
+      const raw = await fs.promises.readFile(DATA_PATH, 'utf8');
+      parsed = JSON.parse(raw);
+    } catch {
+      // No compiled dataset yet: an empty layer is correct and honest. It must
+      // never invent incidents to look populated.
+      parsed = {
+        incidents: [],
+        sources: [],
+        coverageNote: 'No compiled dataset present.',
+      };
+    }
+    const incidents = (Array.isArray(parsed.incidents) ? parsed.incidents : [])
+      .map((row) => {
+        const clean = { ...row };
+        for (const field of FORBIDDEN_FIELDS) delete clean[field];
+        return clean;
+      });
+    cachedMtimeMs = mtimeMs;
+    cached = {
+      incidents,
+      sources: Array.isArray(parsed.sources) ? parsed.sources : [],
+      coverageNote: typeof parsed.coverageNote === 'string' ? parsed.coverageNote : '',
+      count: incidents.length,
+    };
+    return cached;
+  }
+
+  return {
+    name: 'shootings-data',
+    configureServer(server) {
+      server.middlewares.use('/api/shootings', async (req, res) => {
+        try {
+          const payload = await load();
+          res.writeHead(200, {
+            'Content-Type': 'application/json',
+            // Historical records: safe to cache hard, and it keeps a reload
+            // from re-reading and re-filtering the whole file.
+            'Cache-Control': 'public, max-age=3600',
+          });
+          res.end(JSON.stringify(payload));
+        } catch (error) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: String(error?.message || error) }));
+        }
+      });
+    },
+  };
+}
+
 function alsoServeInPreview(plugin) {
   if (!plugin || typeof plugin.configureServer !== 'function') return plugin;
   if (typeof plugin.configurePreviewServer === 'function') return plugin;
@@ -8202,6 +8294,7 @@ export default defineConfig(({ mode }) => {
       trackBackfillProxies(),
       openAiRealtimeProxy(),
       googlePlacesContextProxy(),
+      shootingsData(),
     ].map((plugin, index) => (index === 0 ? plugin : alsoServeInPreview(plugin))),
     server: {
       host: env.HOST || 'localhost',

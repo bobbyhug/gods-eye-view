@@ -1,0 +1,12 @@
+SELECT DISTINCT ?item ?itemLabel ?date ?countryLabel ?coord ?placeLabel ?killed ?injured ?perp WHERE {
+  VALUES ?country { wd:Q148 wd:Q17 wd:Q884 wd:Q869 wd:Q928 wd:Q668 wd:Q843 wd:Q408 wd:Q664 }
+  ?item wdt:P17 ?country ; wdt:P585 ?date ; wdt:P31 ?cls .
+  VALUES ?cls { wd:Q21480300 wd:Q750215 wd:Q3882219 }
+  FILTER(YEAR(?date) >= 2001)
+  OPTIONAL { ?item wdt:P625 ?coord }
+  OPTIONAL { ?item wdt:P276 ?place }
+  OPTIONAL { ?item wdt:P1120 ?killed }
+  OPTIONAL { ?item wdt:P1339 ?injured }
+  OPTIONAL { ?item wdt:P8032 ?perp }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
+}

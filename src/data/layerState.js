@@ -290,6 +290,9 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
   Object.freeze({ id: 'radio', token: 'r', disposition: 'enabled+options', optionOwner: 'radio' }),
   Object.freeze({ id: 'rocket-launches', token: 'x', disposition: 'enabled-only' }),
   Object.freeze({ id: 'satellites', token: 's', disposition: 'enabled+options', optionOwner: 'satellites' }),
+  // 'k' because 's' is satellites. enabled-only for now: the death-toll
+  // filter is a view preference rather than layer state a link must carry.
+  Object.freeze({ id: 'shootings', token: 'k', disposition: 'enabled-only' }),
   Object.freeze({ id: 'telegeography-submarine-cables', token: 'u', disposition: 'enabled-only' }),
   Object.freeze({ id: 'traffic', token: 't', disposition: 'enabled-only' }),
 ]);
