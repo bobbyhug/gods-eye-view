@@ -29,6 +29,16 @@ import { createGevActionRunner } from './gevActions.js';
 /** Where intent parsing happens. */
 const CHAT_URL = '/api/openrouter/chat';
 
+/** Longest a command will wait for the startup camera restore to settle. */
+const STARTUP_WAIT_CAP_MS = 8000;
+
+/** Actions that move the camera, and so lose a race against startup restore. */
+const CAMERA_ACTIONS = new Set([
+  'fly_to_location', 'fly_route', 'zoom_to_globe', 'frame_overhead',
+  'move_camera', 'adjust_camera_zoom', 'track_entity',
+  'select_nearest_aircraft', 'find_incident',
+]);
+
 /**
  * Every action the voice layer can invoke.
  *
@@ -265,6 +275,32 @@ export function initFreeVoice({
     viewer, styleManager, dataManager, sceneDirector, annotations,
   });
 
+  /**
+   * Wait for the app's startup camera restore to finish.
+   *
+   * A camera command issued during startup LOSES. The restore settles
+   * asynchronously — measured still pending five seconds after load — and when
+   * it lands it reasserts its own camera, cancelling whatever flight was in
+   * progress. The symptom is a command that reports success while the globe
+   * has not moved, which is exactly what "fly to Tokyo" did.
+   *
+   * Waiting is the fix rather than fighting it: the restore is the user's
+   * remembered view, and a voice command should follow it, not race it.
+   *
+   * Capped, because a restore that never settles must not mute the microphone
+   * forever — after the cap the command goes ahead and takes its chances.
+   *
+   * @returns {Promise<void>}
+   */
+  async function awaitStartupSettled() {
+    const restore = styleManager?.initialRestorePromise;
+    if (!restore || typeof restore.then !== 'function') return;
+    await Promise.race([
+      restore.catch(() => {}),
+      new Promise((resolve) => { setTimeout(resolve, STARTUP_WAIT_CAP_MS); }),
+    ]);
+  }
+
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   const supported = Boolean(SR) && Boolean(window.speechSynthesis);
   let recognition = null;
@@ -348,6 +384,11 @@ export function initFreeVoice({
     }
 
     try {
+      // Camera commands must not race the startup restore; see
+      // awaitStartupSettled. Non-camera commands (layers, styles, panels) are
+      // unaffected and should not pay the wait.
+      if (CAMERA_ACTIONS.has(intent.action)) await awaitStartupSettled();
+
       // find_incident belongs to the shootings layer, not the shared runner.
       if (intent.action === 'find_incident') {
         const shootings = dataManager?.layers?.get?.('shootings')?.module;
