@@ -9667,6 +9667,28 @@ body.scene-playback-mode #first-run-launcher {
   outline-offset: 2px;
 }
 
+/* Cursor readout for the temperature field. Dark pill, exactly the shape MSN
+   Weather uses, offset from the pointer so it never sits under it. */
+.temp-hover {
+  position: fixed;
+  z-index: 340;
+  padding: 5px 10px 6px;
+  border-radius: 6px;
+  background: rgba(18, 20, 24, 0.92);
+  color: #fff;
+  font: 13px/1.15 var(--font-mono);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+.temp-hover[hidden] { display: none; }
+.temp-hover-when {
+  color: rgba(255, 255, 255, 0.62);
+  margin-left: 7px;
+  font-size: 11px;
+}
+
 /* ── Temperature forecast panel ────────────────────────────────────────────
    Bottom-LEFT. The incident card is bottom-right, so both layers can be on at
    once without one covering the other. */

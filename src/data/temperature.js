@@ -33,18 +33,27 @@ const FIELD_ALPHA = 0.42;
 /**
  * Temperature colour stops, °C.
  *
+ * Modelled on the ramp MSN Weather and Windy use — violet through blue, teal,
+ * green, yellow, orange, red — because it is the one people already read
+ * fluently. Stops cluster between 10 and 36 where most inhabited land sits, so
+ * the range that matters gets most of the colour rather than being flattened
+ * into one green.
+ *
  * Spans a real Earth range rather than the range of the current grid: a fixed
  * scale means the same colour means the same temperature every time you look,
  * which an auto-fitted scale cannot promise.
  */
 export const TEMP_STOPS = Object.freeze([
-  { t: -40, color: '#3b2f7a' },
-  { t: -20, color: '#3f6fd0' },
-  { t: 0, color: '#57b6e0' },
-  { t: 10, color: '#8fd0a8' },
-  { t: 20, color: '#e2d066' },
-  { t: 30, color: '#e08a48' },
-  { t: 45, color: '#c2392f' },
+  { t: -40, color: '#8f6fc4' },
+  { t: -25, color: '#7d8fd0' },
+  { t: -10, color: '#5fb0c9' },
+  { t: 0, color: '#3fae8f' },
+  { t: 10, color: '#54b46a' },
+  { t: 18, color: '#b7c94f' },
+  { t: 24, color: '#e8c341' },
+  { t: 30, color: '#e8913b' },
+  { t: 36, color: '#dd5f33' },
+  { t: 45, color: '#b8322c' },
 ]);
 
 /**
@@ -149,6 +158,7 @@ export function createTemperatureLayer() {
   /** @type {Cesium.ScreenSpaceEventHandler|null} */
   let _clickHandler = null;
   let _panel = null;
+  let _hover = null;
 
 
   /**
@@ -354,12 +364,42 @@ export function createTemperatureLayer() {
   }
 
   /**
+   * Show the cursor readout at a screen position.
+   *
+   * @param {number} x
+   * @param {number} y
+   * @param {number} celsius
+   * @returns {void}
+   */
+  function showHover(x, y, celsius) {
+    if (!_hover) return;
+    const when = new Date().toLocaleString('en-GB', {
+      weekday: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true,
+    }).replace(',', '');
+    _hover.innerHTML = `${Math.round(celsius)} °C<span class="temp-hover-when">${when}</span>`;
+    // Offset up and right of the pointer, and flipped when near an edge so the
+    // pill never runs off screen or sits under the cursor.
+    const rect = _hover.getBoundingClientRect();
+    const flipX = x + 18 + rect.width > window.innerWidth;
+    const flipY = y - 14 - rect.height < 0;
+    _hover.style.left = `${flipX ? x - 18 - rect.width : x + 18}px`;
+    _hover.style.top = `${flipY ? y + 18 : y - 14 - rect.height}px`;
+    _hover.hidden = false;
+  }
+
+  /** @returns {void} */
+  function hideHover() {
+    if (_hover) _hover.hidden = true;
+  }
+
+  /**
    * @param {object} viewer
    * @returns {void}
    */
   function installInteraction(viewer) {
     if (_clickHandler || !viewer?.scene?.canvas) return;
     _panel = document.getElementById('temp-panel');
+    _hover = document.getElementById('temp-hover');
     _panel?.querySelector('[data-temp="close"]')?.addEventListener('click', closePanel);
 
     _clickHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
@@ -379,6 +419,24 @@ export function createTemperatureLayer() {
       if (t === null) return;
       void showForecast({ lat: Number(lat.toFixed(3)), lon: Number(lon.toFixed(3)), t: Number(t.toFixed(1)) });
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+    // Cursor readout. Reads the interpolated field rather than calling the API:
+    // a request per mouse move would exhaust the free tier in seconds, and the
+    // field is already in memory so this costs nothing and never lags.
+    _clickHandler.setInputAction((movement) => {
+      if (!_enabled || !_lookup) { hideHover(); return; }
+      const position = movement.endPosition;
+      const cartesian = viewer.scene.pickPosition(position)
+        || viewer.camera.pickEllipsoid(position, Cesium.Ellipsoid.WGS84);
+      if (!cartesian) { hideHover(); return; }
+      const carto = Cesium.Cartographic.fromCartesian(cartesian);
+      const t = sampleAt(
+        Cesium.Math.toDegrees(carto.latitude),
+        Cesium.Math.toDegrees(carto.longitude)
+      );
+      if (t === null) { hideHover(); return; }
+      showHover(position.x, position.y, t);
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
   }
 
   const layer = {
@@ -410,6 +468,7 @@ export function createTemperatureLayer() {
       _enabled = false;
       if (_imageryLayer) _imageryLayer.show = false;
       closePanel();
+      hideHover();
     },
 
     async update() {
