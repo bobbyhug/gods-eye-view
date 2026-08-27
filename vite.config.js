@@ -8397,12 +8397,21 @@ function temperatureData() {
       }
       if (!payload) throw new Error('Open-Meteo: no payload');
       const list = Array.isArray(payload) ? payload : [payload];
-      for (const item of list) {
-        const temp = item?.current?.temperature_2m;
-        if (!Number.isFinite(Number(temp))) continue;
+      // Pair each result with the point we ASKED for, not the one Open-Meteo
+      // answered with. It snaps every request to its own model grid, so the
+      // returned coordinates are a scatter — 53 distinct latitudes and 253
+      // longitudes for 648 points — and anything downstream that assumes a
+      // regular lattice ends up almost entirely holes. Results come back in
+      // request order, so the pairing is positional. The value is for a point
+      // within about a tenth of a degree of the one requested, which at
+      // 10-degree spacing is nothing.
+      for (let i = 0; i < list.length; i += 1) {
+        const temp = list[i]?.current?.temperature_2m;
+        const asked = batch[i];
+        if (!asked || !Number.isFinite(Number(temp))) continue;
         cells.push({
-          lat: Number(item.latitude.toFixed(2)),
-          lon: Number(item.longitude.toFixed(2)),
+          lat: asked.lat,
+          lon: asked.lon,
           t: Number(Number(temp).toFixed(1)),
         });
       }

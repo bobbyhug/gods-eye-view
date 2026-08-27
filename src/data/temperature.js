@@ -22,6 +22,15 @@ const FORECAST_URL = '/api/temperature/forecast';
 const UPDATE_INTERVAL_MS = 15 * 60 * 1000;
 
 /**
+ * Opacity of the field.
+ *
+ * Low on purpose. The point is to tint the ground, not replace it — at full
+ * strength this became an opaque sheet with the world hidden underneath, which
+ * is worse than no layer at all.
+ */
+const FIELD_ALPHA = 0.42;
+
+/**
  * Temperature colour stops, °C.
  *
  * Spans a real Earth range rather than the range of the current grid: a fixed
@@ -102,13 +111,33 @@ export function dayLabel(iso, index) {
 }
 
 /**
+ * Find the photorealistic tileset in a scene.
+ *
+ * @param {object} viewer
+ * @returns {object|null}
+ */
+function findPhotorealTileset(viewer) {
+  const prims = viewer?.scene?.primitives;
+  if (!prims) return null;
+  for (let i = 0; i < prims.length; i += 1) {
+    const p = prims.get(i);
+    if (p && p.imageryLayers && typeof p.maximumScreenSpaceError === 'number') return p;
+  }
+  return null;
+}
+
+/**
  * Create the layer.
  *
  * @returns {object} Layer module.
  */
 export function createTemperatureLayer() {
-  /** @type {Cesium.CustomDataSource|null} */
-  let _dataSource = null;
+  /** The photoreal tileset, which hosts the imagery layer. */
+  let _tileset = null;
+  /** @type {object|null} */
+  let _imageryLayer = null;
+  /** Bilinear sampling index, built from the cells. */
+  let _lookup = null;
   /** @type {Array<object>} */
   let _cells = [];
   let _stepDeg = 10;
@@ -120,48 +149,149 @@ export function createTemperatureLayer() {
   /** @type {Cesium.ScreenSpaceEventHandler|null} */
   let _clickHandler = null;
   let _panel = null;
-  /** entityId -> cell, so a pick resolves without searching. */
-  const _byEntityId = new Map();
 
-  /** Paint one rectangle per grid cell. */
-  function render() {
-    if (!_dataSource) return;
-    _dataSource.entities.removeAll();
-    _byEntityId.clear();
-    const half = _stepDeg / 2;
 
-    for (const cell of _cells) {
-      const id = `temp-${cell.lat}-${cell.lon}`;
-      _byEntityId.set(id, cell);
-      try {
-        _dataSource.entities.add({
-          id,
-          rectangle: {
-            // Longitude is clamped as well as latitude. The grid starts at
-            // -180, so the western edge of that column was -185 and Cesium
-            // rejected it with "Expected west to be greater than or equal to
-            // -3.14159…" — which is not a warning, it STOPS RENDERING and puts
-            // an error dialog over the whole app. Clamping narrows the two edge
-            // columns by half a cell, which at 10-degree spacing is invisible.
-            coordinates: Cesium.Rectangle.fromDegrees(
-              Math.max(-180, cell.lon - half), Math.max(-90, cell.lat - half),
-              Math.min(180, cell.lon + half), Math.min(90, cell.lat + half)
-            ),
-            material: temperatureColor(cell.t),
-            // BOTH, not TERRAIN. This app runs with globe.show === false and
-            // renders Google photorealistic 3D tiles instead, so TERRAIN
-            // classified onto a surface that is not there — 648 cells loaded,
-            // all shown, and nothing visible on screen. BOTH drapes on the
-            // tiles as well, and still works if the globe is ever turned on.
-            classificationType: Cesium.ClassificationType.BOTH,
-          },
-          description: `${cell.t}°C at ${cell.lat}, ${cell.lon}`,
-        });
-      } catch {
-        // One bad cell must not abandon the rest of the grid.
+  /**
+   * Sample the grid at any lat/lon, bilinearly.
+   *
+   * The grid is 10 degrees apart, which as discrete rectangles looked like
+   * exactly what it is: giant coloured squares stamped over the map. Real
+   * temperature is a smooth field, so it should be drawn as one. Interpolating
+   * between the four surrounding samples turns the same data into a continuous
+   * gradient with no visible cell edges.
+   *
+   * @param {number} lat
+   * @param {number} lon
+   * @returns {number|null} Celsius, or null outside the grid.
+   */
+  function sampleAt(lat, lon) {
+    if (!_lookup) return null;
+    const { minLat, minLon, step, cols, rows, values } = _lookup;
+    const x = (lon - minLon) / step;
+    const y = (lat - minLat) / step;
+    const x0 = Math.floor(x);
+    const y0 = Math.floor(y);
+    const fx = x - x0;
+    const fy = y - y0;
+
+    // Longitude wraps; latitude clamps at the poles.
+    const col = (i) => ((i % cols) + cols) % cols;
+    const row = (j) => Math.min(rows - 1, Math.max(0, j));
+    const at = (j, i) => values[row(j) * cols + col(i)];
+
+    const v00 = at(y0, x0);
+    const v10 = at(y0, x0 + 1);
+    const v01 = at(y0 + 1, x0);
+    const v11 = at(y0 + 1, x0 + 1);
+    if (![v00, v10, v01, v11].every(Number.isFinite)) return null;
+
+    const top = v00 * (1 - fx) + v10 * fx;
+    const bottom = v01 * (1 - fx) + v11 * fx;
+    return top * (1 - fy) + bottom * fy;
+  }
+
+  /**
+   * Draw the whole field into one canvas.
+   *
+   * One image rather than 648 primitives: it is smooth, it is a single draw,
+   * and it can be handed to the tileset as an imagery layer so the colour sits
+   * IN the ground texture instead of floating over it as a sheet.
+   *
+   * @returns {HTMLCanvasElement}
+   */
+  function paintCanvas() {
+    const canvas = document.createElement('canvas');
+    // Half a degree per pixel. Finer than this cannot add information — the
+    // source grid is 10 degrees — but it keeps the gradient free of stair-steps.
+    canvas.width = 720;
+    canvas.height = 360;
+    const ctx = canvas.getContext('2d');
+    const image = ctx.createImageData(canvas.width, canvas.height);
+    const data = image.data;
+
+    for (let py = 0; py < canvas.height; py += 1) {
+      // Canvas y runs top-down, latitude runs bottom-up.
+      const lat = 90 - (py + 0.5) * (180 / canvas.height);
+      for (let px = 0; px < canvas.width; px += 1) {
+        const lon = -180 + (px + 0.5) * (360 / canvas.width);
+        const t = sampleAt(lat, lon);
+        const i = (py * canvas.width + px) * 4;
+        if (t === null) {
+          data[i + 3] = 0;
+          continue;
+        }
+        const colour = temperatureColor(t, 1);
+        data[i] = Math.round(colour.red * 255);
+        data[i + 1] = Math.round(colour.green * 255);
+        data[i + 2] = Math.round(colour.blue * 255);
+        // Alpha lives here rather than on the layer so the tint stays even
+        // across the whole field.
+        data[i + 3] = Math.round(FIELD_ALPHA * 255);
       }
     }
+    ctx.putImageData(image, 0, 0);
+    return canvas;
+  }
+
+  /** Build the lat/lon lookup the sampler reads. */
+  function indexGrid() {
+    if (!_cells.length) { _lookup = null; return; }
+    const lats = [...new Set(_cells.map((c) => c.lat))].sort((a, b) => a - b);
+    const lons = [...new Set(_cells.map((c) => c.lon))].sort((a, b) => a - b);
+    const step = _stepDeg;
+    const cols = lons.length;
+    const rows = lats.length;
+    const values = new Float32Array(cols * rows).fill(NaN);
+    const lonIndex = new Map(lons.map((v, i) => [v, i]));
+    const latIndex = new Map(lats.map((v, i) => [v, i]));
+    for (const cell of _cells) {
+      const i = lonIndex.get(cell.lon);
+      const j = latIndex.get(cell.lat);
+      if (i === undefined || j === undefined) continue;
+      values[j * cols + i] = cell.t;
+    }
+    _lookup = { minLat: lats[0], minLon: lons[0], step, cols, rows, values };
+  }
+
+  /**
+   * Put the field on the map as an imagery layer over the 3D tiles.
+   *
+   * This is what "mixed in with the ground" means technically: the tileset
+   * composites the image into its own surface shading, so terrain and cities
+   * still read through it. The previous approach — classified rectangles —
+   * could only ever be a sheet laid on top.
+   *
+   * @returns {void}
+   */
+  function render() {
+    indexGrid();
+    removeImagery();
+    if (!_lookup || !_tileset?.imageryLayers) return;
+    try {
+      // A data URL, not an `image` option: Cesium 1.138's
+      // SingleTileImageryProvider requires `url` and rejects an image with
+      // "options.url is required". The canvas is small enough (720x360) that
+      // encoding it costs nothing worth measuring.
+      const provider = new Cesium.SingleTileImageryProvider({
+        url: paintCanvas().toDataURL('image/png'),
+        rectangle: Cesium.Rectangle.fromDegrees(-180, -90, 180, 90),
+        tileWidth: 720,
+        tileHeight: 360,
+      });
+      _imageryLayer = _tileset.imageryLayers.addImageryProvider(provider);
+      _imageryLayer.show = _enabled;
+    } catch (error) {
+      _lastError = `Imagery layer failed: ${error?.message || error}`;
+    }
     _rowControlsListener?.();
+  }
+
+  /** @returns {void} */
+  function removeImagery() {
+    if (_imageryLayer && _tileset?.imageryLayers) {
+      try { _tileset.imageryLayers.remove(_imageryLayer, true); } catch { /* already gone */ }
+    }
+    _imageryLayer = null;
   }
 
   /**
@@ -234,17 +364,20 @@ export function createTemperatureLayer() {
 
     _clickHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
     _clickHandler.setInputAction((click) => {
-      if (!_enabled) return;
-      // drillPick, not pick: the cells are draped on the tile surface, so a
-      // plain pick returns the terrain in front of them.
-      const hits = viewer.scene.drillPick(click.position, 8);
-      for (const hit of hits) {
-        const id = typeof hit?.id?.id === 'string' ? hit.id.id : null;
-        if (id && _byEntityId.has(id)) {
-          void showForecast(_byEntityId.get(id));
-          return;
-        }
-      }
+      if (!_enabled || !_lookup) return;
+      // There are no entities to pick any more — the field is one image. So
+      // resolve the ground point under the cursor and sample the field there,
+      // which also means the forecast is for the exact spot clicked rather
+      // than for the centre of a 10-degree cell.
+      const cartesian = viewer.scene.pickPosition(click.position)
+        || viewer.camera.pickEllipsoid(click.position, Cesium.Ellipsoid.WGS84);
+      if (!cartesian) return;
+      const carto = Cesium.Cartographic.fromCartesian(cartesian);
+      const lat = Cesium.Math.toDegrees(carto.latitude);
+      const lon = Cesium.Math.toDegrees(carto.longitude);
+      const t = sampleAt(lat, lon);
+      if (t === null) return;
+      void showForecast({ lat: Number(lat.toFixed(3)), lon: Number(lon.toFixed(3)), t: Number(t.toFixed(1)) });
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
   }
 
@@ -256,10 +389,11 @@ export function createTemperatureLayer() {
     updateInterval: UPDATE_INTERVAL_MS,
 
     init(viewer) {
-      _dataSource = new Cesium.CustomDataSource('temperature');
-      _dataSource.show = false;
-      viewer.dataSources.add(_dataSource);
+      // The tileset is looked up rather than injected so the layer's signature
+      // matches every other module the manager registers.
+      _tileset = findPhotorealTileset(viewer);
       _cells = [];
+      _lookup = null;
       _lastUpdate = null;
       _lastError = null;
       _enabled = false;
@@ -267,13 +401,14 @@ export function createTemperatureLayer() {
 
     enable(viewer) {
       _enabled = true;
-      if (_dataSource) _dataSource.show = true;
+      if (!_tileset) _tileset = findPhotorealTileset(viewer);
+      if (_imageryLayer) _imageryLayer.show = true;
       installInteraction(viewer);
     },
 
     disable() {
       _enabled = false;
-      if (_dataSource) _dataSource.show = false;
+      if (_imageryLayer) _imageryLayer.show = false;
       closePanel();
     },
 
