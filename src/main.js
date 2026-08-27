@@ -499,15 +499,35 @@ async function init() {
           .catch(() => false);
         if (realtimeReady || !status?.configured || !freeVoice.isSupported()) return;
 
-        const button = document.querySelector('#gev-voice-control button');
+        // #gev-voice-button by id, NOT the first button in the container. The
+        // container's first button is #gev-voice-tier — the STD/mini cost
+        // chip — so a positional selector rebound the wrong control and left
+        // the mic still wired to the Realtime path, which then reported
+        // "OPENAI_API_KEY is not set" on click.
+        const button = document.getElementById('gev-voice-button');
         if (!button) return;
         // Replacing the node drops the Realtime listener with it, so the two
         // paths can never both fire on one click.
         const fresh = button.cloneNode(true);
         button.replaceWith(fresh);
-        const label = document.querySelector('#gev-voice-control .voice-status')
-          || document.querySelector('#gev-voice-control [class*="status"]');
+        const label = document.getElementById('gev-voice-status');
+        // Space-to-talk belongs to the Realtime controller and would start a
+        // connection that cannot succeed. Suppress it while free voice owns
+        // the microphone.
+        const swallowSpace = (event) => {
+          if (event.code === 'Space' && !/^(INPUT|TEXTAREA)$/.test(event.target?.tagName || '')) {
+            event.stopImmediatePropagation();
+          }
+        };
+        window.addEventListener('keydown', swallowSpace, true);
+        window.addEventListener('keyup', swallowSpace, true);
+        // The Realtime path's own error banner is meaningless here.
+        document.getElementById('gev-voice-error')?.remove();
+        const root = document.getElementById('gev-voice-control');
         freeVoice.onStateChange((state, text) => {
+          // The container styles itself from data-status, so keeping it in
+          // step is what makes the button look active while listening.
+          if (root) root.dataset.status = state === 'listening' ? 'listening' : 'idle';
           if (!label) return;
           const copy = {
             listening: text ? `“${text}”` : 'LISTENING',
@@ -515,9 +535,9 @@ async function init() {
             thinking: 'THINKING',
             done: text || 'DONE',
             error: text || 'ERROR',
-            idle: 'VOICE STANDBY',
+            idle: 'OFF',
           };
-          label.textContent = String(copy[state] || 'VOICE STANDBY').toUpperCase().slice(0, 42);
+          label.textContent = String(copy[state] || 'OFF').toUpperCase().slice(0, 42);
         });
         fresh.addEventListener('click', () => {
           if (freeVoice.isListening()) freeVoice.stop();

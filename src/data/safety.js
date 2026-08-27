@@ -116,9 +116,10 @@ export function createSafetyLayer() {
             polygon: {
               hierarchy: Cesium.Cartesian3.fromDegreesArray(flat),
               material: safetyColor(country.rate),
-              // Draped on the terrain rather than floating above it, so the
-              // shading follows the ground at any camera angle.
-              classificationType: Cesium.ClassificationType.TERRAIN,
+              // BOTH, not TERRAIN — this app runs with globe.show === false and
+              // draws Google 3D tiles, so TERRAIN classifies onto nothing and
+              // the polygons never appear.
+              classificationType: Cesium.ClassificationType.BOTH,
             },
             description: `${country.name} — ${country.rate} homicides per 100,000 (${country.year}) · ${band.label}`,
             properties: {

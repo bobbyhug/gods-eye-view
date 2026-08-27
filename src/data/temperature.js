@@ -148,9 +148,12 @@ export function createTemperatureLayer() {
               Math.min(180, cell.lon + half), Math.min(90, cell.lat + half)
             ),
             material: temperatureColor(cell.t),
-            // Draped on terrain so the shading follows the ground rather than
-            // hovering as a flat sheet over mountains.
-            classificationType: Cesium.ClassificationType.TERRAIN,
+            // BOTH, not TERRAIN. This app runs with globe.show === false and
+            // renders Google photorealistic 3D tiles instead, so TERRAIN
+            // classified onto a surface that is not there — 648 cells loaded,
+            // all shown, and nothing visible on screen. BOTH drapes on the
+            // tiles as well, and still works if the globe is ever turned on.
+            classificationType: Cesium.ClassificationType.BOTH,
           },
           description: `${cell.t}°C at ${cell.lat}, ${cell.lon}`,
         });
@@ -309,11 +312,20 @@ export function createTemperatureLayer() {
     getRowControls() {
       // A handful of stops rather than every one: the row is narrow, and the
       // point is to say which end is hot.
+      // Counts are per band, not null: the row renders whatever `count` holds,
+      // so null printed the literal text "null" beside every swatch.
+      const bands = [
+        { label: '≤ -20°', t: -20, test: (v) => v <= -20 },
+        { label: '0°', t: 0, test: (v) => v > -20 && v <= 0 },
+        { label: '10°', t: 10, test: (v) => v > 0 && v <= 10 },
+        { label: '20°', t: 20, test: (v) => v > 10 && v <= 20 },
+        { label: '30°+', t: 30, test: (v) => v > 20 },
+      ];
       return {
-        legend: [-20, 0, 10, 20, 30].map((t) => ({
-          label: `${t}°`,
-          color: temperatureColor(t, 1).toCssColorString(),
-          count: null,
+        legend: bands.map((band) => ({
+          label: band.label,
+          color: temperatureColor(band.t, 1).toCssColorString(),
+          count: _cells.filter((cell) => band.test(cell.t)).length,
           blurb: 'Current air temperature at 2 m. Tap a cell for a five-day forecast.',
         })),
       };
