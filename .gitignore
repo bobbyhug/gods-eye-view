@@ -13,3 +13,6 @@ output/
 
 # Runtime temperature grid cache, rewritten every few hours.
 data/temperature-cache.json
+
+# Stray dumps from live-site verification runs.
+h.txt
