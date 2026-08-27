@@ -164,6 +164,12 @@ export function matchLocally(text) {
   if (/\b(stop (tracking|following)|untrack)\b/.test(said)) {
     return { action: 'stop_tracking', args: {}, reply: 'Stopped tracking.' };
   }
+  if (/\b(reset|home|start over|default view)\b/.test(said)) {
+    return { action: 'zoom_to_globe', args: {}, reply: 'Resetting the view.' };
+  }
+  if (/\b(zoom in|closer|move in)\b/.test(said)) {
+    return { action: 'adjust_camera_zoom', args: { direction: 'in' }, reply: 'Zooming in.' };
+  }
 
   // A named incident or a "worst in <place>" question is a search. Caught here
   // so it never gets mistaken for a navigation command.
@@ -191,6 +197,33 @@ export function matchLocally(text) {
       }
     }
   }
+  // NAVIGATION. Deliberately last, so a layer name always wins: "take me to
+  // the shootings" is a layer request, not a request to geocode the word
+  // "shootings" and fly somewhere named after it.
+  //
+  // Only explicit movement verbs count. "show me X" is NOT among them —
+  // it already means "turn on layer X" above, and letting it fall through to
+  // geocoding would send the camera somewhere every time a layer name was
+  // slightly off.
+  //
+  // This is the single most-used command and it needs no language model: the
+  // action runner geocodes the place itself.
+  const nav = /\b(?:fly|go|take me|navigate|travel|head)\s+(?:me\s+)?to\s+(?:the\s+)?(.+)$/.exec(said)
+    || /\b(?:zoom to|center on|centre on|focus on)\s+(?:the\s+)?(.+)$/.exec(said);
+  if (nav) {
+    const place = nav[1].replace(/[.?!,]+$/, '').trim();
+    const namesALayer = Object.values(LAYER_WORDS)
+      .some((words) => words.split(',').some((w) => place === w.trim()));
+    if (place && !namesALayer && place.length <= 80) {
+      return {
+        action: 'fly_to_location',
+        // `query`, not `locationQuery` — checked against flyToRequestedLocation.
+        args: { query: place },
+        reply: `Flying to ${place}.`,
+      };
+    }
+  }
+
   return null;
 }
 
@@ -420,7 +453,7 @@ export function initFreeVoice({
       const fallback = aiAvailable
         ? "I didn't catch a command."
         : 'I can only take set commands here. Try "fly to Tokyo", '
-          + '"show shootings", or "reset view".';
+          + '"show shootings", "zoom out", or "reset view".';
       const reply = intent?.reply || fallback;
       onState('idle', reply);
       speak(reply);
