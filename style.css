@@ -9757,6 +9757,45 @@ body.scene-playback-mode #first-run-launcher {
   color: var(--text-secondary);
   margin-bottom: 13px;
 }
+/* Attribution, not endorsement: the wording says this is what the record
+   states, so a label like "antisemitism" reads as a finding rather than as the
+   map's own voice. */
+.shooting-detail-motive {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 12px 0 0;
+}
+.shooting-detail-motive[hidden] { display: none; }
+.shooting-detail-motive-key {
+  font: 8px/1 var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.shooting-detail-motive-val {
+  font: 11px/1.35 var(--font-mono);
+  color: #d9c9a8;
+}
+/* Which half of the switch this incident belongs to. */
+.shooting-detail-badge {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font: 8px/1.5 var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.shooting-detail-badge.is-civilian {
+  background: rgba(226, 122, 95, 0.16);
+  color: #e6b3a0;
+}
+.shooting-detail-badge.is-military {
+  background: rgba(111, 143, 214, 0.18);
+  color: #a8bde0;
+}
+
 .shooting-detail-toll {
   display: flex;
   gap: 22px;

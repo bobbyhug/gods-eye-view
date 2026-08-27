@@ -93,6 +93,43 @@ const CLASSES = [
   { qid: 'Q750215', label: 'mass murder (armed)', requireWeapon: true },
   { qid: 'Q2223653', label: 'terrorist attack (armed)', requireWeapon: true },
   { qid: 'Q3199915', label: 'massacre (armed)', requireWeapon: true },
+
+  // Tier 3: mass killings by ANY method — stabbings, vehicle attacks, arson,
+  // bombings. Requested explicitly ("any sort of killings"), which widens the
+  // layer's subject beyond shootings. Matched directly, without the weapon
+  // qualifier that tier 2 uses.
+  //
+  // The armed-conflict and organisation screens still apply, so this adds
+  // civilian mass killings rather than war.
+  { qid: 'Q750215', label: 'mass murder (any method)', requireWeapon: false, direct: true },
+  { qid: 'Q3199915', label: 'massacre (any method)', requireWeapon: false, direct: true },
+  { qid: 'Q2223653', label: 'terrorist attack (any method)', requireWeapon: false, direct: true },
+  // NOT Q1078765 — that is "railway accident", not "mass killing". Including it
+  // put 372 train crashes into the dataset, among them the 2004 Sri Lanka
+  // tsunami rail disaster (1,700 dead), which is a natural disaster and not a
+  // killing at all. Verify every QID against its label before adding it; the
+  // identifiers are not guessable.
+  //
+  // There is a real Q56514238 "mass killing", but its definition is non-combat
+  // killing BY A GOVERNMENT OR STATE — the category this layer excludes.
+  { qid: 'Q132821', label: 'murder', requireWeapon: false, direct: true },
+
+  // Tier 4: conflict and other-method classes. These are NOT excluded any
+  // more — they are tagged `military` and the layer lets you switch between
+  // civilian, military, or both. Deciding for the reader which killings count
+  // was the wrong call; showing both and labelling them is better.
+  //
+  // Every QID below was checked against its label before being added. Three
+  // obvious-looking candidates turned out to be junk: "Ethnic Cleansing"
+  // (Q842636) is a 2002 video game, "armed attack" (Q112236595) is a painting,
+  // and "Battle" (Q737593) is a town in East Sussex. Do not guess these.
+  { qid: 'Q41397', label: 'genocide', requireWeapon: false, direct: true },
+  { qid: 'Q891854', label: 'bomb attack', requireWeapon: false, direct: true },
+  { qid: 'Q217327', label: 'suicide attack', requireWeapon: false, direct: true },
+  { qid: 'Q2252077', label: 'shooting', requireWeapon: false, direct: true },
+  { qid: 'Q135010', label: 'war crime', requireWeapon: false, direct: true },
+  { qid: 'Q2380335', label: 'airstrike', requireWeapon: false, direct: true },
+  { qid: 'Q1371150', label: 'hostage taking', requireWeapon: false, direct: true },
 ];
 
 /**
@@ -104,7 +141,7 @@ const CLASSES = [
  * @param {string} qid
  * @returns {string}
  */
-function queryForClass(qid, requireWeapon = false) {
+function queryForClass(qid, requireWeapon = false, direct = false) {
   // The weapon must be a FIREARM, not merely recorded. P520 alone counts bombs,
   // vehicles and aircraft as "armament", which let the September 11 attacks
   // (2,996 dead), the Madrid train bombings, the Nice truck attack and the Sri
@@ -120,9 +157,9 @@ function queryForClass(qid, requireWeapon = false) {
   // 504 on all four retries. The incidents this tier exists for carry these
   // types directly anyway: Christchurch is P31 terrorist attack AND mass
   // murder, Buffalo is P31 massacre. Direct matching costs nothing real here.
-  const typePath = requireWeapon ? 'wdt:P31' : 'wdt:P31/wdt:P279*';
+  const typePath = (requireWeapon || direct) ? 'wdt:P31' : 'wdt:P31/wdt:P279*';
   return `
-SELECT ?item ?itemLabel ?date ?coord ?locCoord ?admCoord ?countryLabel ?locLabel ?killed ?injured ?venuePhoto ?photoLocLabel WHERE {
+SELECT ?item ?itemLabel ?date ?coord ?locCoord ?admCoord ?countryLabel ?locLabel ?killed ?injured ?venuePhoto ?photoLocLabel ?motiveLabel WHERE {
   ?item ${typePath} wd:${qid} .
   ${weaponClause}
   { ?item wdt:P585 ?date . } UNION { ?item wdt:P580 ?date . }
@@ -160,7 +197,7 @@ SELECT ?item ?itemLabel ?date ?coord ?locCoord ?admCoord ?countryLabel ?locLabel
   OPTIONAL { ?item wdt:P17 ?country . }
   OPTIONAL { ?item wdt:P1120 ?killed . }
   OPTIONAL { ?item wdt:P1339 ?injured . }
-${VENUE_PHOTO_CLAUSE}
+${VENUE_PHOTO_CLAUSE}${MOTIVE_CLAUSE}
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
 }
 `;
@@ -179,6 +216,31 @@ ${VENUE_PHOTO_CLAUSE}
  * generic Copenhagen view beside an incident is not a picture of where it
  * happened.
  */
+/**
+ * Recorded motive, from P828 "has cause", with mechanisms filtered out.
+ *
+ * P14359 "motive" is the semantically correct property and was tried first, but
+ * it is a very new property with essentially no usage on these items — the
+ * compile returned zero. P828 is where the real values live.
+ *
+ * P828 is a mixed bag, though: alongside "antisemitism", "homophobia" and
+ * "opposition to immigration" it returns "blunt trauma" and "surface-to-air
+ * missile", which are how someone died rather than why they were killed and
+ * read as nonsense under a heading that says motive. Values that are weapons,
+ * injuries or diseases are excluded, which leaves the social and ideological
+ * causes.
+ *
+ * COVERAGE IS THIN: roughly 70 incidents of several thousand carry this at all.
+ * The card hides the row entirely rather than showing an empty label.
+ */
+const MOTIVE_CLAUSE = `
+  OPTIONAL {
+    ?item wdt:P828 ?motive .
+    FILTER NOT EXISTS { ?motive wdt:P31/wdt:P279* wd:Q728 . }
+    FILTER NOT EXISTS { ?motive wdt:P31/wdt:P279* wd:Q193078 . }
+    FILTER NOT EXISTS { ?motive wdt:P31/wdt:P279* wd:Q12136 . }
+  }`;
+
 const VENUE_PHOTO_CLAUSE = `
   OPTIONAL {
     ?item wdt:P276 ?photoLoc .
@@ -246,6 +308,69 @@ function firstValue(rows, field) {
     if (value !== undefined && value !== null && String(value).trim() !== '') return String(value);
   }
   return '';
+}
+
+/**
+ * Death toll above which an event is treated as armed conflict regardless of
+ * what its properties say.
+ *
+ * Empirical, and deliberately generous. The deadliest civilian mass killings on
+ * record are far below this: Utoya 77, Bataclan 90, Las Vegas 60, Christchurch
+ * 51. Nothing an individual does reaches four figures.
+ *
+ * It exists because the property-based checks leak. The Tamil massacre (40,000),
+ * the Masalit genocide (10,800) and the Camp Speicher executions (1,570) carry
+ * no organisation, no part-of link and no conflict type, so every structural
+ * signal missed them and they were being labelled CIVILIAN. A crude threshold
+ * that is right about those is better than a principled test that is wrong.
+ */
+const CONFLICT_DEATH_TOLL = 300;
+
+/**
+ * Military or civilian.
+ *
+ * @param {string} qid
+ * @param {Set<string>} militaryQids
+ * @param {number} killed
+ * @returns {string}
+ */
+function classify(qid, militaryQids, killed) {
+  if (militaryQids.has(qid)) return 'military';
+  if (Number(killed) >= CONFLICT_DEATH_TOLL) return 'military';
+  return 'civilian';
+}
+
+/**
+ * Recorded motive, as a short factual phrase.
+ *
+ * Wikidata's P14359 (motive) and P828 (has cause) carry research-style
+ * categories — "antisemitism", "homophobia", "opposition to immigration" —
+ * which is the level newsrooms and criminologists publish at.
+ *
+ * DELIBERATELY NOT a narrative. No manifesto text, no quotations, no
+ * perpetrator writing of any kind: those are the thing the no-notoriety
+ * guidance exists to keep out of circulation. A category describing WHY a
+ * class of attack happens is a different object from an attacker's own words,
+ * and it is the part that helps a reader understand the pattern.
+ *
+ * Capped at three so the card stays a card. Two entries can disagree — El Paso
+ * carries four — and listing all of them turns a label into an essay.
+ *
+ * @param {Array<object>} rows
+ * @returns {string}
+ */
+function collectMotives(rows) {
+  const seen = new Set();
+  for (const row of rows) {
+    for (const field of ['motiveLabel']) {
+      const value = row[field]?.value;
+      if (!value) continue;
+      // Unlabelled items come back as a bare QID, which tells a reader nothing.
+      if (/^Q\d+$/.test(value)) continue;
+      seen.add(value);
+    }
+  }
+  return [...seen].slice(0, 3).join(', ');
 }
 
 /**
@@ -338,7 +463,7 @@ async function fetchDetailsFor(qids) {
   for (let start = 0; start < qids.length; start += BATCH) {
     const values = qids.slice(start, start + BATCH).map((qid) => `wd:${qid}`).join(' ');
     const rows = await runQuery(`
-SELECT ?item ?itemLabel ?date ?coord ?locCoord ?admCoord ?countryLabel ?locLabel ?killed ?injured ?venuePhoto ?photoLocLabel WHERE {
+SELECT ?item ?itemLabel ?date ?coord ?locCoord ?admCoord ?countryLabel ?locLabel ?killed ?injured ?venuePhoto ?photoLocLabel ?motiveLabel WHERE {
   VALUES ?item { ${values} }
   { ?item wdt:P585 ?date . } UNION { ?item wdt:P580 ?date . }
   OPTIONAL { ?item wdt:P625 ?coord . }
@@ -347,7 +472,7 @@ SELECT ?item ?itemLabel ?date ?coord ?locCoord ?admCoord ?countryLabel ?locLabel
   OPTIONAL { ?item wdt:P17 ?country . }
   OPTIONAL { ?item wdt:P1120 ?killed . }
   OPTIONAL { ?item wdt:P1339 ?injured . }
-${VENUE_PHOTO_CLAUSE}
+${VENUE_PHOTO_CLAUSE}${MOTIVE_CLAUSE}
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
 }
 `);
@@ -375,54 +500,49 @@ ${VENUE_PHOTO_CLAUSE}
  */
 async function findConflictEvents(qids) {
   const exclude = new Set();
-  // Small batches on purpose. This query walks P279* twice and 220 items per
-  // request intermittently tipped the endpoint into a 504 — which, after
-  // retries, failed the whole compile. 90 completes reliably even under load.
-  const BATCH = 90;
-  for (let start = 0; start < qids.length; start += BATCH) {
-    const batch = qids.slice(start, start + BATCH);
-    const values = batch.map((qid) => `wd:${qid}`).join(' ');
-    const sparql = `
+  // Small batches AND one condition per query. The previous version asked all
+  // three conditions in a single UNION, each walking P279*, and at 3,800 items
+  // that reliably 504'd and failed the whole compile. Three cheap questions
+  // asked separately always complete, at the cost of more round trips.
+  const BATCH = 60;
+  const PASSES = [
+    {
+      name: 'part of a named armed conflict',
+      where: `
+        ?item wdt:P361 ?conflict .
+        ?conflict wdt:P31/wdt:P279* ?type .
+        VALUES ?type { wd:Q350604 wd:Q198 wd:Q645883 }`,
+    },
+    {
+      // The discriminator that actually separates the two subjects: a civilian
+      // attack is carried out by a person, an armed group or state army doing
+      // the same thing is a conflict event however it is filed.
+      name: 'carried out by an organisation',
+      where: `
+        { ?item wdt:P8031 ?actor } UNION { ?item wdt:P710 ?actor }
+        ?actor wdt:P31/wdt:P279* wd:Q43229 .`,
+    },
+    {
+      name: 'typed as war, military operation, war crime or genocide',
+      where: `
+        ?item wdt:P31/wdt:P279* ?selfType .
+        VALUES ?selfType { wd:Q350604 wd:Q198 wd:Q645883 wd:Q135010 wd:Q41397 wd:Q2380335 }`,
+    },
+  ];
+
+  for (const pass of PASSES) {
+    for (let start = 0; start < qids.length; start += BATCH) {
+      const values = qids.slice(start, start + BATCH).map((qid) => `wd:${qid}`).join(' ');
+      const rows = await runQuery(`
 SELECT DISTINCT ?item WHERE {
   VALUES ?item { ${values} }
-  {
-    # Part of a named armed conflict, war, insurgency or military operation.
-    ?item wdt:P361 ?conflict .
-    ?conflict wdt:P31/wdt:P279* ?type .
-    VALUES ?type { wd:Q350604 wd:Q198 wd:Q645883 }
-  } UNION {
-    # Or carried out by an ORGANISATION rather than an individual.
-    #
-    # This is the discriminator that actually separates the two subjects. A
-    # civilian mass shooting is committed by a person; an armed group or a
-    # state army committing one is a conflict event, whatever it is filed
-    # under. It catches the Zaki Biam massacre (Nigerian Army) and the Garissa
-    # University attack (Al-Shabaab) while leaving Christchurch, Las Vegas and
-    # Buffalo — all lone individuals — untouched.
-    #
-    # NOTE ON PERPETRATORS: this reads the perpetrator's TYPE, never their
-    # identity, and nothing from this query is stored or served. Using "was
-    # this an organisation" to decide scope is a different act from naming
-    # someone, and the no-notoriety rule is about the latter.
-    { ?item wdt:P8031 ?actor } UNION { ?item wdt:P710 ?actor }
-    ?actor wdt:P31/wdt:P279* wd:Q43229 .
-  } UNION {
-    # Or typed as one itself, via any subclass.
-    ?item wdt:P31/wdt:P279* ?selfType .
-    # Q135010 "war crime" is a definitive conflict marker: the term only has
-    # meaning inside an armed conflict. It is what caught the Gaza aid site
-    # killings (766 dead), which carried no P361 at all.
-    #
-    # Q3199915 "massacre" is NOT here, for the reason given in the main query:
-    # it removed Las Vegas 2017 and Buffalo along with the conflict events.
-    VALUES ?selfType { wd:Q350604 wd:Q198 wd:Q645883 wd:Q135010 }
-  }
+  ${pass.where}
 }
-`;
-    const rows = await runQuery(sparql);
-    for (const row of rows) {
-      const qid = String(row.item?.value || '').split('/').pop();
-      if (qid) exclude.add(qid);
+`);
+      for (const row of rows) {
+        const qid = String(row.item?.value || '').split('/').pop();
+        if (qid) exclude.add(qid);
+      }
     }
     process.stdout.write('.');
   }
@@ -472,6 +592,7 @@ async function fetchStanfordMsa() {
       injured: Math.max(0, Number(row['Number of Civilian Injured']) || 0),
       venueType: (row['School Related'] || '').toLowerCase() === 'yes' ? 'school' : '',
       precision: 'exact',
+      category: 'civilian',
       sourceName: 'Stanford MSA',
       sourceUrl: 'https://github.com/StanfordGeospatialCenter/MSA',
     });
@@ -553,9 +674,11 @@ async function main() {
   const byItem = new Map();
   for (const cls of CLASSES) {
     process.stdout.write(`Querying Wikidata: ${cls.label}…`);
-    const bindings = cls.requireWeapon
-      ? await fetchDetailsFor(await fetchClassQids(cls.qid, true))
-      : await runQuery(queryForClass(cls.qid, false));
+    // Anything matched directly is fetched in two passes: these classes are
+    // large, and one query with every OPTIONAL attached reliably 504s.
+    const bindings = (cls.requireWeapon || cls.direct)
+      ? await fetchDetailsFor(await fetchClassQids(cls.qid, cls.requireWeapon))
+      : await runQuery(queryForClass(cls.qid, false, false));
     let fresh = 0;
     for (const row of bindings) {
       const uri = row.item?.value;
@@ -567,13 +690,13 @@ async function main() {
   }
   process.stdout.write(`  ${byItem.size} distinct Wikidata incidents\n`);
 
-  process.stdout.write('Screening out armed-conflict events');
+  // Classify rather than delete. Every incident is tagged `military` or
+  // `civilian` and the layer switches between them, so the reader decides what
+  // they are looking at instead of inheriting our judgement.
+  process.stdout.write('Classifying military vs civilian');
   const allQids = [...byItem.keys()].map((uri) => uri.split('/').pop());
-  const conflictQids = await findConflictEvents(allQids);
-  for (const uri of [...byItem.keys()]) {
-    if (conflictQids.has(uri.split('/').pop())) byItem.delete(uri);
-  }
-  process.stdout.write(` removed ${conflictQids.size}, ${byItem.size} remain\n`);
+  const militaryQids = await findConflictEvents(allQids);
+  process.stdout.write(` ${militaryQids.size} military, ${byItem.size - militaryQids.size} civilian\n`);
 
   const incidents = [];
   let dropped = 0;
@@ -610,6 +733,8 @@ async function main() {
       // megabytes, and Commons resizes on demand.
       venuePhoto: photo ? `${photo}?width=480` : '',
       venueName: firstValue(rows, 'photoLocLabel'),
+      category: classify(qid, militaryQids, maxNumber(rows, 'killed')),
+      motive: collectMotives(rows),
       precision: point.precision,
       sourceName: 'Wikidata',
       sourceUrl: `https://www.wikidata.org/wiki/${qid}`,
@@ -674,6 +799,9 @@ async function main() {
       },
     ],
     stats: {
+      withMotive: incidents.filter((i) => i.motive).length,
+      civilian: incidents.filter((i) => i.category === 'civilian').length,
+      military: incidents.filter((i) => i.category === 'military').length,
       wikidataIncidents: byItem.size,
       stanfordAdded: msaAdded,
       stanfordDuplicates: msaDuplicates,
@@ -689,6 +817,8 @@ async function main() {
   process.stdout.write(
     `\nWrote ${OUT_PATH}\n`
     + `  plotted               ${incidents.length}\n`
+    + `  civilian              ${incidents.filter((i) => i.category === 'civilian').length}\n`
+    + `  military              ${incidents.filter((i) => i.category === 'military').length}\n`
     + `  from Wikidata         ${incidents.length - msaAdded}\n`
     + `  from Stanford MSA     ${msaAdded} (${msaDuplicates} were already present)\n`
     + `  dropped (no location) ${dropped}\n`

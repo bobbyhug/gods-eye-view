@@ -72,6 +72,23 @@ export function tollColor(killed) {
 }
 
 /**
+ * Marker colour for a military/conflict event.
+ *
+ * Same lightness ramp as tollColor, shifted to a cool hue. Category is carried
+ * by hue and death toll by intensity, so the two dimensions never compete.
+ *
+ * @param {number} killed
+ * @returns {Cesium.Color}
+ */
+export function militaryColor(killed) {
+  const n = Number(killed) || 0;
+  if (n >= 20) return Cesium.Color.fromCssColorString('#6f8fd6');
+  if (n >= 10) return Cesium.Color.fromCssColorString('#7fa3c9');
+  if (n >= 5) return Cesium.Color.fromCssColorString('#93b0c4');
+  return Cesium.Color.fromCssColorString('#a9bcc6');
+}
+
+/**
  * Marker radius in pixels.
  *
  * Compressed with a cube root so a 60-death incident does not render sixty
@@ -119,9 +136,38 @@ export function normalizeIncident(raw, index = 0) {
     precision: typeof raw.precision === 'string' ? raw.precision : 'exact',
     venuePhoto: typeof raw.venuePhoto === 'string' ? raw.venuePhoto : '',
     venueName: typeof raw.venueName === 'string' ? raw.venueName : '',
+    category: raw.category === 'military' ? 'military' : 'civilian',
+    motive: cleanMotive(raw.motive),
     sourceName: typeof raw.sourceName === 'string' ? raw.sourceName : '',
     sourceUrl: typeof raw.sourceUrl === 'string' ? raw.sourceUrl : '',
   };
+}
+
+/**
+ * Terms that describe HOW someone died rather than why.
+ *
+ * The compiler already filters values typed as weapons, injuries or diseases,
+ * but a few are typed as none of those and still slip through — "blunt trauma",
+ * "surface-to-air missile". Two out of eighty-two, and both would read as
+ * absurd under a heading that says motive.
+ */
+const MECHANISM_TERMS = [
+  'trauma', 'missile', 'wound', 'gunshot', 'explosion', 'asphyxia',
+  'strangulation', 'stabbing', 'blunt', 'firearm', 'bomb',
+];
+
+/**
+ * Drop mechanism values from a motive string.
+ *
+ * @param {unknown} raw
+ * @returns {string}
+ */
+export function cleanMotive(raw) {
+  if (typeof raw !== 'string' || !raw) return '';
+  const kept = raw.split(',')
+    .map((part) => part.trim())
+    .filter((part) => part && !MECHANISM_TERMS.some((term) => part.toLowerCase().includes(term)));
+  return kept.join(', ');
 }
 
 /**
@@ -135,6 +181,19 @@ export function filterByToll(incidents, minKilled) {
   const floor = Math.max(0, Number(minKilled) || 0);
   if (floor <= 0) return incidents;
   return incidents.filter((incident) => incident.killed >= floor);
+}
+
+/**
+ * Incidents in the selected category.
+ *
+ * @param {Array<object>} incidents
+ * @param {string} category - 'civilian' | 'military' | 'both'
+ * @returns {Array<object>}
+ */
+export function filterByCategory(incidents, category) {
+  if (category === 'both') return incidents;
+  const want = category === 'military' ? 'military' : 'civilian';
+  return incidents.filter((incident) => incident.category === want);
 }
 
 /**
@@ -177,6 +236,8 @@ export function createShootingsLayer() {
   /** @type {Array<object>} */
   let _incidents = [];
   let _minKilled = MIN_KILLED_FLOOR;
+  /** 'civilian' | 'military' | 'both' */
+  let _category = 'civilian';
   let _shown = 0;
   let _lastUpdate = null;
   let _lastError = null;
@@ -195,7 +256,7 @@ export function createShootingsLayer() {
     if (!_dataSource) return;
     _dataSource.entities.removeAll();
     _byEntityId.clear();
-    const visible = filterByToll(_incidents, _minKilled);
+    const visible = filterByToll(filterByCategory(_incidents, _category), _minKilled);
     _shown = visible.length;
 
     let rejected = 0;
@@ -217,7 +278,12 @@ export function createShootingsLayer() {
           // not be seen or clicked.
           heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
           pixelSize: tollRadiusPx(incident.killed),
-          color: tollColor(incident.killed).withAlpha(0.85),
+          // Military events take a cool hue so the two categories stay
+          // distinguishable when BOTH is selected — otherwise a mixed map is
+          // just an undifferentiated smear of dots.
+          color: (incident.category === 'military'
+            ? militaryColor(incident.killed)
+            : tollColor(incident.killed)).withAlpha(0.85),
           outlineColor: Cesium.Color.BLACK.withAlpha(0.55),
           outlineWidth: 1,
           // Markers stay legible at globe scale without swelling as you close
@@ -314,6 +380,17 @@ export function createShootingsLayer() {
     // be a claim, and a missing figure is not the same as a zero one.
     set('killed', incident.killed > 0 ? String(incident.killed) : '—');
     set('injured', incident.injured > 0 ? String(incident.injured) : '—');
+    const motiveRow = _card.querySelector('[data-shooting="motive-row"]');
+    if (motiveRow) {
+      set('motive', incident.motive || '');
+      motiveRow.hidden = !incident.motive;
+    }
+    const badge = _card.querySelector('[data-shooting="category"]');
+    if (badge) {
+      const military = incident.category === 'military';
+      badge.textContent = military ? 'Armed conflict' : 'Civilian attack';
+      badge.className = `shooting-detail-badge is-${military ? 'military' : 'civilian'}`;
+    }
     set('precision', precisionNote(incident.precision));
 
     // The photograph is of the PLACE. Hidden entirely when there is none —
@@ -379,7 +456,12 @@ export function createShootingsLayer() {
 
   const layer = {
     id: 'shootings',
-    name: 'Mass Shootings',
+    // Named for what it now HOLDS, not what it started as. The layer was
+    // shootings-only; it now carries mass killings by any method — stabbings,
+    // vehicle attacks, bombings. Leaving it labelled "Mass Shootings" with a
+    // bombing inside it would be a false label on a map, which is worse than an
+    // awkward rename. The layer id is unchanged so share links keep working.
+    name: 'Mass Killings',
     icon: '🕯️',
     source: 'public records',
     updateInterval: UPDATE_INTERVAL_MS,
@@ -444,6 +526,15 @@ export function createShootingsLayer() {
      * @returns {boolean} Whether anything was accepted.
      */
     setParams(params = {}) {
+      if (typeof params.category === 'string') {
+        const next = ['civilian', 'military', 'both'].includes(params.category)
+          ? params.category : 'civilian';
+        if (next !== _category) {
+          _category = next;
+          render();
+        }
+        return true;
+      }
       if (!Number.isFinite(Number(params.minKilled))) return false;
       const next = Math.max(
         MIN_KILLED_FLOOR,
@@ -467,7 +558,22 @@ export function createShootingsLayer() {
      * @returns {object}
      */
     getRowControls() {
+      const counts = {
+        civilian: _incidents.filter((i) => i.category === 'civilian').length,
+        military: _incidents.filter((i) => i.category === 'military').length,
+      };
       return {
+        chips: [
+          { id: 'cat-civilian', label: `CIVILIAN ${counts.civilian}`,
+            active: _category === 'civilian', params: { category: 'civilian' },
+            title: 'Attacks by individuals on civilians' },
+          { id: 'cat-military', label: `MILITARY ${counts.military}`,
+            active: _category === 'military', params: { category: 'military' },
+            title: 'Armed conflict, insurgency, state violence and attacks by armed groups' },
+          { id: 'cat-both', label: 'BOTH',
+            active: _category === 'both', params: { category: 'both' },
+            title: 'Show every recorded incident' },
+        ],
         sliders: [{
           id: 'min-killed',
           paramKey: 'minKilled',

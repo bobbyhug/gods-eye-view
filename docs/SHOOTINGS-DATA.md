@@ -1,48 +1,86 @@
-# Mass shootings layer — data sources
+# Mass Killings layer — data sources
 
-The `shootings` layer plots civilian mass shootings, 2001–present. This
-documents where the data comes from, what was rejected and why, and what the
-layer cannot tell you.
+The `shootings` layer (shown as **Mass Killings**) plots recorded mass-casualty
+killings, 2001–present. This documents where the data comes from, what was
+rejected and why, and what the layer cannot tell you.
 
-## What is in scope
+**3,326 incidents across 131 countries** — 2,390 civilian, 936 military.
 
-Civilian mass shootings: school, university, workplace, place of worship,
-retail, nightclub and public-space attacks.
+## Two categories, and a switch
 
-**Not in scope, and actively filtered out:** armed conflict, insurgency,
-military operations and state violence. These are a different subject with
-different data, and merging them would misrepresent both.
+Incidents are **classified, not filtered out**. The row carries three chips:
 
-That filtering is not automatic. Wikidata types plenty of conflict killings as
-"mass shooting", and a first pass returned the 2015 Zaria massacre (Nigerian
-Army, ~1,000 dead), the Zaki Biam army reprisal, and the 2021 Kabul airport
-bombing. The compiler excludes anything typed as a war, war crime, suicide bombing or
-military operation, anything that is `part of` a named armed conflict, and
-anything whose **perpetrator is an organisation rather than an individual**.
+| Chip | Shows |
+| --- | --- |
+| `CIVILIAN` | Attacks by individuals — the original subject of this layer |
+| `MILITARY` | Armed conflict, insurgency, state violence, attacks by armed groups |
+| `BOTH` | Everything |
 
-That last check is the one that actually separates the two subjects: a civilian
-mass shooting is committed by a person, whereas an armed group or a state army
-doing the same thing is a conflict event however it is filed. It removes the
-Zaki Biam massacre (Nigerian Army), the Garissa University attack (Al-Shabaab)
-and the Barsalogho massacre, while leaving Christchurch, Las Vegas and Buffalo —
-all lone individuals — untouched. It reads the perpetrator's *type*, never their
-identity, and nothing from that query is stored or served.
+This replaced an earlier design that simply deleted conflict events. Deciding
+for the reader which killings count was the wrong call; showing both and
+labelling them honestly is better. Military markers take a cool hue so the two
+stay distinguishable when BOTH is selected.
 
-"Massacre" is deliberately **not** an exclusion. It reads as a war word but is
-applied just as often to civilian mass shootings; excluding it deleted the 2017
-Las Vegas shooting (60 dead) and the Buffalo Tops attack along with the conflict
-events.
+### How an incident is classified
 
-**Known residue.** A few conflict-zone events still get through — the 2017 Sinai
-mosque attack, the In Aménas siege, the 2022 Plateau State massacres. They carry
-firearms, no organisation is recorded against them, and nothing marks them as
-conflict. Removing them would mean hand-blacklisting titles, which does not
-generalise. They are a real limitation rather than an oversight.
+`military` if **any** of these hold, otherwise `civilian`:
 
-Terrorist attacks are **not** excluded. Some of the worst civilian mass
-shootings — Christchurch, Utøya — are classed as terrorism, and dropping them
-to keep the category tidy would misrepresent the subject as badly as including
-a war.
+1. It is `part of` a named armed conflict, war or military operation.
+2. Its **perpetrator is an organisation** rather than an individual. This is the
+   discriminator that actually separates the two subjects — a civilian mass
+   killing is committed by a person, whereas an armed group or a state army
+   doing the same thing is a conflict event however it is filed. It correctly
+   catches the Zaki Biam massacre (Nigerian Army) and Garissa (Al-Shabaab) while
+   leaving Christchurch, Las Vegas and Buffalo untouched.
+3. It is typed as war, military operation, war crime, genocide or airstrike.
+4. **It killed 300 or more people.** Crude, and deliberately so. The structural
+   checks leak: the Tamil massacre (40,000), the Masalit genocide (10,800) and
+   the Camp Speicher executions (1,570) carry no organisation, no part-of link
+   and no conflict type, so every principled signal missed them. The deadliest
+   civilian mass killings on record are far below this line — Utøya 77, Bataclan
+   90, Las Vegas 60 — so nothing an individual does reaches it.
+
+Check 2 reads the perpetrator's *type*, never their identity, and nothing from
+that query is stored or served.
+
+**Known residue.** Classification is imperfect in the CIVILIAN direction: the
+2017 Sinai mosque attack, the In Aménas siege and the 2022 Plateau State
+massacres sit there despite being conflict-zone events. They name no
+organisation, fall under the 300 threshold, and nothing marks them as conflict.
+Removing them would mean hand-blacklisting titles, which does not generalise.
+
+Terrorist attacks are **not** automatically military. Some of the worst civilian
+mass killings — Christchurch, Utøya — are classed as terrorism, and filing them
+under armed conflict would misrepresent them.
+
+## Photographs are of the PLACE
+
+104+ incidents carry a photograph of where it happened — the school, the mall,
+the island. Sourced from the **venue's** image (`P276` → `P18`).
+
+The incident's own `P18` is **never** used: on Wikidata it is frequently a
+photograph of the perpetrator. Settlements and administrative areas are also
+excluded as photo venues, because their image is a city skyline, and a generic
+Copenhagen view beside an incident implies a precision the record does not have.
+That filter is what takes it from 299 loose matches to photographs actually of
+the place.
+
+## Recorded motive
+
+Roughly 82 incidents carry a short motive — "antisemitism", "homophobia",
+"opposition to immigration" — from `P828`, the level newsrooms and criminologists
+publish at.
+
+Deliberately **not** a narrative: no manifesto text, no quotations, no
+perpetrator writing. A category describing why a class of attack happens is a
+different object from an attacker's own words.
+
+`P14359` "motive" is the semantically correct property and was tried first, but
+it has essentially no usage on these items and returned zero. `P828` is a mixed
+bag — alongside real motives it returns "blunt trauma" and "surface-to-air
+missile", which are how someone died rather than why — so weapon, injury and
+disease values are filtered out at compile time and a short mechanism denylist
+catches the rest client-side.
 
 ## Perpetrators are never recorded
 
