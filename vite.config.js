@@ -8478,6 +8478,127 @@ function temperatureData() {
   };
 }
 
+/**
+ * OpenRouter — free-tier chat completions.
+ *
+ *   POST /api/openrouter/chat   { messages: [...], maxTokens?, system? }
+ *   GET  /api/openrouter/status
+ *
+ * WHY THIS EXISTS: OPENAI_API_KEY is billed per token. OpenRouter publishes
+ * models with a `:free` suffix that cost nothing, so the app's text features
+ * can run without a paid account.
+ *
+ * THE KEY NEVER REACHES THE BROWSER. It is a billing credential — anyone who
+ * reads it can spend against the account. Unlike the Google Maps key, which has
+ * to be in the bundle and is defended by an HTTP-referrer restriction, this one
+ * is only ever used here, server-side.
+ *
+ * FREE MODELS ARE CONTENDED. Measured on a live key: gemma, laguna and
+ * dots-studio all returned 429 within the same minute while minimax answered
+ * normally. A single model id would therefore fail most of the time, so this
+ * walks a list and returns the first that answers. That is not a nicety; it is
+ * the difference between a feature that works and one that mostly 429s.
+ *
+ * @returns {import('vite').Plugin}
+ */
+function openRouterProxy() {
+  const ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
+  /**
+   * Tried in order. minimax first because it is the one that actually answered
+   * under load in testing; the rest are fallbacks for when it is busy too.
+   * Reasoning-heavy models are deliberately absent — nemotron returned "Here's
+   * a thinking process:" for a request that asked for five words.
+   */
+  const FREE_MODELS = [
+    'minimax/minimax-m3:free',
+    'google/gemma-4-31b-it:free',
+    'google/gemma-4-26b-a4b-it:free',
+    'poolside/laguna-s-2.1:free',
+    'dots-studio/dots-3-note-preview:free',
+  ];
+
+  /**
+   * First model that answers.
+   *
+   * @param {Array<object>} messages
+   * @param {number} maxTokens
+   * @returns {Promise<{text: string, model: string}>}
+   */
+  async function complete(messages, maxTokens) {
+    const key = process.env.OPENROUTER_API_KEY;
+    if (!key) throw new Error('OPENROUTER_API_KEY is not set');
+    let lastError = 'no model answered';
+
+    for (const model of FREE_MODELS) {
+      try {
+        const response = await fetch(ENDPOINT, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${key}`,
+            'Content-Type': 'application/json',
+            // OpenRouter asks for these so usage is attributable.
+            'HTTP-Referer': 'https://github.com/uhrichsam4/gods-eye-view',
+            'X-Title': "God's Eye View",
+          },
+          body: JSON.stringify({ model, messages, max_tokens: maxTokens }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || data?.error) {
+          lastError = data?.error?.message || `HTTP ${response.status}`;
+          continue;
+        }
+        const text = String(data?.choices?.[0]?.message?.content || '').trim();
+        // An empty answer is a failed answer — dots-studio returned one.
+        if (!text) { lastError = `${model} returned empty content`; continue; }
+        return { text, model };
+      } catch (error) {
+        lastError = String(error?.message || error);
+      }
+    }
+    throw new Error(lastError);
+  }
+
+  function install(middlewares) {
+    middlewares.use('/api/openrouter', async (req, res) => {
+      const sendJson = (status, obj) => {
+        if (res.headersSent) return;
+        res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+        res.end(JSON.stringify(obj));
+      };
+      const subPath = String(req.url || '/').split('?')[0];
+
+      if (subPath === '/status') {
+        // Whether a key exists, never the key itself.
+        sendJson(200, { configured: Boolean(process.env.OPENROUTER_API_KEY), models: FREE_MODELS });
+        return;
+      }
+
+      if (subPath !== '/chat' || req.method !== 'POST') {
+        sendJson(405, { error: 'POST /api/openrouter/chat' });
+        return;
+      }
+
+      try {
+        const raw = await readRequestBody(req, 64 * 1024);
+        const body = JSON.parse(raw || '{}');
+        const messages = Array.isArray(body.messages) ? body.messages : [];
+        if (!messages.length) { sendJson(400, { error: 'messages is required' }); return; }
+        if (body.system) messages.unshift({ role: 'system', content: String(body.system) });
+        const maxTokens = Math.min(Math.max(Number(body.maxTokens) || 300, 1), 2000);
+        const result = await complete(messages, maxTokens);
+        sendJson(200, result);
+      } catch (error) {
+        sendJson(502, { error: String(error?.message || error) });
+      }
+    });
+  }
+
+  return {
+    name: 'openrouter-proxy',
+    configureServer(server) { install(server.middlewares); },
+  };
+}
+
 function alsoServeInPreview(plugin) {
   if (!plugin || typeof plugin.configureServer !== 'function') return plugin;
   if (typeof plugin.configurePreviewServer === 'function') return plugin;
@@ -8529,6 +8650,7 @@ export default defineConfig(({ mode }) => {
       shootingsData(),
       safetyData(),
       temperatureData(),
+      openRouterProxy(),
     ].map((plugin, index) => (index === 0 ? plugin : alsoServeInPreview(plugin))),
     server: {
       host: env.HOST || 'localhost',
