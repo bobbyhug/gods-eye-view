@@ -8257,6 +8257,227 @@ function shootingsData() {
   };
 }
 
+/**
+ * World safety index — country polygons with an intentional-homicide rate.
+ *
+ * Same shape as shootingsData(): a compiled file, mtime-keyed cache, ETag
+ * revalidation. See scripts/compile-safety.mjs for what the number means and
+ * why homicide rather than a composite crime index.
+ *
+ * @returns {import('vite').Plugin}
+ */
+function safetyData() {
+  const DATA_PATH = path.resolve(__dirname, 'data/safety.json');
+  let cached = null;
+  let cachedMtimeMs = -1;
+
+  /** @returns {Promise<object>} */
+  async function load() {
+    let mtimeMs = -1;
+    try {
+      mtimeMs = (await fs.promises.stat(DATA_PATH)).mtimeMs;
+    } catch {
+      mtimeMs = -1;
+    }
+    if (cached && mtimeMs === cachedMtimeMs) return cached;
+    try {
+      cached = JSON.parse(await fs.promises.readFile(DATA_PATH, 'utf8'));
+    } catch {
+      // No compiled dataset: an empty layer is correct. It must never invent
+      // a safety rating for a country it has no figure for.
+      cached = { countries: [], sources: [], coverageNote: 'No compiled dataset present.' };
+    }
+    cachedMtimeMs = mtimeMs;
+    return cached;
+  }
+
+  return {
+    name: 'safety-data',
+    configureServer(server) {
+      server.middlewares.use('/api/safety', async (req, res) => {
+        try {
+          const payload = await load();
+          const body = JSON.stringify(payload);
+          const etag = `W/"safety-${payload.countries.length}-${cachedMtimeMs}"`;
+          if (req.headers['if-none-match'] === etag) {
+            res.writeHead(304, { ETag: etag, 'Cache-Control': 'no-cache' });
+            res.end();
+            return;
+          }
+          res.writeHead(200, {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache',
+            ETag: etag,
+          });
+          res.end(body);
+        } catch (error) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: String(error?.message || error) }));
+        }
+      });
+    },
+  };
+}
+
+/**
+ * Global temperature grid, and a point forecast.
+ *
+ * Open-Meteo: free, no API key, CC BY 4.0. Already the app's weather provider.
+ *
+ *   GET /api/temperature            -> a whole-world grid of current temperatures
+ *   GET /api/temperature/forecast?lat=&lon=  -> five days for one place
+ *
+ * The grid is fetched SERVER-SIDE and cached. Open-Meteo takes many
+ * coordinates per request, so a global grid is a handful of calls rather than
+ * hundreds — but doing it in the browser would mean every visitor making those
+ * calls against a free public API, which is how a free public API stops being
+ * available.
+ *
+ * @returns {import('vite').Plugin}
+ */
+function temperatureData() {
+  /**
+   * Grid spacing in degrees.
+   *
+   * 10 gives 36x18 = 630 cells. A 5-degree grid (2,520 cells) was tried and
+   * rate-limited immediately: Open-Meteo weights a request by how many
+   * locations it carries, so a 240-coordinate call counts as roughly 240
+   * requests and a full sweep blows the minute limit in one go. 630 cells is
+   * still a legible world map and stays inside the free tier.
+   */
+  const STEP_DEG = 10;
+  /** Coordinates per upstream request. */
+  const BATCH = 100;
+  /** Pause between batches, so a sweep spreads across the minute window. */
+  const BATCH_PAUSE_MS = 1500;
+  /** Grid lifetime. Temperature does not move fast enough to justify less. */
+  const TTL_MS = 30 * 60 * 1000;
+
+  let cache = null;
+  let cachedAt = 0;
+  let inflight = null;
+
+  /** @returns {Array<{lat: number, lon: number}>} */
+  function buildGrid() {
+    const points = [];
+    // Stops short of the poles: Open-Meteo has no data above ~85 and the cells
+    // there are geometrically absurd anyway.
+    for (let lat = -85; lat <= 85; lat += STEP_DEG) {
+      for (let lon = -180; lon < 180; lon += STEP_DEG) {
+        points.push({ lat: Number(lat.toFixed(2)), lon: Number(lon.toFixed(2)) });
+      }
+    }
+    return points;
+  }
+
+  /** @returns {Promise<object>} */
+  async function fetchGrid() {
+    const grid = buildGrid();
+    const cells = [];
+    for (let start = 0; start < grid.length; start += BATCH) {
+      const batch = grid.slice(start, start + BATCH);
+      const params = new URLSearchParams({
+        latitude: batch.map((p) => p.lat).join(','),
+        longitude: batch.map((p) => p.lon).join(','),
+        current: 'temperature_2m',
+        timezone: 'UTC',
+      });
+      // 429 here is a minute-window limit, not a permanent refusal, so it is
+      // worth waiting out rather than failing the whole grid.
+      let payload = null;
+      for (let attempt = 1; attempt <= 3; attempt += 1) {
+        const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`, {
+          headers: { 'User-Agent': 'GodsEyeView/1.0 temperature-grid' },
+        });
+        if (response.ok) { payload = await response.json(); break; }
+        if (response.status !== 429 || attempt === 3) {
+          throw new Error(`Open-Meteo HTTP ${response.status}`);
+        }
+        await new Promise((resolve) => { setTimeout(resolve, 20000 * attempt); });
+      }
+      if (!payload) throw new Error('Open-Meteo: no payload');
+      const list = Array.isArray(payload) ? payload : [payload];
+      for (const item of list) {
+        const temp = item?.current?.temperature_2m;
+        if (!Number.isFinite(Number(temp))) continue;
+        cells.push({
+          lat: Number(item.latitude.toFixed(2)),
+          lon: Number(item.longitude.toFixed(2)),
+          t: Number(Number(temp).toFixed(1)),
+        });
+      }
+      if (start + BATCH < grid.length) {
+        await new Promise((resolve) => { setTimeout(resolve, BATCH_PAUSE_MS); });
+      }
+    }
+    return {
+      generated: new Date().toISOString(),
+      stepDeg: STEP_DEG,
+      unit: '°C',
+      source: { name: 'Open-Meteo', url: 'https://open-meteo.com/', licence: 'CC BY 4.0' },
+      cells,
+    };
+  }
+
+  return {
+    name: 'temperature-data',
+    configureServer(server) {
+      server.middlewares.use('/api/temperature', async (req, res) => {
+        const sendJson = (status, obj) => {
+          if (res.headersSent) return;
+          res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+          res.end(JSON.stringify(obj));
+        };
+        try {
+          const url = new URL(req.url || '/', 'http://local');
+          const subPath = url.pathname;
+
+          if (subPath === '/forecast') {
+            const lat = Number(url.searchParams.get('lat'));
+            const lon = Number(url.searchParams.get('lon'));
+            if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+              sendJson(400, { error: 'lat and lon are required' });
+              return;
+            }
+            const params = new URLSearchParams({
+              latitude: String(lat),
+              longitude: String(lon),
+              current: 'temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code,apparent_temperature',
+              daily: 'temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max',
+              forecast_days: '5',
+              timezone: 'auto',
+            });
+            const upstream = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`, {
+              headers: { 'User-Agent': 'GodsEyeView/1.0 temperature-forecast' },
+            });
+            if (!upstream.ok) {
+              sendJson(502, { error: `Open-Meteo HTTP ${upstream.status}` });
+              return;
+            }
+            sendJson(200, await upstream.json());
+            return;
+          }
+
+          // Grid. Concurrent callers share one upstream fetch rather than each
+          // starting their own sweep of a free public API.
+          const fresh = cache && (Date.now() - cachedAt) < TTL_MS;
+          if (!fresh) {
+            if (!inflight) {
+              inflight = fetchGrid()
+                .then((result) => { cache = result; cachedAt = Date.now(); return result; })
+                .finally(() => { inflight = null; });
+            }
+            await inflight;
+          }
+          sendJson(200, cache || { cells: [] });
+        } catch (error) {
+          sendJson(500, { error: String(error?.message || error) });
+        }
+      });
+    },
+  };
+}
+
 function alsoServeInPreview(plugin) {
   if (!plugin || typeof plugin.configureServer !== 'function') return plugin;
   if (typeof plugin.configurePreviewServer === 'function') return plugin;
@@ -8306,6 +8527,8 @@ export default defineConfig(({ mode }) => {
       openAiRealtimeProxy(),
       googlePlacesContextProxy(),
       shootingsData(),
+      safetyData(),
+      temperatureData(),
     ].map((plugin, index) => (index === 0 ? plugin : alsoServeInPreview(plugin))),
     server: {
       host: env.HOST || 'localhost',

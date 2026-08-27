@@ -949,6 +949,20 @@
   </div>
 
 
+  <!-- ── Temperature: tapped-cell forecast ────────────────────────────────
+       Bottom-left, opposite the incident card so the two never collide. -->
+  <div id="temp-panel" class="temp-panel" hidden role="dialog" aria-labelledby="temp-panel-place">
+    <button type="button" class="temp-close" data-temp="close" aria-label="Close forecast">×</button>
+    <div class="temp-head">
+      <div class="temp-now" data-temp="now">—</div>
+      <div class="temp-head-text">
+        <div class="temp-place" id="temp-panel-place" data-temp="place"></div>
+        <div class="temp-cond" data-temp="cond"></div>
+      </div>
+    </div>
+    <div class="temp-days" data-temp="days"></div>
+  </div>
+
   <!-- ── Mass shootings: incident detail ──────────────────────────────────
        Cesium's own InfoBox is disabled app-wide (infoBox: false), so clicking a
        marker needs its own card. Carries no perpetrator information, because

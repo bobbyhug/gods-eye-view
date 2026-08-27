@@ -289,11 +289,18 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
   Object.freeze({ id: 'military-installations', token: 'i', disposition: 'enabled-only' }),
   Object.freeze({ id: 'radio', token: 'r', disposition: 'enabled+options', optionOwner: 'radio' }),
   Object.freeze({ id: 'rocket-launches', token: 'x', disposition: 'enabled-only' }),
+  // 'y' because s/a/i are taken. enabled-only: the layer has no options,
+  // only a colour legend. Sorted before 'satellites' — the registry is
+  // asserted to be in lexical order.
+  Object.freeze({ id: 'safety', token: 'y', disposition: 'enabled-only' }),
   Object.freeze({ id: 'satellites', token: 's', disposition: 'enabled+options', optionOwner: 'satellites' }),
   // 'k' because 's' is satellites. enabled-only for now: the death-toll
   // filter is a view preference rather than layer state a link must carry.
   Object.freeze({ id: 'shootings', token: 'k', disposition: 'enabled-only' }),
   Object.freeze({ id: 'telegeography-submarine-cables', token: 'u', disposition: 'enabled-only' }),
+  // 'p' because t is traffic. Sorted between telegeography and traffic —
+  // the registry is asserted to be in lexical order.
+  Object.freeze({ id: 'temperature', token: 'p', disposition: 'enabled-only' }),
   Object.freeze({ id: 'traffic', token: 't', disposition: 'enabled-only' }),
 ]);
 
