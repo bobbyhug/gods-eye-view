@@ -117,6 +117,31 @@ const LAYER_WORDS = Object.freeze({
 });
 
 /**
+ * Whether the free voice path should take over the microphone.
+ *
+ * A PURE PREDICATE ON PURPOSE. This decision was previously inline in the
+ * startup sequence and got it wrong in a way nobody could test: it also
+ * required the OpenRouter key to be configured. That key lives in a gitignored
+ * .env, so it is absent in production — the free path never bound, the mic
+ * stayed wired to the OpenAI Realtime controller, and clicking it reported
+ * "OPENAI_API_KEY is not set" to a user with no way to supply one.
+ *
+ * The key is irrelevant to whether voice can run. `matchLocally` resolves the
+ * great majority of commands with no network call at all, and the parser is
+ * consulted only for phrasings it does not recognise. A missing key narrows
+ * what can be understood; it does not stop the microphone working.
+ *
+ * @param {{realtimeReady?: boolean, speechSupported?: boolean}} state
+ * @returns {boolean}
+ */
+export function shouldUseFreeVoice({ realtimeReady = false, speechSupported = false } = {}) {
+  // Realtime, when it is actually available, is the better path — leave it be.
+  if (realtimeReady) return false;
+  // Nothing to bind to without browser speech support.
+  return speechSupported === true;
+}
+
+/**
  * Commands answerable without a round trip.
  *
  * Two reasons this exists rather than sending everything to the model. It is
@@ -276,6 +301,17 @@ export function initFreeVoice({
   });
 
   /**
+   * Whether the free-tier intent parser is reachable.
+   *
+   * Only affects what we SAY when nothing matches. It must never gate whether
+   * voice runs at all: the local matcher handles the great majority of
+   * commands with no network call, so a deployment without an OpenRouter key
+   * still has a working microphone — it just cannot interpret phrasings the
+   * matcher has not seen.
+   */
+  let aiAvailable = true;
+
+  /**
    * Wait for the app's startup camera restore to finish.
    *
    * A camera command issued during startup LOSES. The restore settles
@@ -377,7 +413,15 @@ export function initFreeVoice({
     }
 
     if (!intent || intent.action === 'none') {
-      const reply = intent?.reply || "I didn't catch a command.";
+      // Distinguish "heard you, no such command" from "cannot interpret free
+      // phrasing at all here". Telling someone their phrasing was not
+      // understood, when in fact nothing on this deployment could ever have
+      // understood it, sends them rephrasing forever.
+      const fallback = aiAvailable
+        ? "I didn't catch a command."
+        : 'I can only take set commands here. Try "fly to Tokyo", '
+          + '"show shootings", or "reset view".';
+      const reply = intent?.reply || fallback;
       onState('idle', reply);
       speak(reply);
       return;
@@ -430,6 +474,13 @@ export function initFreeVoice({
   }
 
   return {
+    /**
+     * Tell the layer whether the intent parser is reachable.
+     *
+     * @param {boolean} value
+     */
+    setAiAvailable(value) { aiAvailable = value !== false; },
+
     /** @returns {boolean} */
     isSupported() { return supported; },
 
