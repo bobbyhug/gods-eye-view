@@ -18,6 +18,30 @@ import * as Cesium from 'cesium';
 const GRID_URL = '/api/temperature';
 const FORECAST_URL = '/api/temperature/forecast';
 
+/**
+ * NASA GIBS — free, keyless, 1 km satellite tiles.
+ *
+ * This is the answer to "why can't the mountain be cold and the valley warm".
+ * Open-Meteo serves POINTS and caps at 600 per minute, measured; resolving
+ * terrain needs roughly 0.1-degree sampling, some 6.5 million points, which no
+ * amount of pacing reaches. GIBS serves PRE-RENDERED TILES from a satellite
+ * instrument, so every pixel is already computed — the same class of product
+ * MSN Weather and Windy draw.
+ *
+ * WHAT IT MEASURES IS DIFFERENT, and the layer says so rather than quietly
+ * swapping one quantity for another. This is LAND SURFACE temperature — how hot
+ * the ground itself is — not the air two metres above it. Desert sand can read
+ * 20 C hotter than the air over it. It is real measured data and it renders
+ * terrain beautifully; it is just not the number a thermometer on your porch
+ * shows.
+ */
+const GIBS_URL = 'https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/'
+  + '{Layer}/default/{Time}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png';
+const GIBS_LAYER = 'MODIS_Terra_Land_Surface_Temp_Day';
+const GIBS_MATRIX = '1km';
+/** GIBS 1km tops out here; asking beyond it returns empty tiles. */
+const GIBS_MAX_LEVEL = 7;
+
 /** Server caches for 30 minutes; asking more often just re-reads that cache. */
 const UPDATE_INTERVAL_MS = 15 * 60 * 1000;
 
@@ -159,6 +183,11 @@ export function createTemperatureLayer() {
   let _clickHandler = null;
   let _panel = null;
   let _hover = null;
+  /** 'air' (Open-Meteo field) or 'surface' (NASA 1 km tiles). */
+  let _mode = 'air';
+  /** @type {object|null} */
+  let _gibsLayer = null;
+  let _gibsDate = '';
 
 
   /**
@@ -289,10 +318,78 @@ export function createTemperatureLayer() {
         tileHeight: 360,
       });
       _imageryLayer = _tileset.imageryLayers.addImageryProvider(provider);
-      _imageryLayer.show = _enabled;
+      _imageryLayer.show = _enabled && _mode === 'air';
     } catch (error) {
       _lastError = `Imagery layer failed: ${error?.message || error}`;
     }
+    _rowControlsListener?.();
+  }
+
+  /**
+   * Most recent date GIBS actually has a tile for.
+   *
+   * Satellite products publish on a lag that varies by day, so today is often
+   * empty. Probing one known tile per candidate date costs three small requests
+   * at worst and avoids showing a blank globe.
+   *
+   * @returns {Promise<string>}
+   */
+  async function resolveGibsDate() {
+    for (let back = 1; back <= 5; back += 1) {
+      const d = new Date(Date.now() - back * 86400000).toISOString().slice(0, 10);
+      const probe = GIBS_URL
+        .replace('{Layer}', GIBS_LAYER).replace('{Time}', d)
+        .replace('{TileMatrixSet}', GIBS_MATRIX)
+        .replace('{TileMatrix}', '3').replace('{TileRow}', '2').replace('{TileCol}', '4');
+      try {
+        const response = await fetch(probe, { method: 'HEAD' });
+        if (response.ok) return d;
+      } catch { /* try the next day */ }
+    }
+    return new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10);
+  }
+
+  /**
+   * Attach the NASA 1 km surface-temperature tiles.
+   *
+   * @returns {Promise<void>}
+   */
+  async function addGibs() {
+    if (!_tileset?.imageryLayers || _gibsLayer) return;
+    try {
+      _gibsDate = await resolveGibsDate();
+      const provider = new Cesium.WebMapTileServiceImageryProvider({
+        url: GIBS_URL,
+        layer: GIBS_LAYER,
+        style: 'default',
+        format: 'image/png',
+        tileMatrixSetID: GIBS_MATRIX,
+        maximumLevel: GIBS_MAX_LEVEL,
+        tilingScheme: new Cesium.GeographicTilingScheme(),
+        dimensions: { Time: _gibsDate },
+        credit: new Cesium.Credit('NASA EOSDIS GIBS · MODIS', true),
+      });
+      _gibsLayer = _tileset.imageryLayers.addImageryProvider(provider);
+      _gibsLayer.alpha = FIELD_ALPHA;
+      _gibsLayer.show = _enabled && _mode === 'surface';
+    } catch (error) {
+      _lastError = `NASA tiles failed: ${error?.message || error}`;
+    }
+  }
+
+  /** @returns {void} */
+  function removeGibs() {
+    if (_gibsLayer && _tileset?.imageryLayers) {
+      try { _tileset.imageryLayers.remove(_gibsLayer, true); } catch { /* already gone */ }
+    }
+    _gibsLayer = null;
+  }
+
+  /** Show whichever source is selected. */
+  function applyMode() {
+    if (_imageryLayer) _imageryLayer.show = _enabled && _mode === 'air';
+    if (_gibsLayer) _gibsLayer.show = _enabled && _mode === 'surface';
+    if (_mode === 'surface' && !_gibsLayer) void addGibs();
     _rowControlsListener?.();
   }
 
@@ -460,13 +557,14 @@ export function createTemperatureLayer() {
     enable(viewer) {
       _enabled = true;
       if (!_tileset) _tileset = findPhotorealTileset(viewer);
-      if (_imageryLayer) _imageryLayer.show = true;
       installInteraction(viewer);
+      applyMode();
     },
 
     disable() {
       _enabled = false;
       if (_imageryLayer) _imageryLayer.show = false;
+      if (_gibsLayer) _gibsLayer.show = false;
       closePanel();
       hideHover();
     },
@@ -502,6 +600,18 @@ export function createTemperatureLayer() {
       _rowControlsListener = typeof listener === 'function' ? listener : null;
     },
 
+    /**
+     * @param {{mode?: string}} params
+     * @returns {boolean}
+     */
+    setParams(params = {}) {
+      if (params.mode !== 'air' && params.mode !== 'surface') return false;
+      if (params.mode === _mode) return true;
+      _mode = params.mode;
+      applyMode();
+      return true;
+    },
+
     /** @returns {object} */
     getRowControls() {
       // A handful of stops rather than every one: the row is narrow, and the
@@ -516,6 +626,18 @@ export function createTemperatureLayer() {
         { label: '30°+', t: 30, test: (v) => v > 20 },
       ];
       return {
+        chips: [
+          {
+            id: 'temp-air', label: 'AIR', active: _mode === 'air',
+            params: { mode: 'air' },
+            title: 'Air temperature 2 m above ground, Open-Meteo. Smooth but 10-degree resolution.',
+          },
+          {
+            id: 'temp-surface', label: 'SURFACE 1KM', active: _mode === 'surface',
+            params: { mode: 'surface' },
+            title: 'Land surface temperature from NASA MODIS at 1 km — shows terrain, but measures the ground, not the air.',
+          },
+        ],
         legend: bands.map((band) => ({
           label: band.label,
           color: temperatureColor(band.t, 1).toCssColorString(),
