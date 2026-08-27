@@ -8339,40 +8339,196 @@ function temperatureData() {
   /**
    * Grid spacing in degrees.
    *
-   * 10 gives 36x18 = 630 cells. A 5-degree grid (2,520 cells) was tried and
-   * rate-limited immediately: Open-Meteo weights a request by how many
-   * locations it carries, so a 240-coordinate call counts as roughly 240
-   * requests and a full sweep blows the minute limit in one go. 630 cells is
-   * still a legible world map and stays inside the free tier.
+   * 5 gives 72x35 = 2,520 points — four times the detail of the 10-degree grid,
+   * and the finest the free tier will actually serve.
+   *
+   * THE LIMIT IS MEASURED, NOT GUESSED: a probe asking for 2,016 points as fast
+   * as possible returned exactly 600 successes and then 429'd every remaining
+   * batch. Open-Meteo weights a request by how many locations it carries, so
+   * the ceiling is 600 LOCATIONS per minute regardless of how they are packed.
+   * The pacing below sits just under that, which makes a full sweep take about
+   * four and a half minutes — fine for something cached for thirty.
    */
   const STEP_DEG = 10;
   /** Coordinates per upstream request. */
   const BATCH = 100;
-  /** Pause between batches, so a sweep spreads across the minute window. */
-  const BATCH_PAUSE_MS = 1500;
-  /** Grid lifetime. Temperature does not move fast enough to justify less. */
-  const TTL_MS = 30 * 60 * 1000;
+  /**
+   * Pause between batches. 100 points every 11 s is roughly 545 per minute,
+   * comfortably under the measured 600-per-minute ceiling.
+   */
+  const BATCH_PAUSE_MS = 11000;
+  /**
+   * Grid lifetime.
+   *
+   * THE BINDING LIMIT IS DAILY, NOT PER-MINUTE. A 5-degree grid (2,520 points)
+   * was tried and blew the free tier's 10,000-calls-per-day budget in an
+   * afternoon — Open-Meteo charges one call per LOCATION, so a sweep costs its
+   * full point count. At 648 points every three hours this spends 5,184 a day
+   * and leaves the rest for the per-click forecast.
+   *
+   * Resolution is NOT what this constant buys. The coarse grid only has to
+   * carry the large-scale pattern; terrain detail comes from the elevation
+   * downscaling in the layer, which costs no quota at all.
+   */
+  const TTL_MS = 3 * 60 * 60 * 1000;
+  /**
+   * Last good grid, on disk.
+   *
+   * Without this every server restart began a fresh sweep, which is what
+   * actually exhausted the daily budget during development. It also means a
+   * quota-exhausted day shows yesterday's field instead of a blank globe.
+   */
+  const CACHE_PATH = path.resolve(__dirname, 'data/temperature-cache.json');
+  /** After a failed sweep, wait this long before trying again. */
+  const RETRY_COOLDOWN_MS = 10 * 60 * 1000;
 
   let cache = null;
   let cachedAt = 0;
   let inflight = null;
+  /** Partial results, so a long sweep can be served while it is still running. */
+  let partial = null;
+  let failedAt = 0;
 
-  /** @returns {Array<{lat: number, lon: number}>} */
-  function buildGrid() {
-    const points = [];
-    // Stops short of the poles: Open-Meteo has no data above ~85 and the cells
-    // there are geometrically absurd anyway.
-    for (let lat = -85; lat <= 85; lat += STEP_DEG) {
-      for (let lon = -180; lon < 180; lon += STEP_DEG) {
-        points.push({ lat: Number(lat.toFixed(2)), lon: Number(lon.toFixed(2)) });
+  /** Seed from disk so a restart costs nothing. */
+  function loadDiskCache() {
+    try {
+      const raw = fs.readFileSync(CACHE_PATH, 'utf8');
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed?.cells) && parsed.cells.length) {
+        const age = Date.now() - Date.parse(parsed.generated || '');
+        if (Number.isFinite(age) && age < TTL_MS && parsed.complete) {
+          cache = parsed;
+          cachedAt = Date.now() - age;
+        } else {
+          // Too old or unfinished to serve as fresh, but far better than
+          // nothing while a new sweep runs.
+          partial = { ...parsed, complete: false };
+        }
       }
+    } catch {
+      // No cache yet, or it is unreadable. Both are fine.
     }
-    return points;
   }
 
-  /** @returns {Promise<object>} */
-  async function fetchGrid() {
-    const grid = buildGrid();
+  /** @param {object} grid */
+  function saveDiskCache(grid) {
+    try {
+      fs.writeFileSync(CACHE_PATH, JSON.stringify(grid), 'utf8');
+    } catch {
+      // A read-only deploy must not break the endpoint.
+    }
+  }
+
+  loadDiskCache();
+
+  /**
+   * Grid points, ordered so that ANY PREFIX COVERS THE WHOLE WORLD.
+   *
+   * The naive row-major order was a real bug, not a stylistic one: a sweep that
+   * died partway through had fetched a contiguous band from the south pole
+   * northward, so the published partial covered latitude -85 to -10 and the
+   * entire northern hemisphere was blank. The map looked broken because, for
+   * anyone north of the equator, it was.
+   *
+   * Interlacing fixes that. Points are visited in four passes over offset
+   * sub-lattices, coarse first, so the first batch samples the globe at 4x
+   * spacing and later batches refine between those samples — progressive-JPEG
+   * ordering, applied to a fetch queue.
+   *
+   * @returns {Array<{lat: number, lon: number}>}
+   */
+  function buildGrid() {
+    /** @type {Array<{lat: number, lon: number}>} */
+    const rows = [];
+    // Stops short of the poles: Open-Meteo has no data above ~85 and the cells
+    // there are geometrically absurd anyway.
+    const lats = [];
+    for (let lat = -85; lat <= 85; lat += STEP_DEG) lats.push(Number(lat.toFixed(2)));
+    const lons = [];
+    for (let lon = -180; lon < 180; lon += STEP_DEG) lons.push(Number(lon.toFixed(2)));
+
+    // Coarse-to-fine sub-lattice offsets, as (stride, offset) pairs.
+    const passes = [[4, 0], [4, 2], [2, 1], [1, 0]];
+    const seen = new Set();
+    for (const [stride, offset] of passes) {
+      for (let i = offset; i < lats.length; i += stride) {
+        for (let j = offset; j < lons.length; j += stride) {
+          const key = `${i}:${j}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          rows.push({ lat: lats[i], lon: lons[j] });
+        }
+      }
+    }
+    // The passes above can miss points whose index parity no pass reaches;
+    // sweep up anything left so the grid is genuinely complete.
+    for (let i = 0; i < lats.length; i += 1) {
+      for (let j = 0; j < lons.length; j += 1) {
+        const key = `${i}:${j}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        rows.push({ lat: lats[i], lon: lons[j] });
+      }
+    }
+    return rows;
+  }
+
+  const SOURCE_OPEN_METEO = Object.freeze({
+    name: 'Open-Meteo', url: 'https://open-meteo.com/', licence: 'CC BY 4.0',
+  });
+  const SOURCE_MET_NO = Object.freeze({
+    name: 'MET Norway', url: 'https://api.met.no/', licence: 'CC BY 4.0',
+  });
+
+  /**
+   * Identify ourselves properly.
+   *
+   * MET Norway requires a User-Agent naming the application and a way to reach
+   * whoever runs it, and returns 403 for anything generic. This is a condition
+   * of their free access, not a nicety.
+   */
+  const USER_AGENT = 'GodsEyeView/1.0 (https://github.com/uhrichsam4/gods-eye-view)';
+
+  /**
+   * Publish what has been fetched so far.
+   *
+   * @param {Array<object>} cells
+   * @param {object} source
+   */
+  function publishPartial(cells, source) {
+    partial = {
+      generated: new Date().toISOString(),
+      stepDeg: STEP_DEG,
+      unit: '°C',
+      source,
+      cells: [...cells],
+      complete: false,
+    };
+  }
+
+  /**
+   * @param {Array<object>} cells
+   * @param {object} source
+   * @returns {object}
+   */
+  function finalise(cells, source) {
+    return {
+      generated: new Date().toISOString(),
+      stepDeg: STEP_DEG,
+      unit: '°C',
+      source,
+      cells,
+      complete: true,
+    };
+  }
+
+  /**
+   * Sweep the grid via Open-Meteo, one request per hundred points.
+   *
+   * @param {Array<{lat: number, lon: number}>} grid
+   * @returns {Promise<Array<object>>}
+   */
+  async function fetchViaOpenMeteo(grid) {
     const cells = [];
     for (let start = 0; start < grid.length; start += BATCH) {
       const batch = grid.slice(start, start + BATCH);
@@ -8382,14 +8538,16 @@ function temperatureData() {
         current: 'temperature_2m',
         timezone: 'UTC',
       });
-      // 429 here is a minute-window limit, not a permanent refusal, so it is
-      // worth waiting out rather than failing the whole grid.
       let payload = null;
       for (let attempt = 1; attempt <= 3; attempt += 1) {
         const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`, {
-          headers: { 'User-Agent': 'GodsEyeView/1.0 temperature-grid' },
+          headers: { 'User-Agent': USER_AGENT },
         });
         if (response.ok) { payload = await response.json(); break; }
+        // A daily exhaustion will never clear by waiting, so do not spend two
+        // minutes of backoff discovering that. Hand straight to the fallback.
+        const body = await response.text().catch(() => '');
+        if (/daily/i.test(body)) throw new Error('Open-Meteo daily limit exceeded');
         if (response.status !== 429 || attempt === 3) {
           throw new Error(`Open-Meteo HTTP ${response.status}`);
         }
@@ -8399,33 +8557,97 @@ function temperatureData() {
       const list = Array.isArray(payload) ? payload : [payload];
       // Pair each result with the point we ASKED for, not the one Open-Meteo
       // answered with. It snaps every request to its own model grid, so the
-      // returned coordinates are a scatter — 53 distinct latitudes and 253
-      // longitudes for 648 points — and anything downstream that assumes a
+      // returned coordinates are a scatter and anything downstream assuming a
       // regular lattice ends up almost entirely holes. Results come back in
-      // request order, so the pairing is positional. The value is for a point
-      // within about a tenth of a degree of the one requested, which at
-      // 10-degree spacing is nothing.
+      // request order, so the pairing is positional.
       for (let i = 0; i < list.length; i += 1) {
         const temp = list[i]?.current?.temperature_2m;
         const asked = batch[i];
         if (!asked || !Number.isFinite(Number(temp))) continue;
-        cells.push({
-          lat: asked.lat,
-          lon: asked.lon,
-          t: Number(Number(temp).toFixed(1)),
-        });
+        cells.push({ lat: asked.lat, lon: asked.lon, t: Number(Number(temp).toFixed(1)) });
       }
+      publishPartial(cells, SOURCE_OPEN_METEO);
+      process.stdout.write(`[temperature] open-meteo ${cells.length}/${grid.length}\n`);
       if (start + BATCH < grid.length) {
         await new Promise((resolve) => { setTimeout(resolve, BATCH_PAUSE_MS); });
       }
     }
-    return {
-      generated: new Date().toISOString(),
-      stepDeg: STEP_DEG,
-      unit: '°C',
-      source: { name: 'Open-Meteo', url: 'https://open-meteo.com/', licence: 'CC BY 4.0' },
-      cells,
-    };
+    return cells;
+  }
+
+  /**
+   * Sweep the grid via MET Norway.
+   *
+   * ONE REQUEST PER POINT, which is why this is the fallback rather than the
+   * primary: Open-Meteo answers a hundred coordinates at once. What MET has
+   * that Open-Meteo does not is no daily ceiling, so it is what keeps the map
+   * populated on a day the primary budget is gone.
+   *
+   * Paced deliberately. MET permits twenty requests a second, and this uses a
+   * quarter of that — their free access is conditional on not hammering it, and
+   * a grid that takes two minutes is entirely acceptable for something cached
+   * for three hours.
+   *
+   * @param {Array<{lat: number, lon: number}>} grid
+   * @returns {Promise<Array<object>>}
+   */
+  async function fetchViaMetNo(grid) {
+    const cells = [];
+    const CONCURRENCY = 5;
+    let cursor = 0;
+    let failures = 0;
+
+    async function worker() {
+      while (cursor < grid.length) {
+        const point = grid[cursor];
+        cursor += 1;
+        try {
+          const url = 'https://api.met.no/weatherapi/locationforecast/2.0/compact'
+            + `?lat=${point.lat}&lon=${point.lon}`;
+          const response = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
+          if (!response.ok) { failures += 1; continue; }
+          const payload = await response.json();
+          const temp = payload?.properties?.timeseries?.[0]?.data?.instant?.details?.air_temperature;
+          if (!Number.isFinite(Number(temp))) { failures += 1; continue; }
+          cells.push({ lat: point.lat, lon: point.lon, t: Number(Number(temp).toFixed(1)) });
+        } catch {
+          failures += 1;
+        }
+        if (cells.length % 100 === 0 && cells.length) {
+          publishPartial(cells, SOURCE_MET_NO);
+          process.stdout.write(`[temperature] met.no ${cells.length}/${grid.length}\n`);
+        }
+        // Roughly five requests a second across all workers.
+        await new Promise((resolve) => { setTimeout(resolve, CONCURRENCY * 200); });
+      }
+    }
+
+    await Promise.all(Array.from({ length: CONCURRENCY }, worker));
+    if (!cells.length) throw new Error(`MET Norway returned nothing (${failures} failures)`);
+    publishPartial(cells, SOURCE_MET_NO);
+    return cells;
+  }
+
+  /**
+   * Fetch the grid, preferring the cheap source and falling back to the
+   * unlimited one.
+   *
+   * The two are NOT mixed into a single grid. They are different forecast
+   * models, and stitching half of one to half of the other would put a seam
+   * across the map wherever the two happened to meet.
+   *
+   * @returns {Promise<object>}
+   */
+  async function fetchGrid() {
+    const grid = buildGrid();
+    try {
+      return finalise(await fetchViaOpenMeteo(grid), SOURCE_OPEN_METEO);
+    } catch (error) {
+      process.stdout.write(
+        `[temperature] ${error?.message || error} - falling back to MET Norway\n`
+      );
+      return finalise(await fetchViaMetNo(grid), SOURCE_MET_NO);
+    }
   }
 
   return {
@@ -8470,15 +8692,43 @@ function temperatureData() {
           // Grid. Concurrent callers share one upstream fetch rather than each
           // starting their own sweep of a free public API.
           const fresh = cache && (Date.now() - cachedAt) < TTL_MS;
-          if (!fresh) {
-            if (!inflight) {
-              inflight = fetchGrid()
-                .then((result) => { cache = result; cachedAt = Date.now(); return result; })
-                .finally(() => { inflight = null; });
-            }
-            await inflight;
+          // A failed sweep must not be retried on the very next request. When
+          // the daily quota is gone every attempt burns a minute of backoff and
+          // fails again; without this the endpoint spends all day doing that.
+          const coolingDown = failedAt && (Date.now() - failedAt) < RETRY_COOLDOWN_MS;
+          if (!fresh && !inflight && !coolingDown) {
+            inflight = fetchGrid()
+              .then((result) => {
+                cache = result;
+                cachedAt = Date.now();
+                partial = null;
+                failedAt = 0;
+                saveDiskCache(result);
+                return result;
+              })
+              .catch((error) => {
+                failedAt = Date.now();
+                // Keep the partial: a half-finished interlaced sweep is a
+                // coarse global field, which is worth far more than nothing.
+                if (partial?.cells?.length) saveDiskCache(partial);
+                process.stdout.write(`[temperature] sweep failed: ${error?.message || error}\n`);
+              })
+              .finally(() => { inflight = null; });
           }
-          sendJson(200, cache || { cells: [] });
+          // Serve, in order of preference: a fresh grid, the previous one while
+          // a refresh runs, or the partial sweep in progress.
+          if (cache) { sendJson(200, cache); return; }
+          if (partial?.cells?.length) { sendJson(200, partial); return; }
+
+          // Cold start. Waiting on `inflight` here meant waiting for the WHOLE
+          // sweep — four and a half minutes of hung request and a blank map,
+          // which is what the progressive publishing was supposed to prevent.
+          // Wait only for the first batch to land, then serve that.
+          const firstBatchDeadline = Date.now() + 30000;
+          while (!partial?.cells?.length && !cache && Date.now() < firstBatchDeadline) {
+            await new Promise((resolve) => { setTimeout(resolve, 500); });
+          }
+          sendJson(200, cache || partial || { cells: [], stepDeg: STEP_DEG, complete: false });
         } catch (error) {
           sendJson(500, { error: String(error?.message || error) });
         }

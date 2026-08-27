@@ -1,4 +1,12 @@
 import * as Cesium from 'cesium';
+import {
+  LAPSE_C_PER_M,
+  buildColorTable,
+  createCoarseElevation,
+  createTerrainTemperatureProvider,
+  sampleBilinear,
+  lapseElevation,
+} from './terrainTemperature.js';
 
 /**
  * World temperature.
@@ -42,8 +50,17 @@ const GIBS_MATRIX = '1km';
 /** GIBS 1km tops out here; asking beyond it returns empty tiles. */
 const GIBS_MAX_LEVEL = 7;
 
-/** Server caches for 30 minutes; asking more often just re-reads that cache. */
-const UPDATE_INTERVAL_MS = 15 * 60 * 1000;
+/**
+ * Refresh cadence.
+ *
+ * Short while the server's sweep is still filling in — a 5-degree grid takes
+ * about four and a half minutes to fetch under the rate limit, and the field
+ * should visibly sharpen rather than sit coarse until the next quarter hour.
+ * Long once complete, because the server caches for thirty minutes and asking
+ * sooner only re-reads that cache.
+ */
+const UPDATE_INTERVAL_MS = 60 * 1000;
+const UPDATE_INTERVAL_SETTLED_MS = 15 * 60 * 1000;
 
 /**
  * Opacity of the field.
@@ -169,12 +186,17 @@ export function createTemperatureLayer() {
   let _tileset = null;
   /** @type {object|null} */
   let _imageryLayer = null;
+  let _provider = null;
+  const _coarseElevation = createCoarseElevation();
+  /** Built once; the ramp never changes. */
+  let _colorTable = null;
   /** Bilinear sampling index, built from the cells. */
   let _lookup = null;
   /** @type {Array<object>} */
   let _cells = [];
   let _stepDeg = 10;
   let _generated = '';
+  let _complete = false;
   let _lastUpdate = null;
   let _lastError = null;
   let _enabled = false;
@@ -204,72 +226,27 @@ export function createTemperatureLayer() {
    * @returns {number|null} Celsius, or null outside the grid.
    */
   function sampleAt(lat, lon) {
-    if (!_lookup) return null;
-    const { minLat, minLon, step, cols, rows, values } = _lookup;
-    const x = (lon - minLon) / step;
-    const y = (lat - minLat) / step;
-    const x0 = Math.floor(x);
-    const y0 = Math.floor(y);
-    const fx = x - x0;
-    const fy = y - y0;
-
-    // Longitude wraps; latitude clamps at the poles.
-    const col = (i) => ((i % cols) + cols) % cols;
-    const row = (j) => Math.min(rows - 1, Math.max(0, j));
-    const at = (j, i) => values[row(j) * cols + col(i)];
-
-    const v00 = at(y0, x0);
-    const v10 = at(y0, x0 + 1);
-    const v01 = at(y0 + 1, x0);
-    const v11 = at(y0 + 1, x0 + 1);
-    if (![v00, v10, v01, v11].every(Number.isFinite)) return null;
-
-    const top = v00 * (1 - fx) + v10 * fx;
-    const bottom = v01 * (1 - fx) + v11 * fx;
-    return top * (1 - fy) + bottom * fy;
+    return sampleBilinear(_lookup, lat, lon);
   }
 
   /**
-   * Draw the whole field into one canvas.
+   * Temperature at the actual ground, which is what the map paints.
    *
-   * One image rather than 648 primitives: it is smooth, it is a single draw,
-   * and it can be handed to the tileset as an imagery layer so the colour sits
-   * IN the ground texture instead of floating over it as a sheet.
+   * {@link sampleAt} returns the sea-level field; this puts the altitude back.
+   * The elevation comes from the provider's own tile cache, so the number
+   * reported here is computed from the very same sample as the colour beneath
+   * the cursor and the two cannot drift apart.
    *
-   * @returns {HTMLCanvasElement}
+   * @param {number} lat
+   * @param {number} lon
+   * @returns {number|null}
    */
-  function paintCanvas() {
-    const canvas = document.createElement('canvas');
-    // Half a degree per pixel. Finer than this cannot add information — the
-    // source grid is 10 degrees — but it keeps the gradient free of stair-steps.
-    canvas.width = 720;
-    canvas.height = 360;
-    const ctx = canvas.getContext('2d');
-    const image = ctx.createImageData(canvas.width, canvas.height);
-    const data = image.data;
-
-    for (let py = 0; py < canvas.height; py += 1) {
-      // Canvas y runs top-down, latitude runs bottom-up.
-      const lat = 90 - (py + 0.5) * (180 / canvas.height);
-      for (let px = 0; px < canvas.width; px += 1) {
-        const lon = -180 + (px + 0.5) * (360 / canvas.width);
-        const t = sampleAt(lat, lon);
-        const i = (py * canvas.width + px) * 4;
-        if (t === null) {
-          data[i + 3] = 0;
-          continue;
-        }
-        const colour = temperatureColor(t, 1);
-        data[i] = Math.round(colour.red * 255);
-        data[i + 1] = Math.round(colour.green * 255);
-        data[i + 2] = Math.round(colour.blue * 255);
-        // Alpha lives here rather than on the layer so the tint stays even
-        // across the whole field.
-        data[i + 3] = Math.round(FIELD_ALPHA * 255);
-      }
-    }
-    ctx.putImageData(image, 0, 0);
-    return canvas;
+  function surfaceAt(lat, lon) {
+    const seaLevel = sampleAt(lat, lon);
+    if (seaLevel === null) return null;
+    const metres = _provider?.elevationAt(lat, lon);
+    const height = Number.isFinite(metres) ? metres : _coarseElevation.at(lat, lon);
+    return seaLevel - (LAPSE_C_PER_M * lapseElevation(height));
   }
 
   /** Build the lat/lon lookup the sampler reads. */
@@ -287,7 +264,14 @@ export function createTemperatureLayer() {
       const i = lonIndex.get(cell.lon);
       const j = latIndex.get(cell.lat);
       if (i === undefined || j === undefined) continue;
-      values[j * cols + i] = cell.t;
+      // Store SEA-LEVEL temperature, not the observed value. Each reading is
+      // credited back the warmth its own altitude took away, which is what
+      // makes the field smooth enough to interpolate honestly: a station on a
+      // plateau and one in the valley below it disagree by degrees purely
+      // because of height, and interpolating between them as-is smears that
+      // height difference sideways across the map. The altitude is subtracted
+      // again per-pixel at full elevation resolution when the tile is drawn.
+      values[j * cols + i] = cell.t + (LAPSE_C_PER_M * lapseElevation(_coarseElevation.at(cell.lat, cell.lon)));
     }
     _lookup = { minLat: lats[0], minLon: lons[0], step, cols, rows, values };
   }
@@ -307,17 +291,19 @@ export function createTemperatureLayer() {
     removeImagery();
     if (!_lookup || !_tileset?.imageryLayers) return;
     try {
-      // A data URL, not an `image` option: Cesium 1.138's
-      // SingleTileImageryProvider requires `url` and rejects an image with
-      // "options.url is required". The canvas is small enough (720x360) that
-      // encoding it costs nothing worth measuring.
-      const provider = new Cesium.SingleTileImageryProvider({
-        url: paintCanvas().toDataURL('image/png'),
-        rectangle: Cesium.Rectangle.fromDegrees(-180, -90, 180, 90),
-        tileWidth: 720,
-        tileHeight: 360,
+      if (!_colorTable) _colorTable = buildColorTable(temperatureColor);
+      // A TILED provider, not one global image. The previous version painted
+      // the whole planet into a single 720x360 canvas, which is half a degree
+      // per pixel — about 55 km — so every mountain range on Earth landed
+      // inside one pixel and the map could not show terrain even in principle.
+      // Tiles let the detail scale with the zoom, and each one downscales the
+      // field by its own elevation as it is drawn.
+      _provider = createTerrainTemperatureProvider({
+        sampleSeaLevel: sampleAt,
+        colorTable: _colorTable,
+        alpha: FIELD_ALPHA,
       });
-      _imageryLayer = _tileset.imageryLayers.addImageryProvider(provider);
+      _imageryLayer = _tileset.imageryLayers.addImageryProvider(_provider);
       _imageryLayer.show = _enabled && _mode === 'air';
     } catch (error) {
       _lastError = `Imagery layer failed: ${error?.message || error}`;
@@ -399,6 +385,7 @@ export function createTemperatureLayer() {
       try { _tileset.imageryLayers.remove(_imageryLayer, true); } catch { /* already gone */ }
     }
     _imageryLayer = null;
+    _provider = null;
   }
 
   /**
@@ -512,7 +499,7 @@ export function createTemperatureLayer() {
       const carto = Cesium.Cartographic.fromCartesian(cartesian);
       const lat = Cesium.Math.toDegrees(carto.latitude);
       const lon = Cesium.Math.toDegrees(carto.longitude);
-      const t = sampleAt(lat, lon);
+      const t = surfaceAt(lat, lon);
       if (t === null) return;
       void showForecast({ lat: Number(lat.toFixed(3)), lon: Number(lon.toFixed(3)), t: Number(t.toFixed(1)) });
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
@@ -527,7 +514,7 @@ export function createTemperatureLayer() {
         || viewer.camera.pickEllipsoid(position, Cesium.Ellipsoid.WGS84);
       if (!cartesian) { hideHover(); return; }
       const carto = Cesium.Cartographic.fromCartesian(cartesian);
-      const t = sampleAt(
+      const t = surfaceAt(
         Cesium.Math.toDegrees(carto.latitude),
         Cesium.Math.toDegrees(carto.longitude)
       );
@@ -540,6 +527,9 @@ export function createTemperatureLayer() {
     id: 'temperature',
     name: 'Temperature',
     icon: '🌡️',
+    // Overwritten from the payload once a grid arrives. Attribution is a
+    // licence condition for both sources, so it has to name the one that
+    // actually produced the numbers on screen, not a hardcoded guess.
     source: 'Open-Meteo',
     updateInterval: UPDATE_INTERVAL_MS,
 
@@ -585,8 +575,18 @@ export function createTemperatureLayer() {
         _cells = cells;
         _stepDeg = Number(payload.stepDeg) || 10;
         _generated = String(payload.generated || '');
+        // While the sweep is partial, keep polling so the map sharpens; once
+        // complete, back off to the server's cache lifetime.
+        _complete = payload.complete === true;
+        const sourceName = payload?.source?.name;
+        if (typeof sourceName === 'string' && sourceName) layer.source = sourceName;
+        layer.updateInterval = _complete ? UPDATE_INTERVAL_SETTLED_MS : UPDATE_INTERVAL_MS;
         _lastUpdate = Date.now();
         _lastError = null;
+        // The sea-level reduction needs elevation for every observation, so the
+        // coarse mosaic has to be in hand before the grid is indexed. Sixteen
+        // tiles, fetched once, then cached for the life of the session.
+        await _coarseElevation.ready();
         render();
         return true;
       } catch (error) {
@@ -652,7 +652,11 @@ export function createTemperatureLayer() {
         count: _cells.length,
         lastUpdate: _lastUpdate,
         error: _lastError,
-        note: _generated ? `Grid generated ${_generated.slice(0, 16).replace('T', ' ')} UTC` : '',
+        // Say plainly when the field is still filling in, rather than showing a
+        // coarse map with no explanation for why it looks blocky.
+        note: _generated
+          ? `${_stepDeg}° grid, elevation-corrected${_complete ? '' : ' — still filling in'}, ${_generated.slice(11, 16)} UTC`
+          : '',
       };
     },
   };
