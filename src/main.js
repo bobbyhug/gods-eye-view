@@ -30,6 +30,7 @@ import { LAYER_STATE_REGISTRY } from './data/layerState.js';
 import { registerDataCredits } from './data/dataCredits.js';
 import { SceneDirector } from './scenes/director.js';
 import { initGevVoiceCommands } from './voice/gevRealtime.js';
+import { initFreeVoice } from './voice/freeVoice.js';
 import { MapStackController } from './mapStackController.js';
 import { initAnnotations } from './annotations/index.js';
 import { initLogoGaze } from './logoGaze.js';
@@ -475,6 +476,58 @@ async function init() {
       openFlightSim: () => { flightSim.openPlanner(); flightSimPanel.open(); },
     };
     window.__godsEyeView.voiceCommands = initGevVoiceCommands({ viewer, styleManager, dataManager, sceneDirector, annotations });
+
+    // Free voice: browser speech in and out, intent parsed by a free-tier
+    // model. Stands alongside the OpenAI Realtime path rather than replacing
+    // it — that one needs OPENAI_API_KEY and is billed per token, this one
+    // needs neither. Exposed for the UI and for programmatic commands.
+    const freeVoice = initFreeVoice({
+      viewer, styleManager, dataManager, sceneDirector, annotations,
+    });
+    window.__godsEyeView.freeVoice = freeVoice;
+
+    // The MIC button drives whichever voice path is actually available.
+    // OPENAI_API_KEY may be unset — it is by default — and in that case the
+    // Realtime path cannot connect at all, so the button would do nothing.
+    // Rebinding it to free voice means one control that always works rather
+    // than a button whose behaviour depends on a key the user cannot see.
+    void (async () => {
+      try {
+        const status = await fetch('/api/openrouter/status').then((r) => r.json());
+        const realtimeReady = await fetch('/api/realtime/token', { method: 'POST' })
+          .then((r) => r.ok)
+          .catch(() => false);
+        if (realtimeReady || !status?.configured || !freeVoice.isSupported()) return;
+
+        const button = document.querySelector('#gev-voice-control button');
+        if (!button) return;
+        // Replacing the node drops the Realtime listener with it, so the two
+        // paths can never both fire on one click.
+        const fresh = button.cloneNode(true);
+        button.replaceWith(fresh);
+        const label = document.querySelector('#gev-voice-control .voice-status')
+          || document.querySelector('#gev-voice-control [class*="status"]');
+        freeVoice.onStateChange((state, text) => {
+          if (!label) return;
+          const copy = {
+            listening: text ? `“${text}”` : 'LISTENING',
+            heard: `“${text}”`,
+            thinking: 'THINKING',
+            done: text || 'DONE',
+            error: text || 'ERROR',
+            idle: 'VOICE STANDBY',
+          };
+          label.textContent = String(copy[state] || 'VOICE STANDBY').toUpperCase().slice(0, 42);
+        });
+        fresh.addEventListener('click', () => {
+          if (freeVoice.isListening()) freeVoice.stop();
+          else freeVoice.start();
+        });
+        console.info('[Voice] Free voice active (no OpenAI key present).');
+      } catch (error) {
+        console.warn('[Voice] free-voice wiring skipped:', error?.message || error);
+      }
+    })();
 
   } catch (error) {
     console.error("God's Eye View initialization failed:", error);

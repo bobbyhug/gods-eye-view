@@ -137,9 +137,15 @@ export function createTemperatureLayer() {
         _dataSource.entities.add({
           id,
           rectangle: {
+            // Longitude is clamped as well as latitude. The grid starts at
+            // -180, so the western edge of that column was -185 and Cesium
+            // rejected it with "Expected west to be greater than or equal to
+            // -3.14159…" — which is not a warning, it STOPS RENDERING and puts
+            // an error dialog over the whole app. Clamping narrows the two edge
+            // columns by half a cell, which at 10-degree spacing is invisible.
             coordinates: Cesium.Rectangle.fromDegrees(
-              cell.lon - half, Math.max(-90, cell.lat - half),
-              cell.lon + half, Math.min(90, cell.lat + half)
+              Math.max(-180, cell.lon - half), Math.max(-90, cell.lat - half),
+              Math.min(180, cell.lon + half), Math.min(90, cell.lat + half)
             ),
             material: temperatureColor(cell.t),
             // Draped on terrain so the shading follows the ground rather than

@@ -171,6 +171,144 @@ export function cleanMotive(raw) {
 }
 
 /**
+ * US state names, so "in Florida" can be resolved.
+ *
+ * The dataset records `country` but not state, and Wikidata's place names carry
+ * the state inline ("2018 Parkland, Florida shooting"). Matching against the
+ * name is the only join available, and it works because these titles are
+ * written by people who name the state.
+ */
+const US_STATES = Object.freeze({
+  // [west, south, east, north]
+  alabama: [-88.5, 30.2, -84.9, 35.0], alaska: [-172, 51, -130, 71.5],
+  arizona: [-114.9, 31.3, -109, 37], arkansas: [-94.7, 33, -89.6, 36.5],
+  // California's eastern edge is pulled to -115.3 rather than its true -114.1.
+  // The CA/NV border runs diagonally — at Las Vegas's latitude California ends
+  // near -116.2 — so the honest rectangle swallowed Las Vegas and answered
+  // "worst in California" with a Nevada shooting. The cost is the far
+  // south-eastern desert corner (Blythe, Needles); the alternative is naming
+  // the wrong state on the biggest incident in the set.
+  california: [-124.5, 32.5, -115.3, 42], colorado: [-109.1, 36.9, -102, 41],
+  connecticut: [-73.8, 40.9, -71.7, 42.1], delaware: [-75.8, 38.4, -75, 39.9],
+  florida: [-87.7, 24.4, -79.9, 31.1], georgia: [-85.7, 30.3, -80.8, 35.1],
+  hawaii: [-160.3, 18.8, -154.7, 22.3], idaho: [-117.3, 41.9, -111, 49],
+  illinois: [-91.6, 36.9, -87.4, 42.6], indiana: [-88.1, 37.7, -84.7, 41.8],
+  iowa: [-96.7, 40.3, -90.1, 43.6], kansas: [-102.1, 36.9, -94.5, 40.1],
+  kentucky: [-89.6, 36.4, -81.9, 39.2], louisiana: [-94.1, 28.9, -88.8, 33.1],
+  maine: [-71.1, 42.9, -66.9, 47.5], maryland: [-79.5, 37.9, -75, 39.8],
+  massachusetts: [-73.5, 41.2, -69.8, 42.9], michigan: [-90.5, 41.6, -82.1, 48.3],
+  minnesota: [-97.3, 43.4, -89.4, 49.4], mississippi: [-91.7, 30.1, -88.1, 35],
+  missouri: [-95.8, 35.9, -89.1, 40.7], montana: [-116.1, 44.3, -104, 49],
+  nebraska: [-104.1, 39.9, -95.3, 43.1], nevada: [-120.1, 35, -114, 42],
+  'new hampshire': [-72.6, 42.6, -70.6, 45.4], 'new jersey': [-75.6, 38.9, -73.8, 41.4],
+  'new mexico': [-109.1, 31.3, -103, 37], 'new york': [-79.8, 40.4, -71.8, 45.1],
+  'north carolina': [-84.4, 33.8, -75.4, 36.6], 'north dakota': [-104.1, 45.9, -96.5, 49],
+  ohio: [-84.9, 38.4, -80.5, 42.4], oklahoma: [-103.1, 33.6, -94.4, 37.1],
+  oregon: [-124.6, 41.9, -116.4, 46.3], pennsylvania: [-80.6, 39.7, -74.7, 42.3],
+  'rhode island': [-71.9, 41.1, -71.1, 42.1], 'south carolina': [-83.4, 32, -78.5, 35.2],
+  'south dakota': [-104.1, 42.4, -96.4, 45.9], tennessee: [-90.4, 34.9, -81.6, 36.7],
+  texas: [-106.7, 25.8, -93.5, 36.5], utah: [-114.1, 37, -109, 42],
+  vermont: [-73.5, 42.7, -71.5, 45.1], virginia: [-83.7, 36.5, -75.2, 39.5],
+  washington: [-124.8, 45.5, -116.9, 49], 'west virginia': [-82.7, 37.2, -77.7, 40.6],
+  wisconsin: [-92.9, 42.5, -86.8, 47.1], wyoming: [-111.1, 40.9, -104, 45],
+});
+
+/** Words that mean "rank by death toll", however people phrase it. */
+const SUPERLATIVES = /\b(worst|deadliest|biggest|craziest|largest|most people|highest|baddest|insane|crazy)\b/;
+
+/**
+ * Search incidents by free text.
+ *
+ * Handles the two ways people actually ask:
+ *
+ *   "the worst shooting in Florida"  — a place filter plus a superlative
+ *   "miami school shooting"          — words that should appear in the name
+ *
+ * Scored rather than filtered, because a strict AND match on every word finds
+ * nothing: nobody types an incident's exact Wikidata title.
+ *
+ * @param {Array<object>} incidents
+ * @param {string} query
+ * @param {number} [limit]
+ * @returns {Array<object>} Best matches first.
+ */
+export function searchIncidents(incidents, query, limit = 5) {
+  const text = String(query || '').toLowerCase().trim();
+  if (!text) return [];
+
+  const wantsDeadliest = SUPERLATIVES.test(text);
+  // Place filtering is GEOGRAPHIC, not by name. Matching the state's name
+  // inside the incident title missed the Orlando nightclub shooting for "worst
+  // in Florida" — 50 dead, in Florida, but its title never says "Florida".
+  // A bounding box catches it because the coordinates are the fact.
+  const stateName = Object.keys(US_STATES).find((state) => text.includes(state)) || '';
+  const box = stateName ? US_STATES[stateName] : null;
+  const countries = new Set(incidents.map((i) => (i.country || '').toLowerCase()).filter(Boolean));
+  const country = [...countries].find((c) => c && text.includes(c)) || '';
+
+  // Stop words plus the query verbs — none of these help identify an incident.
+  const STOP = new Set([
+    'the', 'a', 'an', 'in', 'at', 'of', 'was', 'what', 'whats', 'is', 'me', 'show',
+    'find', 'tell', 'about', 'that', 'happened', 'there', 'hey', 'shooting',
+    'shootings', 'killing', 'killings', 'attack', 'incident', 'worst', 'deadliest',
+    'biggest', 'craziest', 'largest', 'most', 'people', 'highest', 'baddest', 'and',
+    'to', 'go', 'zoom', 'take', 'on', 'it', 'one', 'which', 'crazy', 'insane',
+  ]);
+  // The place words are already doing their job as a geographic filter, so
+  // they must NOT also be required to appear in the title. Leaving them in
+  // skipped the Orlando nightclub shooting for "worst in Florida" — 50 dead,
+  // inside the Florida box, but its name says Orlando.
+  const placeWords = new Set([
+    ...stateName.split(' '),
+    ...country.split(' '),
+  ].filter(Boolean));
+  const terms = text.split(/[^a-z0-9]+/)
+    .filter((w) => w.length > 2 && !STOP.has(w) && !placeWords.has(w));
+
+  const scored = [];
+  for (const incident of incidents) {
+    const name = (incident.placeName || '').toLowerCase();
+    const inCountry = (incident.country || '').toLowerCase();
+
+    if (country && inCountry !== country) continue;
+    if (box && !(incident.lon >= box[0] && incident.lon <= box[2]
+      && incident.lat >= box[1] && incident.lat <= box[3])) continue;
+
+    let nameHits = 0;
+    let score = 0;
+    for (const term of terms) {
+      if (name.includes(term)) { score += 10; nameHits += 1; }
+      else if (inCountry.includes(term)) score += 3;
+    }
+    // A place filter that matched is itself evidence, so "worst in Florida"
+    // with no other terms still returns Florida's list.
+    if ((box || country) && !terms.length) score += 1;
+    // A bounding box cannot follow a diagonal border. California's box takes in
+    // Las Vegas, so "worst in California" answered with a Nevada shooting.
+    // Naming the state in the title is stronger evidence than falling inside a
+    // rectangle, so it outranks a box-only match.
+    // Small: a tie-break, not an override. At 25 it beat the death toll and
+    // ranked a 6-death incident that says "California" above a 16-death one
+    // that does not. The box now does the real work of excluding other states.
+    if (stateName && name.includes(stateName)) score += 4;
+    // EVERY named term must appear. A partial match is how "miami school
+    // shooting" confidently answered with the Beslan school siege: "miami"
+    // matched nothing, "school" matched everything, and half a match looked
+    // like an answer. Better to find nothing and say so.
+    if (terms.length && nameHits < terms.length) continue;
+    if (!score) continue;
+
+    // Ranking by toll is what "worst" means; without it the tie-break is
+    // arbitrary and the answer to "the worst in Florida" is whichever record
+    // happened to be first.
+    scored.push({ incident, score: score + (wantsDeadliest ? incident.killed * 2 : 0) });
+  }
+
+  scored.sort((a, b) => (b.score - a.score) || (b.incident.killed - a.incident.killed));
+  return scored.slice(0, limit).map((entry) => entry.incident);
+}
+
+/**
  * Incidents at or above a death-toll floor.
  *
  * @param {Array<object>} incidents
@@ -549,6 +687,64 @@ export function createShootingsLayer() {
     /** @param {Function} listener */
     setRowControlsListener(listener) {
       _rowControlsListener = typeof listener === 'function' ? listener : null;
+    },
+
+    /**
+     * Answer a spoken question about an incident: find it, fly to it, show it.
+     *
+     * @param {object} viewer
+     * @param {string} query
+     * @returns {Promise<{ok: boolean, incident?: object, reply: string}>}
+     */
+    async findAndFocus(viewer, query) {
+      // The question may arrive before anyone has switched the layer on.
+      if (!_loaded) await layer.update();
+      if (!_incidents.length) return { ok: false, reply: 'No incident data loaded.' };
+
+      // Search the WHOLE set, not the filtered view: a question about a
+      // military event should still answer while the civilian filter is up.
+      const matches = searchIncidents(_incidents, query, 5);
+      if (!matches.length) {
+        // Say plainly that nothing was found and invite another try. Silence,
+        // or a confident wrong answer, are both worse than admitting the miss —
+        // and this dataset genuinely does not have everything.
+        return {
+          ok: false,
+          reply: "I didn't find anything for that. Is there something else you'd like me to find?",
+        };
+      }
+      const incident = matches[0];
+
+      // Make sure the thing being described is actually visible before flying
+      // to it — otherwise the camera lands on an empty patch of ground.
+      if (incident.category !== _category && _category !== 'both') {
+        _category = incident.category;
+      }
+      if (_minKilled > incident.killed) _minKilled = MIN_KILLED_FLOOR;
+      if (_dataSource) _dataSource.show = true;
+      render();
+
+      if (viewer?.camera) {
+        viewer.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(incident.lon, incident.lat, 2600),
+          orientation: {
+            heading: 0,
+            pitch: Cesium.Math.toRadians(-42),
+            roll: 0,
+          },
+          duration: 3.0,
+        });
+      }
+      showCard(incident);
+
+      const toll = incident.killed
+        ? `${incident.killed} killed`
+        : 'toll not recorded';
+      return {
+        ok: true,
+        incident,
+        reply: `${incident.placeName}. ${toll}.`,
+      };
     },
 
     /**
