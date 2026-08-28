@@ -27,7 +27,17 @@
 import { createGevActionRunner } from './gevActions.js';
 
 /** Where intent parsing happens. */
+import {
+  buildAgentPrompt,
+  createAgentLoop,
+  looksCompound,
+  looksConversational,
+  stripWakeWords,
+} from './freeAgent.js';
+
 const CHAT_URL = '/api/openrouter/chat';
+/** A free model that has not answered in this long is not going to. */
+const CHAT_TIMEOUT_MS = 20000;
 
 /** Longest a command will wait for the startup camera restore to settle. */
 const STARTUP_WAIT_CAP_MS = 8000;
@@ -404,30 +414,6 @@ export function initFreeVoice({
     speechSynthesis.speak(utterance);
   }
 
-  /**
-   * Ask the model what a transcript means.
-   *
-   * @param {string} transcript
-   * @returns {Promise<object|null>}
-   */
-  async function parseIntent(transcript) {
-    try {
-      const response = await fetch(CHAT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system: buildSystemPrompt(),
-          messages: [{ role: 'user', content: transcript }],
-          maxTokens: 120,
-        }),
-      });
-      if (!response.ok) return null;
-      const data = await response.json();
-      return parseIntentJson(data?.text);
-    } catch {
-      return null;
-    }
-  }
 
   /**
    * Handle one finished utterance.
@@ -435,73 +421,176 @@ export function initFreeVoice({
    * @param {string} transcript
    * @returns {Promise<void>}
    */
-  async function handle(transcript) {
-    onState('heard', transcript);
+  /**
+   * Run one action and report what happened.
+   *
+   * Shared by the instant local path and the agent loop, so a step behaves
+   * identically however it was decided on.
+   *
+   * @param {{action: string, args: object}} step
+   * @returns {Promise<object>}
+   */
+  async function execute(step) {
+    // Camera commands must not race the startup restore; see
+    // awaitStartupSettled. Non-camera commands (layers, styles, panels) are
+    // unaffected and should not pay the wait.
+    if (CAMERA_ACTIONS.has(step.action)) await awaitStartupSettled();
 
-    // Local first: instant, and still works when the free tier is throttled.
-    let intent = matchLocally(transcript);
-    if (!intent) {
-      onState('thinking', transcript);
-      intent = await parseIntent(transcript);
+    // find_incident belongs to the shootings layer, not the shared runner.
+    if (step.action === 'find_incident') {
+      const shootings = dataManager?.layers?.get?.('shootings')?.module;
+      if (typeof shootings?.findAndFocus !== 'function') {
+        return { ok: false, error: 'Incident search is unavailable' };
+      }
+      const found = await shootings.findAndFocus(viewer, step.args?.query || '');
+      return { ok: found.ok !== false, label: found.reply, text: found.reply };
+    }
+    return runAction(step.action, step.args || {});
+  }
+
+  /**
+   * A short description of what is on screen, for the model's prompt.
+   *
+   * Cheap enough to include on every turn, and it means simple questions
+   * ("is the temperature on?") are answered without spending a round on a
+   * tool call to find out.
+   *
+   * @returns {string}
+   */
+  function describeState() {
+    const lines = [];
+    try {
+      const layers = dataManager?.getAll?.() || [];
+      const on = layers.filter((l) => l?.enabled).map((l) => l.id);
+      lines.push(`layers on: ${on.length ? on.join(', ') : 'none'}`);
+    } catch { /* the prompt is better off without it than broken */ }
+    try {
+      const camera = styleManager?.getCameraState?.();
+      if (camera && Number.isFinite(camera.lat)) {
+        lines.push(
+          `camera: ${camera.lat.toFixed(1)}, ${camera.lon.toFixed(1)}`
+          + ` at ${Math.round(camera.alt)} m`
+        );
+      }
+    } catch { /* likewise */ }
+    return lines.join('\n');
+  }
+
+  /**
+   * One call to the free model.
+   *
+   * Given a timeout because the previous version had none: a free tier that
+   * simply never answers left the microphone showing THINKING for as long as
+   * the browser was willing to wait.
+   *
+   * @param {Array<{role: string, content: string}>} messages
+   * @returns {Promise<string>}
+   */
+  async function chat(messages) {
+    const system = messages.find((m) => m.role === 'system')?.content || '';
+    const rest = messages.filter((m) => m.role !== 'system');
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), CHAT_TIMEOUT_MS);
+    try {
+      const response = await fetch(CHAT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ system, messages: rest, maxTokens: 500 }),
+        signal: controller.signal,
+      });
+      if (!response.ok) return '';
+      const data = await response.json();
+      return String(data?.text || '');
+    } catch {
+      return '';
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  const agent = createAgentLoop({
+    chat,
+    execute,
+    buildPrompt: () => buildAgentPrompt({
+      actions: VOICE_ACTIONS.map((a) => `${a.name}(${a.args}) — ${a.hint}`).join('\n'),
+      layers: Object.entries(LAYER_WORDS).map(([id, w]) => `${id} = ${w}`).join('\n'),
+      state: describeState(),
+    }),
+    onSay: (text) => { onState('done', text); speak(text); },
+    onStep: (step) => { onState('thinking', step.action.replace(/_/g, ' ')); },
+  });
+
+  /**
+   * Handle one utterance.
+   *
+   * Two paths. A simple, single, recognised command runs instantly with no
+   * network call at all. Anything compound, conversational, or unrecognised
+   * goes to the agent loop, which can take several steps and answer questions
+   * about what it found.
+   *
+   * @param {string} rawTranscript
+   * @returns {Promise<void>}
+   */
+  async function handle(rawTranscript) {
+    onState('heard', rawTranscript);
+    const transcript = stripWakeWords(rawTranscript);
+    if (!transcript) return;
+
+    const multiPart = looksCompound(transcript) || looksConversational(transcript);
+
+    // The fast path is deliberately skipped for compound requests. Its
+    // navigation pattern takes everything after the verb as a place name, so
+    // "fly to Miami and check the cameras" would be geocoded as a place called
+    // "miami and check the cameras" — nothing is found and the cameras never
+    // come on.
+    if (!multiPart) {
+      const intent = matchLocally(transcript);
+      if (intent) {
+        try {
+          const result = await execute(intent);
+          // These actions REPORT failure in their return value rather than
+          // throwing: `{ ok: false, ... }`. Treating "did not throw" as success
+          // meant the app cheerfully said "Flying to Tokyo" while the camera
+          // had not moved — a confirmation for something that did not happen
+          // is worse than an error.
+          if (result && result.ok === false) {
+            const why = result.cancelled ? 'that was interrupted'
+              : result.error || result.reason || result.label || 'it did not work';
+            onState('error', `${intent.action}: ${String(why).slice(0, 120)}`);
+            speak(`Sorry, ${why}.`);
+            return;
+          }
+          const reply = intent.reply || 'Done.';
+          onState('done', reply);
+          speak(reply);
+        } catch (error) {
+          // Say what failed rather than going quiet — silence after a command
+          // is indistinguishable from not having been heard.
+          onState('error', `That command failed. ${error?.message || error}`);
+          speak('That command failed.');
+        }
+        return;
+      }
     }
 
-    if (!intent || intent.action === 'none') {
-      // Distinguish "heard you, no such command" from "cannot interpret free
-      // phrasing at all here". Telling someone their phrasing was not
-      // understood, when in fact nothing on this deployment could ever have
-      // understood it, sends them rephrasing forever.
-      const fallback = aiAvailable
-        ? "I didn't catch a command."
-        : 'I can only take set commands here. Try "fly to Tokyo", '
-          + '"show shootings", "zoom out", or "reset view".';
-      const reply = intent?.reply || fallback;
+    if (!aiAvailable) {
+      // Telling someone their phrasing was not understood, when in fact
+      // nothing on this deployment could ever have understood it, sends them
+      // rephrasing forever.
+      const reply = 'I can only take set commands here. Try "fly to Tokyo", '
+        + '"show shootings", "zoom out", or "reset view".';
       onState('idle', reply);
       speak(reply);
       return;
     }
 
-    try {
-      // Camera commands must not race the startup restore; see
-      // awaitStartupSettled. Non-camera commands (layers, styles, panels) are
-      // unaffected and should not pay the wait.
-      if (CAMERA_ACTIONS.has(intent.action)) await awaitStartupSettled();
-
-      // find_incident belongs to the shootings layer, not the shared runner.
-      if (intent.action === 'find_incident') {
-        const shootings = dataManager?.layers?.get?.('shootings')?.module;
-        if (typeof shootings?.findAndFocus !== 'function') {
-          onState('error', 'Incident search unavailable');
-          speak('Incident search is unavailable.');
-          return;
-        }
-        const found = await shootings.findAndFocus(viewer, intent.args?.query || transcript);
-        onState(found.ok ? 'done' : 'error', found.reply);
-        speak(found.reply);
-        return;
-      }
-
-      const result = await runAction(intent.action, intent.args || {});
-      // These actions REPORT failure in their return value rather than
-      // throwing: `{ ok: false, ... }`. Treating "did not throw" as success
-      // meant the app cheerfully said "Flying to Tokyo" while the camera had
-      // not moved — a confirmation for something that did not happen is worse
-      // than an error.
-      if (result && result.ok === false) {
-        const why = result.cancelled ? 'that was interrupted'
-          : result.error || result.reason || result.label || 'it did not work';
-        const reply = `Sorry, ${why}.`;
-        onState('error', `${intent.action}: ${JSON.stringify(result).slice(0, 200)}`);
-        speak(reply);
-        return;
-      }
-      const reply = intent.reply || 'Done.';
-      onState('done', reply);
-      speak(reply);
-    } catch (error) {
-      // Say what failed rather than going quiet — silence after a command is
-      // indistinguishable from not having been heard.
-      const reply = 'That command failed.';
-      onState('error', `${reply} ${error?.message || error}`);
+    onState('thinking', transcript);
+    const outcome = await agent.ask(transcript);
+    if (outcome.failed && !outcome.spoke) {
+      const reply = outcome.failed === 'round-cap'
+        ? "I got partway through that but could not finish it."
+        : "I didn't catch that.";
+      onState('idle', reply);
       speak(reply);
     }
   }
@@ -519,6 +608,12 @@ export function initFreeVoice({
 
     /** @returns {boolean} */
     isListening() { return listening; },
+
+    /** Start a new conversation, forgetting what was said before. */
+    resetConversation() { agent.reset(); },
+
+    /** @returns {Array<object>} The conversation so far, for diagnostics. */
+    conversation() { return agent.history(); },
 
     /** @param {Function} listener */
     onStateChange(listener) {
