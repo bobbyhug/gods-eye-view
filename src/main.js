@@ -6,6 +6,7 @@ import {
   setRenderQuality,
   applyRenderQuality as applySceneQuality,
 } from './renderQuality.js';
+import { tuneTileStreaming } from './tileStreaming.js';
 import { StyleManager } from './ui.js';
 import { flyToAustin } from './camera.js';
 import { DataLayerManager } from './data/manager.js';
@@ -196,6 +197,7 @@ async function init() {
       tileset = await Cesium.createGooglePhotorealistic3DTileset({
         onlyUsingWithGoogleGeocoder: true,
       });
+      tuneTileStreaming(tileset);
       viewer.scene.primitives.add(tileset);
       // NOTE: Cesium World Terrain intentionally disabled — conflicts with Google 3D Tiles at high zoom.
       // Google Photorealistic 3D Tiles provide their own terrain/elevation.

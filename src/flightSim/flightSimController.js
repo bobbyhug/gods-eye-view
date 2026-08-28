@@ -164,6 +164,18 @@ export function createFlightSimController({ viewer, hooks = {} }) {
   let frameLoadPeriods = 1;
   /** Measured refresh period, milliseconds. Never assumed to be 16.67. */
   let refreshPeriodMs = 16.7;
+  /**
+   * Smoothed real frame time, milliseconds — for the READOUT only.
+   *
+   * Kept separate from frameLoadPeriods on purpose. The governor works in whole
+   * vsync periods because a step decision needs to know "are we missing frames",
+   * and rounding to whole periods is what makes that question answerable. But
+   * rounding also destroys the number a person wants to read: every rate
+   * between two periods collapses onto one of them, so a genuine 26 fps and a
+   * genuine 40 fps could both display as the same value. The readout uses the
+   * unrounded time and reports what is actually happening.
+   */
+  let frameMsAvg = 16.7;
   /** Seconds until the next resolution change is allowed. */
   let qualityCooldownS = 0;
   /** Set after a speculative step up, so a failed probe backs off harder. */
@@ -321,11 +333,29 @@ export function createFlightSimController({ viewer, hooks = {} }) {
       cameraMode: camera.getMode(),
       mouseYoke: input.isMouseYoke(),
       quality: qualityLabel(),
-      // Derived from the same smoothed load the governor acts on, so the
-      // readout and the thing making decisions cannot disagree. Load is in
-      // vsync periods, so frames-per-second is the refresh rate divided by it.
-      fps: frameLoadPeriods > 0 ? 1000 / (frameLoadPeriods * refreshPeriodMs) : null,
+      // The measured frame time, not the governor's rounded load. Reporting
+      // the rounded value meant the readout could only ever land on the
+      // handful of rates that divide the refresh rate exactly — a real 26 fps
+      // and a real 40 fps both showed as the same number.
+      fps: frameMsAvg > 0 ? 1000 / frameMsAvg : null,
     });
+
+    // ASK FOR THE NEXT FRAME, HERE, EVERY FRAME.
+    //
+    // The simulation advances from postRender, so it only steps when a frame is
+    // actually drawn: render rate and simulation rate are the same number. That
+    // makes it the wrong thing to pace externally. The render governor's pump
+    // asks for frames on its own fixed schedule, and when a scene costs more
+    // than one pump interval to draw, the two rates beat against each other —
+    // requests land at 60 Hz while frames complete at, say, 22 Hz, so the gap
+    // between drawn frames alternates irregularly instead of settling. Measured
+    // from a 120 fps screen recording, the gaps ranged from 2 to 9 refresh ticks
+    // with no stable pattern, which is precisely what reads as shaking.
+    //
+    // Driving the next frame from the end of this one removes the second clock
+    // entirely. The loop then self-paces to whatever the hardware can actually
+    // sustain, and the interval between frames is as steady as the work is.
+    viewer?.scene?.requestRender?.();
   }
 
   /**
@@ -625,6 +655,7 @@ export function createFlightSimController({ viewer, hooks = {} }) {
       if (pinned !== null) viewer.resolutionScale = pinned;
     }
     frameLoadPeriods = 1;
+    frameMsAvg = refreshPeriodMs;
     qualityCooldownS = 2;
 
     if (scene.postProcessStages?.fxaa) scene.postProcessStages.fxaa.enabled = true;
@@ -742,6 +773,14 @@ export function createFlightSimController({ viewer, hooks = {} }) {
 
   function adaptQuality(deltaS) {
     if (!priorQuality || !viewer?.scene) return;
+    // Sample the readout BEFORE the gates below. adaptQuality returns early for
+    // a pinned quality level and for a hidden tab, and the frame-time readout
+    // has to keep working in both cases — it describes the frame, not the
+    // governor's willingness to act on it.
+    {
+      const rawMs = deltaS * 1000;
+      if (rawMs > 0 && rawMs < 500) frameMsAvg += (rawMs - frameMsAvg) * 0.1;
+    }
     // An explicit quality level is the user's decision, not a starting point.
     if (!isAutoQuality()) return;
     // A hidden tab has rAF throttled to a fraction of a hertz. Reacting to that

@@ -694,18 +694,51 @@ test('a gentle gear-down touchdown is a landing; the alternatives are not', () =
 
   assert.equal(resolveGroundContact(base(), B747, groundHeight).contact, 'touchdown');
 
-  const gearUp = base();
-  gearUp.gearFraction = 0;
-  assert.equal(resolveGroundContact(gearUp, B747, groundHeight).contact, 'crash');
-  assert.match(resolveGroundContact(gearUp, B747, groundHeight).reason, /GEAR/);
+  // A BELLY LANDING IS NOT AUTOMATICALLY A CRASH.
+  //
+  // Gear position used to decide the outcome on its own: anything above about
+  // 49 knots with the wheels up was fatal, however gently it was flown. That is
+  // not how an aeroplane behaves — crews have walked away from many gear-up
+  // landings. What kills is energy and attitude, so gear-up now tightens the
+  // limits rather than replacing them.
+  const bellyGentle = base();
+  bellyGentle.gearFraction = 0;
+  const belly = resolveGroundContact(bellyGentle, B747, groundHeight);
+  assert.equal(belly.contact, 'touchdown', 'a gentle wings-level belly landing is survivable');
+  assert.match(belly.reason, /BELLY/, 'it is still reported as a belly landing');
+
+  // ...but the margins are much smaller with no undercarriage to absorb it.
+  const bellyFast = base();
+  bellyFast.gearFraction = 0;
+  bellyFast.speedMps = 140;
+  assert.equal(resolveGroundContact(bellyFast, B747, groundHeight).contact, 'crash');
+  assert.match(resolveGroundContact(bellyFast, B747, groundHeight).reason, /TOO FAST/);
+
+  const bellyHard = base();
+  bellyHard.gearFraction = 0;
+  bellyHard.verticalSpeedMps = -6;          // survivable on wheels, not on the hull
+  assert.equal(resolveGroundContact(bellyHard, B747, groundHeight).contact, 'crash');
+  assert.equal(resolveGroundContact(base(), B747, groundHeight).contact, 'touchdown',
+    'the same rate on extended gear is still a landing');
 
   const slammed = base();
   slammed.verticalSpeedMps = -20;
   assert.equal(resolveGroundContact(slammed, B747, groundHeight).contact, 'crash');
+  assert.match(resolveGroundContact(slammed, B747, groundHeight).reason, /DESCENT/);
 
   const banked = base();
   banked.rollRad = toRadians(35);
   assert.match(resolveGroundContact(banked, B747, groundHeight).reason, /WING/);
+
+  // Attitude faults are judged separately from rate: it is entirely possible to
+  // arrive nose-low without arriving fast.
+  const noseDown = base();
+  noseDown.pitchRad = toRadians(-12);
+  assert.match(resolveGroundContact(noseDown, B747, groundHeight).reason, /NOSE DOWN/);
+
+  const tail = base();
+  tail.pitchRad = toRadians(16);
+  assert.match(resolveGroundContact(tail, B747, groundHeight).reason, /TAIL/);
 });
 
 test('well above the ground the aircraft is simply airborne', () => {

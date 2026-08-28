@@ -175,17 +175,27 @@ export function resolveGroundContact(state, aircraft, groundHeightM) {
   }
 
   const descentRate = -state.verticalSpeedMps;
+  const gearDown = state.gearFraction > 0.9;
 
-  // Gear up, or coming down far too fast, is not a landing.
-  if (state.gearFraction < 0.9 && state.speedMps > 25) {
-    return {
-      contact: 'crash',
-      altitudeAglM,
-      verticalSpeedMps: state.verticalSpeedMps,
-      reason: 'GEAR UP',
-    };
-  }
-  if (descentRate > aircraft.maxTouchdownRateMps * 2) {
+  // HOW AN ARRIVAL IS JUDGED.
+  //
+  // Gear up used to be an instant crash on its own, at anything above about
+  // 49 knots. That is not how an aeroplane behaves: a belly landing flown at a
+  // sensible speed, wings level and with a low rate of descent is survivable,
+  // and crews have walked away from many. What kills is the ENERGY and the
+  // ATTITUDE — arriving too fast, dropping too hard, a wing down, or the nose
+  // pointed at the ground.
+  //
+  // So gear position no longer decides the outcome by itself. It tightens the
+  // limits, because there is no undercarriage to absorb anything: the airframe
+  // takes the whole arrival.
+  const limits = gearDown
+    ? { descent: aircraft.maxTouchdownRateMps * 2, roll: 0.35, pitchDown: -0.14, speed: aircraft.vneMps * 0.95 }
+    // Belly: roughly a third of the vertical energy, half the bank, and a
+    // firm speed ceiling near the clean stall — fly it on gently or not at all.
+    : { descent: aircraft.maxTouchdownRateMps * 1.2, roll: 0.17, pitchDown: -0.09, speed: aircraft.vStallCleanMps * 1.35 };
+
+  if (descentRate > limits.descent) {
     return {
       contact: 'crash',
       altitudeAglM,
@@ -193,9 +203,8 @@ export function resolveGroundContact(state, aircraft, groundHeightM) {
       reason: 'EXCESSIVE DESCENT RATE',
     };
   }
-  // Arriving steeply nose-down or banked past the point where a wingtip would
-  // strike first.
-  if (Math.abs(state.rollRad) > 0.35) {
+  // Banked far enough that a wingtip reaches the ground before the wheels.
+  if (Math.abs(state.rollRad) > limits.roll) {
     return {
       contact: 'crash',
       altitudeAglM,
@@ -203,11 +212,44 @@ export function resolveGroundContact(state, aircraft, groundHeightM) {
       reason: 'WING STRIKE',
     };
   }
+  // Nose-down at contact drives the forward fuselage in first. Distinct from
+  // descent rate: it is possible to arrive nose-low and not fast.
+  if (state.pitchRad < limits.pitchDown) {
+    return {
+      contact: 'crash',
+      altitudeAglM,
+      verticalSpeedMps: state.verticalSpeedMps,
+      reason: 'NOSE DOWN',
+    };
+  }
+  // Rotated so far that the tail arrives before the wheels do.
+  if (state.pitchRad > 0.22) {
+    return {
+      contact: 'crash',
+      altitudeAglM,
+      verticalSpeedMps: state.verticalSpeedMps,
+      reason: 'TAIL STRIKE',
+    };
+  }
+  if (state.speedMps > limits.speed) {
+    return {
+      contact: 'crash',
+      altitudeAglM,
+      verticalSpeedMps: state.verticalSpeedMps,
+      reason: gearDown ? 'OVERSPEED ON TOUCHDOWN' : 'BELLY LANDING TOO FAST',
+    };
+  }
 
   if (state.onGround) {
     return { contact: 'rolling', altitudeAglM, verticalSpeedMps: 0 };
   }
-  return { contact: 'touchdown', altitudeAglM, verticalSpeedMps: state.verticalSpeedMps };
+  return {
+    contact: 'touchdown',
+    altitudeAglM,
+    verticalSpeedMps: state.verticalSpeedMps,
+    // Survivable, but not a normal landing — the caller can say so.
+    ...(gearDown ? {} : { reason: 'BELLY LANDING' }),
+  };
 }
 
 /**
