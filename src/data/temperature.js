@@ -4,6 +4,7 @@ import {
   buildColorTable,
   createCoarseElevation,
   createTerrainTemperatureProvider,
+  fillGridHoles,
   sampleBilinear,
   lapseElevation,
 } from './terrainTemperature.js';
@@ -249,30 +250,45 @@ export function createTemperatureLayer() {
     return seaLevel - (LAPSE_C_PER_M * lapseElevation(height));
   }
 
-  /** Build the lat/lon lookup the sampler reads. */
+  /**
+   * Build the lat/lon lookup the sampler reads.
+   *
+   * The lattice is derived from the grid STEP, not from whichever coordinates
+   * happen to have arrived. Building it from the loaded cells was a bug: while
+   * the sweep is partial those cells are scattered across the lattice, so the
+   * derived axes did not line up with the positions the sampler computes from
+   * minLon and step, and it read the wrong cells or none at all.
+   */
   function indexGrid() {
     if (!_cells.length) { _lookup = null; return; }
-    const lats = [...new Set(_cells.map((c) => c.lat))].sort((a, b) => a - b);
-    const lons = [...new Set(_cells.map((c) => c.lon))].sort((a, b) => a - b);
     const step = _stepDeg;
+    const lats = [];
+    for (let lat = -85; lat <= 85; lat += step) lats.push(Number(lat.toFixed(2)));
+    const lons = [];
+    for (let lon = -180; lon < 180; lon += step) lons.push(Number(lon.toFixed(2)));
     const cols = lons.length;
     const rows = lats.length;
     const values = new Float32Array(cols * rows).fill(NaN);
-    const lonIndex = new Map(lons.map((v, i) => [v, i]));
-    const latIndex = new Map(lats.map((v, i) => [v, i]));
+
+    let placed = 0;
     for (const cell of _cells) {
-      const i = lonIndex.get(cell.lon);
-      const j = latIndex.get(cell.lat);
-      if (i === undefined || j === undefined) continue;
-      // Store SEA-LEVEL temperature, not the observed value. Each reading is
-      // credited back the warmth its own altitude took away, which is what
-      // makes the field smooth enough to interpolate honestly: a station on a
-      // plateau and one in the valley below it disagree by degrees purely
-      // because of height, and interpolating between them as-is smears that
-      // height difference sideways across the map. The altitude is subtracted
-      // again per-pixel at full elevation resolution when the tile is drawn.
-      values[j * cols + i] = cell.t + (LAPSE_C_PER_M * lapseElevation(_coarseElevation.at(cell.lat, cell.lon)));
+      // Index arithmetically rather than by lookup table, so a cell whose
+      // coordinate is a hair off the nominal lattice still lands.
+      const i = Math.round((cell.lon - lons[0]) / step);
+      const j = Math.round((cell.lat - lats[0]) / step);
+      if (i < 0 || i >= cols || j < 0 || j >= rows) continue;
+      // Sea-level reduction: see the note in the render path. Each reading is
+      // credited back the warmth its own altitude took away, so the field being
+      // interpolated is smooth and the altitude is reapplied per pixel.
+      values[(j * cols) + i] = cell.t
+        + (LAPSE_C_PER_M * lapseElevation(_coarseElevation.at(cell.lat, cell.lon)));
+      placed += 1;
     }
+    if (!placed) { _lookup = null; return; }
+
+    // Grow those measurements into the gaps so a sweep in progress paints a
+    // coarse whole world instead of nothing.
+    fillGridHoles(values, cols, rows);
     _lookup = { minLat: lats[0], minLon: lons[0], step, cols, rows, values };
   }
 

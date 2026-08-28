@@ -5,6 +5,7 @@ import {
   LAPSE_C_PER_M,
   buildColorTable,
   decodeTerrarium,
+  fillGridHoles,
   lapseElevation,
   sampleBilinear,
 } from './terrainTemperature.js';
@@ -160,4 +161,73 @@ test('the colour table rises monotonically with temperature', () => {
       `entry ${i} went backwards`
     );
   }
+});
+
+test('a partially loaded grid renders instead of showing nothing', () => {
+  // THE REGRESSION THIS GUARDS. Points arrive interlaced, so a sweep in
+  // progress is scattered across the lattice. The sampler needs all four
+  // corners of a cell, and with scattered data almost no four are complete —
+  // so the layer showed "100" beside a completely empty map until the sweep
+  // finished. Every probe below returned null before the hole filling.
+  const cols = 36;
+  const rows = 18;
+  const values = new Float32Array(cols * rows).fill(Number.NaN);
+  // Every fourth cell, which is what the first interlace pass produces.
+  for (let j = 0; j < rows; j += 4) {
+    for (let i = 0; i < cols; i += 4) values[(j * cols) + i] = 20;
+  }
+  fillGridHoles(values, cols, rows);
+  const lookup = { minLat: -85, minLon: -180, step: 10, cols, rows, values };
+  for (const [lat, lon] of [[39.7, -105], [51.5, -0.1], [35.7, 139.7], [-33.9, 151.2]]) {
+    assert.notEqual(sampleBilinear(lookup, lat, lon), null, `${lat},${lon} was blank`);
+  }
+});
+
+test('filling never invents a value where nothing was measured', () => {
+  // An empty grid must stay empty. Growing from nothing would paint the whole
+  // planet a confident colour based on no observation at all.
+  const cols = 8;
+  const rows = 8;
+  const values = new Float32Array(cols * rows).fill(Number.NaN);
+  fillGridHoles(values, cols, rows);
+  assert.ok(values.every((v) => !Number.isFinite(v)));
+});
+
+test('filling preserves the measurements themselves', () => {
+  const cols = 8;
+  const rows = 8;
+  const values = new Float32Array(cols * rows).fill(Number.NaN);
+  values[0] = -30;
+  values[(4 * cols) + 4] = 40;
+  fillGridHoles(values, cols, rows);
+  assert.equal(values[0], -30, 'a real measurement was overwritten');
+  assert.equal(values[(4 * cols) + 4], 40, 'a real measurement was overwritten');
+});
+
+test('filled values stay within the range of what was measured', () => {
+  // Averaging neighbours cannot produce a temperature colder or hotter than
+  // anything actually observed; an out-of-range value would mean the fill is
+  // extrapolating rather than interpolating.
+  const cols = 12;
+  const rows = 12;
+  const values = new Float32Array(cols * rows).fill(Number.NaN);
+  values[0] = 0;
+  values[(6 * cols) + 6] = 30;
+  values[(11 * cols) + 11] = 15;
+  fillGridHoles(values, cols, rows);
+  for (const v of values) {
+    if (!Number.isFinite(v)) continue;
+    assert.ok(v >= 0 && v <= 30, `filled value ${v} escaped the observed range`);
+  }
+});
+
+test('filling wraps around the antimeridian', () => {
+  // A measurement at longitude index 0 must be able to fill the cell at the
+  // far end of the row, or a seam appears down the Pacific.
+  const cols = 10;
+  const rows = 3;
+  const values = new Float32Array(cols * rows).fill(Number.NaN);
+  values[(1 * cols) + 0] = 25;
+  fillGridHoles(values, cols, rows);
+  assert.ok(Number.isFinite(values[(1 * cols) + (cols - 1)]), 'the wrap neighbour stayed empty');
 });

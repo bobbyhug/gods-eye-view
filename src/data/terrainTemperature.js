@@ -204,6 +204,66 @@ export function createCoarseElevation() {
 }
 
 /**
+ * Fill gaps in a lattice by growing known values into their neighbours.
+ *
+ * WHY THIS IS NEEDED. Points are fetched interlaced, so a sweep in progress
+ * holds a globally-spread but SCATTERED set of cells rather than a filled
+ * rectangle. The bilinear sampler needs all four corners of a cell, and with
+ * scattered data almost no group of four is complete — so a partially loaded
+ * grid rendered as nothing at all. The layer would sit there reading "100",
+ * showing an empty map, until the sweep finished minutes later and every
+ * corner suddenly existed.
+ *
+ * Repeatedly averaging each hole's known neighbours turns those scattered
+ * samples into a complete, coarse field straight away, which then sharpens as
+ * real values arrive and displace the interpolated ones. Longitude wraps;
+ * latitude does not.
+ *
+ * Values are only ever grown from measurements. A hole with no known neighbour
+ * anywhere stays a hole, so a grid that genuinely covers nothing renders
+ * nothing rather than inventing a temperature.
+ *
+ * @param {Float32Array} values Mutated in place.
+ * @param {number} cols
+ * @param {number} rows
+ * @returns {Float32Array} The same array.
+ */
+export function fillGridHoles(values, cols, rows) {
+  // Bounded so a nearly-empty grid cannot spin: each pass grows the known
+  // region by one cell, and the lattice is only tens of cells across.
+  const MAX_PASSES = Math.max(cols, rows);
+  for (let pass = 0; pass < MAX_PASSES; pass += 1) {
+    let holes = 0;
+    let filled = 0;
+    // Read from a snapshot so values grown this pass do not cascade within it,
+    // which would smear one measurement across a whole row in a single sweep.
+    const source = Float32Array.from(values);
+    for (let j = 0; j < rows; j += 1) {
+      for (let i = 0; i < cols; i += 1) {
+        const at = (j * cols) + i;
+        if (Number.isFinite(source[at])) continue;
+        holes += 1;
+        let sum = 0;
+        let n = 0;
+        const consider = (jj, ii) => {
+          if (jj < 0 || jj >= rows) return;
+          const wrapped = ((ii % cols) + cols) % cols;
+          const v = source[(jj * cols) + wrapped];
+          if (Number.isFinite(v)) { sum += v; n += 1; }
+        };
+        consider(j, i - 1);
+        consider(j, i + 1);
+        consider(j - 1, i);
+        consider(j + 1, i);
+        if (n) { values[at] = sum / n; filled += 1; }
+      }
+    }
+    if (!holes || !filled) break;
+  }
+  return values;
+}
+
+/**
  * Bilinear sample of a regular lat/lon field.
  *
  * @param {{minLat: number, minLon: number, step: number, cols: number,
