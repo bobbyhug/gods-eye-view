@@ -178,6 +178,116 @@ function findPhotorealTileset(viewer) {
 }
 
 /**
+ * Representative IANA zone for a region, checked in order.
+ *
+ * Longitude alone cannot know about summer time, which is an hour wrong across
+ * the whole of North America and Europe for half the year — the two regions
+ * anyone using this map is most likely to be looking at. Naming a real zone
+ * lets Intl apply the actual rules, including the changeover dates, which no
+ * arithmetic on longitude can reproduce.
+ *
+ * These are coarse boxes, not borders. They are chosen to be right over the
+ * populated parts of each zone; near a boundary the neighbouring zone may be
+ * the truer answer. Anywhere not covered falls back to longitude arithmetic,
+ * which is the honest result for open ocean and sparsely mapped regions.
+ */
+const TIME_ZONE_BOXES = Object.freeze([
+  // North America. Ordered west to east; the bands follow the meridians the
+  // US and Canadian zones actually track.
+  { lon: [-170, -141], lat: [50, 72], zone: 'America/Anchorage' },
+  { lon: [-141, -115], lat: [30, 72], zone: 'America/Los_Angeles' },
+  { lon: [-115, -102], lat: [25, 72], zone: 'America/Denver' },
+  { lon: [-102, -85], lat: [22, 72], zone: 'America/Chicago' },
+  { lon: [-85, -60], lat: [22, 72], zone: 'America/New_York' },
+  // Central and South America.
+  { lon: [-95, -83], lat: [7, 22], zone: 'America/Mexico_City' },
+  { lon: [-82, -66], lat: [-20, 13], zone: 'America/Bogota' },
+  { lon: [-75, -60], lat: [-56, -20], zone: 'America/Santiago' },
+  { lon: [-60, -34], lat: [-56, 6], zone: 'America/Sao_Paulo' },
+  // Europe and Africa.
+  { lon: [-11, 2], lat: [35, 62], zone: 'Europe/London' },
+  { lon: [2, 24], lat: [35, 72], zone: 'Europe/Paris' },
+  { lon: [24, 45], lat: [34, 72], zone: 'Europe/Moscow' },
+  { lon: [-18, 12], lat: [-36, 35], zone: 'Africa/Lagos' },
+  { lon: [12, 45], lat: [-36, 34], zone: 'Africa/Nairobi' },
+  // Asia and Oceania.
+  { lon: [45, 62], lat: [12, 45], zone: 'Asia/Dubai' },
+  { lon: [62, 90], lat: [5, 40], zone: 'Asia/Kolkata' },
+  { lon: [90, 108], lat: [5, 55], zone: 'Asia/Bangkok' },
+  { lon: [108, 126], lat: [18, 55], zone: 'Asia/Shanghai' },
+  { lon: [126, 146], lat: [30, 50], zone: 'Asia/Tokyo' },
+  { lon: [95, 130], lat: [-11, 8], zone: 'Asia/Jakarta' },
+  { lon: [112, 155], lat: [-45, -10], zone: 'Australia/Sydney' },
+  { lon: [165, 180], lat: [-50, -32], zone: 'Pacific/Auckland' },
+]);
+
+/**
+ * The zone covering a coordinate, or '' if none is claimed.
+ *
+ * @param {number} lat
+ * @param {number} lon
+ * @returns {string}
+ */
+export function zoneFor(lat, lon) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return '';
+  const box = TIME_ZONE_BOXES.find(
+    (b) => lon >= b.lon[0] && lon < b.lon[1] && lat >= b.lat[0] && lat < b.lat[1]
+  );
+  return box ? box.zone : '';
+}
+
+/**
+ * Local clock time at a longitude.
+ *
+ * The readout used to show `new Date()` — the VIEWER'S own time — so the pill
+ * read the same hour whether the cursor was over Tokyo or Los Angeles. A
+ * weather map that reports the time is reporting it for the place being looked
+ * at, not for the person looking.
+ *
+ * Derived from longitude at fifteen degrees an hour, which is what a time zone
+ * approximates in the first place. Deliberately NOT a network lookup: this runs
+ * on every mouse move, and a request per frame would be absurd for both the
+ * rate limit and the latency.
+ *
+ * The trade is that zones which deviate from their meridian are off by the
+ * amount they deviate — India and Nepal keep half-hour offsets, China runs one
+ * zone across five meridians, and summer time shifts an hour somewhere for part
+ * of the year. It is right to within an hour nearly everywhere, which is the
+ * accuracy the pill actually needs to convey "it is the middle of the night
+ * there".
+ *
+ * @param {number} lon Degrees east.
+ * @param {number} [nowMs] Epoch milliseconds; injectable for tests.
+ * @returns {string} e.g. "Thu 27 5:15 pm"
+ */
+export function localTimeAt(lon, nowMs = Date.now(), lat = null) {
+  const FORMAT = {
+    weekday: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true,
+  };
+  // A named zone knows its own summer-time rules; prefer it wherever one is
+  // claimed for this coordinate.
+  const zone = lat === null ? '' : zoneFor(lat, lon);
+  if (zone) {
+    try {
+      return new Date(nowMs)
+        .toLocaleString('en-GB', { ...FORMAT, timeZone: zone })
+        .replace(',', '');
+    } catch {
+      // An environment without full zone data falls through to arithmetic.
+    }
+  }
+  const wrapped = (((Number(lon) + 180) % 360) + 360) % 360 - 180;
+  const offsetHours = Number.isFinite(wrapped) ? Math.round(wrapped / 15) : 0;
+  // Shift the instant, then read it back in UTC. Formatting in the viewer's own
+  // zone would apply their offset on top of the one just added.
+  const shifted = new Date(nowMs + (offsetHours * 3600 * 1000));
+  return shifted.toLocaleString('en-GB', {
+    weekday: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+    ...FORMAT, timeZone: 'UTC',
+  }).replace(',', '');
+}
+
+/**
  * Create the layer.
  *
  * @returns {object} Layer module.
@@ -471,11 +581,9 @@ export function createTemperatureLayer() {
    * @param {number} celsius
    * @returns {void}
    */
-  function showHover(x, y, celsius) {
+  function showHover(x, y, celsius, lon = 0, lat = null) {
     if (!_hover) return;
-    const when = new Date().toLocaleString('en-GB', {
-      weekday: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true,
-    }).replace(',', '');
+    const when = localTimeAt(lon, Date.now(), lat);
     _hover.innerHTML = `${Math.round(celsius)} °C<span class="temp-hover-when">${when}</span>`;
     // Offset up and right of the pointer, and flipped when near an edge so the
     // pill never runs off screen or sits under the cursor.
@@ -535,7 +643,11 @@ export function createTemperatureLayer() {
         Cesium.Math.toDegrees(carto.longitude)
       );
       if (t === null) { hideHover(); return; }
-      showHover(position.x, position.y, t);
+      showHover(
+        position.x, position.y, t,
+        Cesium.Math.toDegrees(carto.longitude),
+        Cesium.Math.toDegrees(carto.latitude)
+      );
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
   }
 
