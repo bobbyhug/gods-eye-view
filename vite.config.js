@@ -5697,9 +5697,19 @@ function openAiRealtimeProxy() {
 
       const apiKey = process.env.OPENAI_API_KEY;
       if (!apiKey) {
-        res.statusCode = 503;
+        // 501 Not Implemented, not 503 Service Unavailable, and cacheable.
+        //
+        // 503 means "try again later", which is exactly what the client did:
+        // every fifteen seconds, forever, in every open tab. A missing key is
+        // not a transient condition — it is a permanent property of this
+        // deployment — so say so in a way the client can act on once.
+        res.statusCode = 501;
         res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({ error: 'OPENAI_API_KEY is not set' }));
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        res.end(JSON.stringify({
+          error: 'OPENAI_API_KEY is not set',
+          disabled: true,
+        }));
         return;
       }
 
@@ -5780,9 +5790,19 @@ function openAiRealtimeProxy() {
 
       const apiKey = process.env.OPENAI_API_KEY;
       if (!apiKey) {
-        res.statusCode = 503;
+        // 501 Not Implemented, not 503 Service Unavailable, and cacheable.
+        //
+        // 503 means "try again later", which is exactly what the client did:
+        // every fifteen seconds, forever, in every open tab. A missing key is
+        // not a transient condition — it is a permanent property of this
+        // deployment — so say so in a way the client can act on once.
+        res.statusCode = 501;
         res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({ error: 'OPENAI_API_KEY is not set' }));
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        res.end(JSON.stringify({
+          error: 'OPENAI_API_KEY is not set',
+          disabled: true,
+        }));
         return;
       }
 
@@ -8335,6 +8355,82 @@ function safetyData() {
  *
  * @returns {import('vite').Plugin}
  */
+/**
+ * Production headers and honest 404s for the preview server.
+ *
+ * `npm start` runs `vite preview`, which is a development convenience pressed
+ * into production service. That is a deliberate trade — twenty-odd API
+ * endpoints live as middleware in this file, and porting them to a separate
+ * server would be a large, risky job for no user-visible gain — but it comes
+ * with three defaults that are wrong for a public site.
+ *
+ * CACHING. Vite serves everything `no-cache`, including files whose names
+ * contain a content hash. Those bytes can never change: a different build
+ * produces a different filename. Revalidating roughly seven megabytes on every
+ * repeat visit is pure waste, and `Vary: Origin` on top of it makes the
+ * responses ineligible for Cloudflare's edge cache no matter what Cache-Control
+ * says.
+ *
+ * MISSING FILES. Vite's SPA fallback answers ANY unmatched path with index.html
+ * and HTTP 200. That is right for application routes and wrong for static
+ * assets: a missing script does not become a working page by being handed 66 kB
+ * of HTML, it becomes a syntax error. It also hides real problems — an audit of
+ * this site concluded the Cesium worker payload was half-missing, because two
+ * probe paths returned "200 OK" instead of 404. The payload was complete; the
+ * paths simply do not exist in this version of Cesium. A server that says yes
+ * to everything cannot be used to find anything out.
+ */
+function productionHeaders() {
+  const distDir = path.resolve(__dirname, 'dist');
+  /** Paths whose contents are immutable by construction. */
+  const IMMUTABLE = /^\/(assets|cesium)\//;
+
+  return {
+    name: 'production-headers',
+    configurePreviewServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const rawUrl = req.url || '/';
+        const pathname = rawUrl.split('?')[0].split('#')[0];
+
+        if (IMMUTABLE.test(pathname)) {
+          // Answer for real. Resolve inside dist and refuse anything that
+          // escapes it, so a crafted path cannot read outside the build.
+          let absolute = null;
+          try {
+            absolute = path.resolve(distDir, decodeURIComponent(pathname).replace(/^\/+/, ''));
+          } catch {
+            absolute = null;
+          }
+          if (!absolute || !absolute.startsWith(distDir) || !fs.existsSync(absolute)) {
+            res.statusCode = 404;
+            res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+            res.setHeader('Cache-Control', 'no-store');
+            res.end('Not found\n');
+            return;
+          }
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+          // `Vary: Origin` is added further down the stack by the CORS layer,
+          // so removing it here would be undone. Intercept instead: for these
+          // paths the response does not vary by origin, and leaving the header
+          // on costs the entire edge cache.
+          const setHeader = res.setHeader.bind(res);
+          res.setHeader = (name, value) => {
+            if (String(name).toLowerCase() === 'vary' && /origin/i.test(String(value))) return res;
+            return setHeader(name, value);
+          };
+        } else if (pathname.startsWith('/api/')) {
+          res.setHeader('Cache-Control', 'no-store');
+        } else {
+          // index.html and application routes: always revalidate, so a deploy
+          // is picked up on the next navigation.
+          res.setHeader('Cache-Control', 'no-cache');
+        }
+        next();
+      });
+    },
+  };
+}
+
 function temperatureData() {
   /**
    * Grid spacing in degrees.
@@ -8909,6 +9005,7 @@ export default defineConfig(({ mode }) => {
       shootingsData(),
       safetyData(),
       temperatureData(),
+      productionHeaders(),
       openRouterProxy(),
     ].map((plugin, index) => (index === 0 ? plugin : alsoServeInPreview(plugin))),
     server: {

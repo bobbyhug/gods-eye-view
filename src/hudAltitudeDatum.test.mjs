@@ -69,6 +69,14 @@ function installHudEnvironment() {
     addEventListener() {},
     removeEventListener() {},
   };
+  // The geoid grid is fetched from an idle callback so its 2.77 MB do not land
+  // in the startup waterfall. Run those callbacks immediately here: these tests
+  // are about what the readout DOES once the grid arrives, not about when the
+  // browser chooses to go idle. `idleCalls` lets a test assert the deferral
+  // itself is still in place.
+  const previousIdle = globalThis.requestIdleCallback;
+  const idleCalls = [];
+  globalThis.requestIdleCallback = (fn) => { idleCalls.push(fn); fn(); return idleCalls.length; };
   const viewer = {
     camera: {
       pitch: -Math.PI / 2,
@@ -84,9 +92,12 @@ function installHudEnvironment() {
   return {
     elements,
     viewer,
+    idleCalls,
     restore() {
       if (previousDocument === undefined) delete globalThis.document;
       else globalThis.document = previousDocument;
+      if (previousIdle === undefined) delete globalThis.requestIdleCallback;
+      else globalThis.requestIdleCallback = previousIdle;
     },
   };
 }
@@ -244,6 +255,33 @@ test('the corrected readouts are the MSL datum, not a coincidence of the SFO sig
     );
     assert.match(env.elements.get('hud-summary').textContent, /\| ALT 54M \|/);
   } finally {
+    hud?.destroy();
+    env.restore();
+  }
+});
+
+
+test('the geoid grid is fetched from an idle callback, not on the first frame', async () => {
+  // THE COST THIS AVOIDS. The import is dynamic, which looks like enough — but
+  // the altitude readout is on screen from the first frame, so it fired
+  // immediately and the 2.77 MB grid landed in the middle of Cesium's own
+  // startup, competing with it for bandwidth. Measured at 1,807 kB / 687 ms.
+  //
+  // Deferring is free: the readout already falls back to the uncorrected
+  // ellipsoidal height until the grid lands, which is the right thing to show
+  // for the first second of a session.
+  const env = installHudEnvironment();
+  let hud;
+  try {
+    hud = new IntelHUD(env.viewer);
+    assert.equal(env.idleCalls.length, 0, 'nothing should be scheduled before the first tick');
+    hud._updateCameraData();
+    assert.equal(env.idleCalls.length, 1, 'the fetch must be scheduled, not issued inline');
+    // A second tick must not queue a second fetch.
+    hud._updateCameraData();
+    assert.equal(env.idleCalls.length, 1, 'the request must happen at most once');
+  } finally {
+    // The HUD owns two intervals; without this the test runner never exits.
     hud?.destroy();
     env.restore();
   }

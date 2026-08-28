@@ -1,3 +1,4 @@
+import { trimTileCache } from './tileStreaming.js';
 import * as Cesium from 'cesium';
 import { governorRequestRender } from './renderGovernor.js';
 
@@ -243,7 +244,15 @@ export class MapStackController {
     this._imageryLayer = new Cesium.ImageryLayer(provider);
     this.viewer.imageryLayers.add(this._imageryLayer, 0);
 
-    if (this.googleTileset) this.googleTileset.show = false;
+    if (this.googleTileset) {
+      this.googleTileset.show = false;
+      // Hiding a tileset does not free a byte of it. Leaving photoreal mode
+      // otherwise keeps roughly half a gigabyte of tiles for a view nobody is
+      // looking at resident for the rest of the session. trimLoadedTiles drops
+      // everything not currently selected — and nothing is selected once the
+      // tileset is hidden.
+      trimTileCache(this.googleTileset);
+    }
     this.viewer.scene.globe.show = true;
     await this._setWorldTerrainEnabled(!!this.cesiumToken, gen);
   }

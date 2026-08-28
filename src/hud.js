@@ -231,9 +231,17 @@ export class IntelHUD {
       this._updateCameraData();
     }, 250);
 
-    // Semantic summary refresh cadence
+    // Semantic summary refresh cadence.
+    //
+    // Gated on a failure counter. When the summary endpoint is not configured —
+    // which is its normal state on a deployment without an OpenAI key — this
+    // used to POST every fifteen seconds and receive a 503 every time, forever,
+    // in every open tab. Measured on the live site: twelve calls in 187 seconds,
+    // every one failing, with no backoff and no end.
+    this._summaryFailures = 0;
+    this._summaryDisabled = false;
     this._summaryInterval = setInterval(() => {
-      if (!this._visible) return;
+      if (!this._visible || this._summaryDisabled) return;
       void this._updateSummary(true);
     }, HUD_SUMMARY_INTERVAL_MS);
   }
@@ -263,9 +271,26 @@ export class IntelHUD {
     if (!this._geoidReady) {
       if (!this._geoidRequested) {
         this._geoidRequested = true;
-        ensureGeoidReady()
-          .then(() => { this._geoidReady = true; })
-          .catch(() => { /* readout falls back to the uncorrected height */ });
+        // FETCHED WHEN THE BROWSER IS IDLE, NOT ON THE FIRST FRAME.
+        //
+        // The import is already dynamic, which looks like enough — but this
+        // readout is on screen from the very first frame, so it fired
+        // immediately and the 2.77 MB grid landed in the middle of the startup
+        // waterfall, competing with Cesium's own boot for bandwidth. Measured
+        // at 1,807 kB and 687 ms of it.
+        //
+        // Deferring costs nothing real: the method already returns null until
+        // the grid arrives and the altitude readout falls back to the
+        // uncorrected ellipsoid height, which is the right answer to show for
+        // the first second of a session rather than a blank.
+        const idle = typeof globalThis.requestIdleCallback === 'function'
+          ? (fn) => globalThis.requestIdleCallback(fn, { timeout: 4000 })
+          : (fn) => setTimeout(fn, 1500);
+        idle(() => {
+          ensureGeoidReady()
+            .then(() => { this._geoidReady = true; })
+            .catch(() => { /* readout falls back to the uncorrected height */ });
+        });
       }
       return null;
     }
@@ -669,10 +694,26 @@ export class IntelHUD {
         throw new Error(data?.error || `HTTP ${response.status}`);
       }
       if (revision !== this._summaryRevision) return;
+      this._summaryFailures = 0;
       this._setSummaryText(data.summary, animate);
     } catch (error) {
       if (error?.name !== 'AbortError') {
-        console.warn('[HUD] AI summary unavailable:', error);
+        this._summaryFailures = (this._summaryFailures || 0) + 1;
+        // Three consecutive failures means it is not going to work this
+        // session: either the key is unset or the service is down, and neither
+        // is fixed by asking again in fifteen seconds. Stop rather than log the
+        // same error until the tab closes. A 501 says "not configured", which
+        // is a permanent answer, so take it at the first sign.
+        const notConfigured = /501|not set|disabled/i.test(String(error?.message || ''));
+        if (notConfigured || this._summaryFailures >= 3) {
+          this._summaryDisabled = true;
+          console.info(
+            `[HUD] AI summary disabled for this session (${notConfigured
+              ? 'not configured' : `${this._summaryFailures} consecutive failures`}).`
+          );
+        } else {
+          console.warn('[HUD] AI summary unavailable:', error);
+        }
         // Invalidate the committed signature so the next periodic tick
         // retries instead of sticking on the fallback line forever.
         this._lastSummarySignature = null;

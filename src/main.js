@@ -105,6 +105,7 @@ async function init() {
     window.__GOOGLE_MAPS_API_KEY__ = googleApiKey;
 
     // Create the Cesium viewer with minimal chrome
+    const cesiumContainer = document.getElementById('cesiumContainer');
     const viewer = new Cesium.Viewer('cesiumContainer', {
       timeline: false,
       animation: false,
@@ -162,6 +163,32 @@ async function init() {
     // drawingBufferHeight that already contains it, so tile selection, request
     // count, memory and traversal are unchanged. Purely more fragments —
     // crisper silhouettes, vectors and text, not more photographic detail.
+    // GUARD AGAINST A ZERO-SIZED CANVAS.
+    //
+    // Seen once in the wild: the canvas was constructed 0x0 while its container
+    // measured 1280x720, and stayed 0x0 for the whole session — a black globe
+    // that never painted. The likely cause is the Viewer being built while the
+    // container has no layout size yet, behind the first-run cover, so Cesium
+    // reads zero and never re-checks on its own.
+    //
+    // Observing the container costs nothing and fixes it whenever it happens,
+    // including on window resizes and display changes.
+    if (cesiumContainer && typeof ResizeObserver === 'function') {
+      const observer = new ResizeObserver(() => {
+        try { viewer.resize(); } catch { /* viewer torn down */ }
+      });
+      observer.observe(cesiumContainer);
+    }
+    // Belt and braces: if the canvas is still zero after the first frame, say so
+    // rather than presenting a black screen with no explanation.
+    viewer.scene.postRender.addEventListener(function firstPaintCheck() {
+      viewer.scene.postRender.removeEventListener(firstPaintCheck);
+      if (viewer.scene.canvas.width === 0 || viewer.scene.canvas.height === 0) {
+        console.warn('[Init] Cesium canvas measured 0x0 after first paint; forcing a resize.');
+        try { viewer.resize(); } catch { /* nothing more to try */ }
+      }
+    });
+
     setNativeResolution(viewer);
 
     // Antialiasing: exactly ONE. The app shipped 4x MSAA and FXAA together —
