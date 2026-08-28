@@ -365,11 +365,11 @@ test('detection lifecycle re-hosts unchanged painters behind the sole host liste
     // ordering under the card canvas is carried by z-index, not siblinghood.
     assert.equal(surface.parentElement, env.viewer.container);
     assert.deepEqual(root.children, [mainCanvas]);
-    assert.equal(surface.style.mixBlendMode, 'screen');
-    assert.equal(
-      surface.style.filter,
-      'contrast(1.05) saturate(1.05) drop-shadow(0 0 3px rgba(0, 244, 255, 0.4))',
-    );
+    // The full-surface blur and blend are off by default: both are recomputed
+    // by the compositor every frame across a five-megapixel canvas. The cheap
+    // colour filter stays. See _applySurfaceTheme for how to restore them.
+    assert.equal(surface.style.mixBlendMode, 'normal');
+    assert.equal(surface.style.filter, 'contrast(1.05) saturate(1.05)');
     assert.equal(surface.style.display, 'none');
 
     setMode('DENSE');
@@ -439,15 +439,18 @@ test('detection lifecycle re-hosts unchanged painters behind the sole host liste
 
     // These are the exact engine calls made by military style presets after
     // their production UI gate chooses CRT/NVG/FLIR defaults.
+    // Each style keeps its colour filter; none carries the drop-shadow blur or
+    // the surface blend any more, both of which the compositor recomputed every
+    // frame over the whole viewport.
     const expectedThemes = {
-      retro: 'contrast(1.08) saturate(1.04) drop-shadow(0 0 3px rgba(255, 176, 56, 0.45))',
-      surveillance: 'contrast(1.12) saturate(1.12) drop-shadow(0 0 3px rgba(120, 255, 120, 0.42))',
-      thermal: 'contrast(1.1) saturate(1.08) drop-shadow(0 0 3px rgba(255, 224, 170, 0.42))',
+      retro: 'contrast(1.08) saturate(1.04)',
+      surveillance: 'contrast(1.12) saturate(1.12)',
+      thermal: 'contrast(1.1) saturate(1.08)',
     };
     for (const style of ['retro', 'surveillance', 'thermal']) {
       setMode('OFF');
       setDetectionStyle(style);
-      assert.equal(surface.style.mixBlendMode, 'screen');
+      assert.equal(surface.style.mixBlendMode, 'normal');
       assert.equal(surface.style.filter, expectedThemes[style]);
       setDetectionTuning({ densityPct: 75 });
       setMode('DENSE');
@@ -459,11 +462,11 @@ test('detection lifecycle re-hosts unchanged painters behind the sole host liste
 
     setMode('OFF');
     setDetectionStyle('normal');
-    assert.equal(surface.style.mixBlendMode, 'screen');
-    assert.equal(
-      surface.style.filter,
-      'contrast(1.05) saturate(1.05) drop-shadow(0 0 3px rgba(0, 244, 255, 0.4))',
-    );
+    // The full-surface blur and blend are off by default: both are recomputed
+    // by the compositor every frame across a five-megapixel canvas. The cheap
+    // colour filter stays. See _applySurfaceTheme for how to restore them.
+    assert.equal(surface.style.mixBlendMode, 'normal');
+    assert.equal(surface.style.filter, 'contrast(1.05) saturate(1.05)');
     env.postRender.raise();
     assert.equal(getMode(), 'OFF');
     assert.equal(surface.style.display, 'none');

@@ -566,9 +566,34 @@ export function setDetectionStyle(styleName) {
 
 function _applySurfaceTheme() {
   if (!_hostSurface) return;
-  _hostSurface.style.mixBlendMode = _theme.blend;
-  // This exact CSS chain is one compositor pass over the finished layer.
-  _hostSurface.style.filter = `${_theme.filter} drop-shadow(0 0 ${GLOW_PX}px ${_theme.glow})`;
+
+  // THE COST THIS AVOIDS. This surface is a full-viewport canvas — roughly five
+  // megapixels on a retina display — and both of the properties below are
+  // recomputed by the compositor on EVERY frame, whether or not anything on it
+  // changed:
+  //
+  //   drop-shadow()          an alpha-aware blur across the entire surface.
+  //                          By far the most expensive item in the chain.
+  //   mix-blend-mode: screen forces a compositor-level blend of the whole
+  //                          surface against the scene beneath it.
+  //
+  // The colour filter (contrast/saturate) is a cheap per-pixel matrix and stays.
+  // The glow is the part being given up, and over a dark globe the difference
+  // is slight: these strokes are already bright cyan on near-black.
+  //
+  // Reversible, so the two can be compared directly rather than argued about:
+  //     document.documentElement.dataset.detectionGlow = 'css'   // full chain
+  //     delete document.documentElement.dataset.detectionGlow    // cheap (default)
+  const wantExpensive = typeof document !== 'undefined'
+    && document.documentElement?.dataset?.detectionGlow === 'css';
+
+  if (wantExpensive) {
+    _hostSurface.style.mixBlendMode = _theme.blend;
+    _hostSurface.style.filter = `${_theme.filter} drop-shadow(0 0 ${GLOW_PX}px ${_theme.glow})`;
+    return;
+  }
+  _hostSurface.style.mixBlendMode = 'normal';
+  _hostSurface.style.filter = _theme.filter;
 }
 
 function _syncSurfaceVisibility() {

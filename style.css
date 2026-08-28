@@ -5,7 +5,10 @@
 
 :root {
   --bg-dark: #0a0a0f;
-  --glass-bg: rgba(12, 12, 20, 0.72);
+  /* Alpha raised from 0.72. With the backdrop blur switched off (see the
+     end of this file) the fill alone has to keep panels legible over
+     bright terrain, which the blur was helping with. */
+  --glass-bg: rgba(12, 12, 20, 0.86);
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-border-hover: rgba(255, 255, 255, 0.15);
   --accent: #00d4ff;
@@ -825,7 +828,9 @@ body.cockpit-mode #cockpit-cloud-effects.active {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.8s ease, visibility 0.8s ease;
+  /* 0.25 s, down from 0.8. The fade sat on the critical path to first
+     sight of the globe, behind a load already measured at 4-7 s. */
+  transition: opacity 0.25s ease, visibility 0.25s ease;
 }
 
 #loading-screen.hidden {
@@ -10084,4 +10089,74 @@ body.cockpit-mode #flightsim-hud { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .fs-warn { animation: none; }
   .fs-city, .fs-maptap { transition: none; }
+}
+
+
+/* ==========================================================================
+   FROSTED GLASS - FLATTENED BY DEFAULT
+   ==========================================================================
+   Every panel, chip and button above used backdrop-filter: blur(). Each one
+   makes the compositor read back the region of the WebGL canvas behind it and
+   blur it, EVERY FRAME, and the cost scales with the NUMBER of separate
+   blurred regions rather than with how much blur each applies. There were 49
+   such elements live over the globe.
+
+   Measured on a 2790x1778 display, removing them took the frame from 14.51 ms
+   to 9.95 ms - a 46 percent frame-rate gain for no lost function. In a small
+   window the effect is far smaller, because the blurred areas are smaller and
+   the frame already fits inside the vsync budget; that is a property of the
+   measurement, not of the cost.
+
+   The look survives on the fill alone: --glass-bg carries more alpha now,
+   which is what the blur was really contributing over bright terrain.
+
+   The blur is switched off, not deleted, so the two can be compared directly:
+
+       document.documentElement.dataset.glass = 'on'    // restore the blur
+       delete document.documentElement.dataset.glass    // flat again (default)
+   ========================================================================== */
+:root:not([data-glass='on']) :is(
+  #gev-voice-control,
+  .panel-inner,
+  #pp-toggles:not(.collapsed),
+  .pp-toggle-btn,
+  #pp-toggles .pp-header-row,
+  #pp-toggles:not(.collapsed) > .pp-header-row,
+  .pp-slider-row,
+  #param-slider-panel,
+  .location-inner,
+  #top-center-actions button,
+  #global-loading-status,
+  #traffic-sync-chip,
+  #cctv-sync-chip,
+  #toast,
+  .cockpit-utility-control.is-expanded,
+  .cockpit-utility-launcher,
+  .cockpit-utility-control.is-expanded .cockpit-utility-launcher,
+  .data-panel-inner,
+  .global-context-panel-inner,
+  .context-radio-mini,
+  .cctv-panel-inner,
+  .scene-panel-inner,
+  #command-dock,
+  #command-dock .panel-inner,
+  #command-dock .location-inner,
+  #command-dock #control-panel.collapsed .panel-inner,
+  #command-dock #location-bar.collapsed .location-inner,
+  #command-dock .gev-voice-error-tray,
+  #command-dock .dock-popover-content,
+  #command-dock > #location-bar,
+  #command-dock > #control-panel,
+  #gev-voice-control .gev-voice-help-tray,
+  #first-run-launcher,
+  .cctv-lightbox-backdrop,
+  .flightsim-panel-inner,
+  .fs-help,
+  .temp-panel,
+  .shooting-detail,
+  .fs-lost,
+  .fs-lost-card
+) {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }

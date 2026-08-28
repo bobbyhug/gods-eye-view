@@ -39,17 +39,132 @@ const _holds = new Set();
 const _recentRequests = [];
 const RECENT_REQUEST_CAP = 16;
 
+/**
+ * Frames per second to pump while any hold is active.
+ *
+ * 60 is plenty for the things that take holds — moving vehicles, orbiting
+ * cameras, style crossfades — all of which are authored against wall-clock
+ * time rather than frame count.
+ */
+let _targetHz = 60;
+/**
+ * The mode last applied: 'continuous', 'idle', or null before install.
+ *
+ * Tracked so the settling frame fires on a real TRANSITION only. applyMode()
+ * runs on every hold and release, so issuing it unconditionally asked for a
+ * render each time anything touched the governor — one render per tick for a
+ * parked scene, which is precisely the idling this exists to prevent.
+ */
+let _lastApplied = null;
+/** rAF id of the running pump, or null. */
+let _pumpId = null;
+/**
+ * Timestamp of the last pumped frame.
+ *
+ * -Infinity, not 0: with 0 the very first pumped frame is compared against a
+ * clock that also starts near zero and is skipped as "too soon", so a hold
+ * would not produce its opening frame.
+ */
+let _lastPump = Number.NEGATIVE_INFINITY;
+
+/**
+ * Frame scheduler. Injectable for tests.
+ *
+ * NO setTimeout FALLBACK. An earlier version fell back to a timer where
+ * requestAnimationFrame was missing, which meant that under Node the pump
+ * became an endless chain of timers that kept the process alive and hung the
+ * test run. Outside a browser there is no display to pace against and nothing
+ * to draw, so the correct behaviour is not to pump at all.
+ */
+let _raf = (fn) => (typeof requestAnimationFrame === 'function'
+  ? requestAnimationFrame(fn) : null);
+/** @type {Function} Injectable for tests. */
+let _cancelRaf = (id) => {
+  if (id !== null && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(id);
+};
+
+function stopPump() {
+  if (_pumpId === null) return;
+  _cancelRaf(_pumpId);
+  _pumpId = null;
+}
+
+function startPump() {
+  if (_pumpId !== null) return;
+  // Each new hold period starts owed a frame immediately.
+  _lastPump = Number.NEGATIVE_INFINITY;
+  const pump = (t) => {
+    _pumpId = _raf(pump);
+    const now = typeof t === 'number' ? t : 0;
+    if (now - _lastPump < 1000 / _targetHz) return;
+    _lastPump = now;
+    _viewer?.scene?.requestRender?.();
+  };
+  _pumpId = _raf(pump);
+  // No scheduler (Node, or a headless harness): ask for the one frame the
+  // caller is entitled to and stop, rather than pretending to pace.
+  if (_pumpId === null) _viewer?.scene?.requestRender?.();
+}
+
+/**
+ * Apply the current hold state to the scene.
+ *
+ * PACED, NOT SWITCHED. This used to be a binary flip: any hold set
+ * `requestRenderMode = false`, which hands the loop to Cesium to run flat out
+ * at the display's refresh rate with no cap. Fifteen different reasons can take
+ * a hold — traffic, satellites, flights, military, rocket launches, vessels,
+ * annotations, the CCTV projection, camera orbits, tracking, cockpit, style
+ * animation — so enabling a single data layer, which is the entire point of the
+ * app, dropped it out of render-on-demand for the rest of the session. Every
+ * one of those uncapped frames also re-ran every compositor effect layered over
+ * the canvas.
+ *
+ * Now `requestRenderMode` stays true permanently and a hold instead starts a
+ * paced pump that asks for a frame at a chosen rate. Rendering continuously and
+ * rendering as fast as possible are different things, and only the first was
+ * ever wanted.
+ */
 function applyMode() {
   if (!_installed || !_viewer?.scene) return;
-  const continuous = _holds.size > 0;
   const scene = _viewer.scene;
-  if (scene.requestRenderMode === !continuous) return;
-  scene.requestRenderMode = !continuous;
-  if (!continuous) {
-    // Entering idle: render one settling frame so anything the last
-    // continuous frame mutated is on screen before the loop stops.
-    scene.requestRender?.();
-  }
+  // Never turned off again.
+  scene.requestRenderMode = true;
+
+  const want = _holds.size > 0 ? 'continuous' : 'idle';
+  if (want === 'continuous') startPump();
+  else stopPump();
+
+  if (_lastApplied === want) return;
+  _lastApplied = want;
+  // Entering idle renders one settling frame, so anything the last pumped
+  // frame mutated is on screen before the loop goes quiet.
+  if (want === 'idle') scene.requestRender?.();
+}
+
+/**
+ * Set the pumped frame rate.
+ *
+ * @param {number} hz
+ * @returns {number} The rate actually set.
+ */
+export function setGovernorTargetHz(hz) {
+  const value = Number(hz);
+  if (Number.isFinite(value) && value >= 15 && value <= 240) _targetHz = value;
+  return _targetHz;
+}
+
+/** @returns {number} */
+export function getGovernorTargetHz() { return _targetHz; }
+
+/**
+ * Replace the frame scheduler. Tests only.
+ *
+ * @param {object} hooks
+ * @returns {void}
+ */
+export function _setGovernorSchedulerForTest({ raf, cancel } = {}) {
+  if (typeof raf === 'function') _raf = raf;
+  if (typeof cancel === 'function') _cancelRaf = cancel;
 }
 
 /**
@@ -130,8 +245,12 @@ export function getRenderGovernorDiagnostics() {
 
 /** Test seam: reset module state between unit tests. */
 export function _resetRenderGovernorForTest() {
+  stopPump();
   _viewer = null;
   _installed = false;
   _holds.clear();
   _recentRequests.length = 0;
+  _lastPump = Number.NEGATIVE_INFINITY;
+  _lastApplied = null;
+  _targetHz = 60;
 }

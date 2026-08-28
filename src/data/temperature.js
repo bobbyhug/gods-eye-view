@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium';
+import { createHoverPickThrottle } from '../hoverPick.js';
 import {
   LAPSE_C_PER_M,
   buildColorTable,
@@ -298,6 +299,7 @@ export function createTemperatureLayer() {
   /** @type {object|null} */
   let _imageryLayer = null;
   let _provider = null;
+  let _hoverThrottle = null;
   const _coarseElevation = createCoarseElevation();
   /** Built once; the ramp never changes. */
   let _colorTable = null;
@@ -631,24 +633,43 @@ export function createTemperatureLayer() {
     // Cursor readout. Reads the interpolated field rather than calling the API:
     // a request per mouse move would exhaust the free tier in seconds, and the
     // field is already in memory so this costs nothing and never lags.
+    // Throttled: pickPosition reads the depth buffer with a SYNCHRONOUS
+    // gl.readPixels, stalling the CPU until the GPU drains, and this ran on
+    // every raw mousemove — up to 120 stalls a second. The readout is for a
+    // human reading a number; ~15 Hz is already faster than that can be read.
+    _hoverThrottle = createHoverPickThrottle({
+      scene: viewer.scene,
+      pick: (position) => readHoverAt(viewer, position),
+    });
     _clickHandler.setInputAction((movement) => {
       if (!_enabled || !_lookup) { hideHover(); return; }
-      const position = movement.endPosition;
-      const cartesian = viewer.scene.pickPosition(position)
-        || viewer.camera.pickEllipsoid(position, Cesium.Ellipsoid.WGS84);
-      if (!cartesian) { hideHover(); return; }
-      const carto = Cesium.Cartographic.fromCartesian(cartesian);
-      const t = surfaceAt(
-        Cesium.Math.toDegrees(carto.latitude),
-        Cesium.Math.toDegrees(carto.longitude)
-      );
-      if (t === null) { hideHover(); return; }
-      showHover(
-        position.x, position.y, t,
-        Cesium.Math.toDegrees(carto.longitude),
-        Cesium.Math.toDegrees(carto.latitude)
-      );
+      _hoverThrottle.handle(movement.endPosition);
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+  }
+
+  /**
+   * Sample and show the readout at one screen position.
+   *
+   * @param {object} viewer
+   * @param {{x: number, y: number}} position
+   * @returns {void}
+   */
+  function readHoverAt(viewer, position) {
+    if (!_enabled || !_lookup) { hideHover(); return; }
+    const cartesian = viewer.scene.pickPosition(position)
+      || viewer.camera.pickEllipsoid(position, Cesium.Ellipsoid.WGS84);
+    if (!cartesian) { hideHover(); return; }
+    const carto = Cesium.Cartographic.fromCartesian(cartesian);
+    const t = surfaceAt(
+      Cesium.Math.toDegrees(carto.latitude),
+      Cesium.Math.toDegrees(carto.longitude)
+    );
+    if (t === null) { hideHover(); return; }
+    showHover(
+      position.x, position.y, t,
+      Cesium.Math.toDegrees(carto.longitude),
+      Cesium.Math.toDegrees(carto.latitude)
+    );
   }
 
   const layer = {

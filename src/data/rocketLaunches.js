@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium';
+import { createHoverPickThrottle } from '../hoverPick.js';
 import {
   findSatelliteOrbitTrackInTle,
   getSatelliteOrbitTrack,
@@ -44,6 +45,7 @@ let _lastError = null;
 let _orbitMatches = 0;
 let _clickHandler = null;
 let _moveHandler = null;
+let _hoverThrottle = null;
 let _viewer = null;
 let _declutterHandler = null;
 let _dataManager = null;
@@ -3434,12 +3436,25 @@ const rocketLaunchesLayer = {
       focusMission(_launches.find((launch) => launch.id === launchId));
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
     _moveHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    // Throttled, and `pick` rather than `drillPick`.
+    //
+    // This ran a twelve-deep drillPick on every raw mousemove — up to twelve
+    // scene renders and twelve synchronous GPU readbacks per event, at up to
+    // 120 events a second — only to decide whether to show a pointer cursor.
+    // The topmost hit is the correct answer for "what would clicking do", so
+    // one pass is enough, and a cursor does not need re-deciding more than
+    // ~15 times a second or for movements of under a few pixels.
+    _hoverThrottle = createHoverPickThrottle({
+      scene: viewer.scene,
+      pick: (position) => {
+        if (!_enabled || !_dataSource?.show) return;
+        const picked = viewer.scene.pick(position);
+        viewer.scene.canvas.style.cursor = entityLaunchId(picked?.id) ? 'pointer' : '';
+      },
+    });
     _moveHandler.setInputAction((movement) => {
       if (!_enabled || !_dataSource?.show) return;
-      const missionEntity = viewer.scene.drillPick(movement.endPosition, 12)
-        .map((picked) => picked?.id)
-        .find((candidate) => entityLaunchId(candidate));
-      viewer.scene.canvas.style.cursor = missionEntity ? 'pointer' : '';
+      _hoverThrottle.handle(movement.endPosition);
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
     // Apply horizon visibility before Cesium traverses and picks the scene.
     // A postRender write is one frame late and can remain visibly stale when
@@ -3520,6 +3535,8 @@ const rocketLaunchesLayer = {
     clearPostTleRetry();
     if (_clickHandler) _clickHandler.destroy();
     _clickHandler = null;
+    _hoverThrottle?.cancel();
+    _hoverThrottle = null;
     if (_moveHandler) _moveHandler.destroy();
     _moveHandler = null;
     if (_declutterHandler) _declutterHandler();

@@ -1,6 +1,8 @@
 import * as Cesium from 'cesium';
 import {
+  applyAntialiasing,
   loadRenderQuality,
+  setNativeResolution,
   setRenderQuality,
   applyRenderQuality as applySceneQuality,
 } from './renderQuality.js';
@@ -136,14 +138,36 @@ async function init() {
       },
     });
 
-    // Cap the default render loop at 60 fps. Cesium's loop otherwise runs at
-    // the display's refresh rate — 120 Hz on ProMotion panels — doubling GPU
-    // and CPU burn for zero visual benefit in a map app whose animation
-    // cadences (poll interpolation, trail fades, style crossfades) are all
-    // designed against wall-clock time, not frame count. Measured on the
-    // 2026-08-05 perf investigation as a strict halving of idle burn on
-    // 120 Hz hardware; a no-op on 60 Hz displays. (perf item 2)
-    viewer.targetFrameRate = 60;
+    // NO targetFrameRate. It used to be pinned to 60, which was wrong in a way
+    // that hid itself.
+    //
+    // Cesium's loop compares the frame delta against 1000/targetFrameRate and
+    // renders only when the delta EXCEEDS it. On a 120 Hz panel rAF fires every
+    // 8.33 ms, so that passes on alternate ticks and the display is pinned to
+    // exactly half its rate. On a 60 Hz panel the deltas sit right on the
+    // 16.667 ms boundary and occasionally land a hair under, skipping a vsync
+    // and making the next delta ~33 ms — periodic judder that a quality
+    // governor reads as GPU overload and answers by lowering quality.
+    //
+    // Worse, the throttle sat between the vsync clock and every timing sample
+    // taken anywhere in the app, so the governor was measuring the throttle
+    // rather than the scene. Frame pacing belongs to the render governor, which
+    // paces deliberately and measures real work.
+
+    // Native resolution. The globe rendered at 1x while the HUD drew at 2x, so
+    // the decoration was sharp and the content was soft.
+    //
+    // Costs no extra tiles: screen-space error divides out pixelRatio against a
+    // drawingBufferHeight that already contains it, so tile selection, request
+    // count, memory and traversal are unchanged. Purely more fragments —
+    // crisper silhouettes, vectors and text, not more photographic detail.
+    setNativeResolution(viewer);
+
+    // Antialiasing: exactly ONE. The app shipped 4x MSAA and FXAA together —
+    // two antialiasers doing the same job, with FXAA additionally pinning the
+    // whole post-process framebuffer chain. At native retina, downsampling from
+    // a 2x buffer IS antialiasing, and MSAA on top measured a 2x frame cost.
+    applyAntialiasing(viewer);
 
     // Register per-layer data attribution into the "Data attribution" popover.
     // Required by each source's license (ODbL, CC BY-NC-SA, NASA FIRMS, etc.);
@@ -399,10 +423,14 @@ async function init() {
 
     // Keep startup chrome truthful: a share is not restored until camera,
     // visual/map/panel lanes, and every requested layer have terminated.
-    void Promise.all([
-      styleManager.initialRestorePromise,
-      new Promise((resolve) => setTimeout(resolve, 1000)),
-    ]).finally(() => {
+    // No artificial floor. This used to race the restore against an
+    // unconditional one-second timer, so the loading screen could not begin to
+    // hide before a full second had passed however fast everything else was.
+    // With an 0.8 s fade and a 0.9 s fallback stacked behind it, that was at
+    // least 1.8 s of pure wall clock added to an already 4-7 s first paint —
+    // time spent looking at a cover for no reason. The restore promise alone is
+    // the honest signal that the app is ready to be seen.
+    void Promise.resolve(styleManager.initialRestorePromise).finally(() => {
       loadingScreen.classList.add('hidden');
       // Reveal only after the loading cover has yielded. transitionend can be
       // absent under reduced motion, so a bounded fallback makes this reliable.
@@ -416,7 +444,10 @@ async function init() {
         initFirstRunExperience({ styleManager, dataManager });
       };
       loadingScreen.addEventListener('transitionend', revealFirstRun, { once: true });
-      setTimeout(revealFirstRun, 900);
+      // Fallback for when transitionend never fires (reduced motion). Kept
+      // just past the 250 ms fade rather than the old 900 ms, which was
+      // itself most of a second of dead time on the startup path.
+      setTimeout(revealFirstRun, 320);
     });
 
     // Expose for debugging

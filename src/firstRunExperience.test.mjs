@@ -577,8 +577,20 @@ test('markup, startup ordering and accessibility remain pinned', () => {
   assert.doesNotMatch(html, /data-first-run-choice="infrastructure"/,
     'the removed tile must leave no markup behind');
 
-  const startup = main.slice(main.indexOf('void Promise.all(['), main.indexOf('// Expose for debugging'));
+  // Anchored on the restore promise itself rather than on how it is awaited.
+  // The reveal used to race it against an unconditional one-second timer, which
+  // put a hard floor under how soon the loading cover could start to hide; the
+  // promise alone is the signal now, so the anchor must not pin the old shape.
+  const startup = main.slice(
+    main.indexOf('styleManager.initialRestorePromise'),
+    main.indexOf('// Expose for debugging'),
+  );
   assert.match(startup, /styleManager\.initialRestorePromise/);
+  assert.doesNotMatch(
+    startup.slice(0, startup.indexOf("loadingScreen.classList.add('hidden')")),
+    /setTimeout\(\s*resolve/,
+    'the reveal must not be gated behind an artificial timer again',
+  );
   assert.ok(startup.indexOf("loadingScreen.classList.add('hidden')") < startup.indexOf('initFirstRunExperience'));
   assert.match(startup, /initFirstRunExperience\(\{ styleManager, dataManager \}\)/);
 

@@ -131,12 +131,43 @@ export function createFlightSimController({ viewer, hooks = {} }) {
   let heldRender = false;
   /** Scene render settings captured on entry, restored verbatim on exit. */
   let priorQuality = null;
-  /** Highest resolution scale this display justifies. Set on entry. */
-  let qualityCeiling = 1;
-  /** Smoothed frame time, milliseconds — drives adaptive resolution. */
-  let frameAvgMs = 16.7;
+  /**
+   * Highest resolution scale this display justifies, as a FRACTION of native.
+   *
+   * Was an absolute multiplier of min(devicePixelRatio, 2). Once the app began
+   * setting useBrowserRecommendedResolution = false, resolutionScale became a
+   * fraction OF the device ratio rather than a replacement for it, so the old
+   * ceiling would have multiplied against dpr and asked for a 3x-4x buffer —
+   * nine to sixteen times the pixels. Native is the ceiling now.
+   */
+  const QUALITY_CEILING = 1;
+  /** Lowest fraction of native worth rendering before it looks broken. */
+  const QUALITY_FLOOR = 0.5;
+  /** Resolution step. 0.5 / 0.75 / 1.0 avoids fractional canvas resampling. */
+  const QUALITY_STEP = 0.25;
+  /** Where a session starts before the governor has learned anything. */
+  const QUALITY_START = 0.75;
+
+  /**
+   * Smoothed frame cost in VSYNC PERIODS, not milliseconds.
+   *
+   * The old governor smoothed wall-clock frame intervals and stepped up when
+   * the average fell below 13 ms. Under vsync the interval is quantised to a
+   * whole number of refresh periods, so on a 60 Hz display the average has a
+   * hard floor of 16.67 ms and `< 13` was mathematically unreachable. The
+   * governor could therefore only ever take the step-DOWN branch: quality
+   * ratcheted away over a session and never came back.
+   *
+   * In periods, 1.0 means "hit every vsync" and is exactly achievable, so
+   * stepping back up is reachable by construction.
+   */
+  let frameLoadPeriods = 1;
+  /** Measured refresh period, milliseconds. Never assumed to be 16.67. */
+  let refreshPeriodMs = 16.7;
   /** Seconds until the next resolution change is allowed. */
   let qualityCooldownS = 0;
+  /** Set after a speculative step up, so a failed probe backs off harder. */
+  let probedUp = false;
   /** Scene values as found on entry, for restoring the 'Auto' level. */
   let qualityBaseline = null;
 
@@ -290,9 +321,10 @@ export function createFlightSimController({ viewer, hooks = {} }) {
       cameraMode: camera.getMode(),
       mouseYoke: input.isMouseYoke(),
       quality: qualityLabel(),
-      // frameAvgMs is already the smoothed frame time the governor uses, so the
-      // readout and the thing making decisions cannot disagree.
-      fps: frameAvgMs > 0 ? 1000 / frameAvgMs : null,
+      // Derived from the same smoothed load the governor acts on, so the
+      // readout and the thing making decisions cannot disagree. Load is in
+      // vsync periods, so frames-per-second is the refresh rate divided by it.
+      fps: frameLoadPeriods > 0 ? 1000 / (frameLoadPeriods * refreshPeriodMs) : null,
     });
   }
 
@@ -583,17 +615,16 @@ export function createFlightSimController({ viewer, hooks = {} }) {
     // headroom. Opening straight at full device pixel ratio means a 4x pixel
     // count on a Retina display, over streaming photoreal tiles, before we know
     // anything about whether this hardware can hold 60 Hz.
-    const dpr = window.devicePixelRatio || 1;
-    qualityCeiling = Math.min(dpr, 2);
+    measureRefreshPeriod();
     if (isAutoQuality()) {
-      viewer.resolutionScale = Math.min(qualityCeiling, 1.5);
+      viewer.resolutionScale = QUALITY_START;
     } else {
       // The user picked a level in DISPLAY. Honour it exactly and do not adapt
       // away from it — a setting that quietly moves is worse than no setting.
       const pinned = resolutionForLevel(getRenderQuality());
       if (pinned !== null) viewer.resolutionScale = pinned;
     }
-    frameAvgMs = 16.7;
+    frameLoadPeriods = 1;
     qualityCooldownS = 2;
 
     if (scene.postProcessStages?.fxaa) scene.postProcessStages.fxaa.enabled = true;
@@ -641,9 +672,9 @@ export function createFlightSimController({ viewer, hooks = {} }) {
     if (next === 'auto') {
       // Re-enter the adaptive path from a known state rather than from
       // whatever the last pinned level happened to leave behind.
-      viewer.resolutionScale = Math.min(qualityCeiling, 1.5);
+      viewer.resolutionScale = QUALITY_START;
       if (tileset) tileset.maximumScreenSpaceError = TILE_DETAIL_BEST;
-      frameAvgMs = 16.7;
+      frameLoadPeriods = 1;
       qualityCooldownS = 2;
     }
     governorRequestRender('flight-sim-quality-cycle');
@@ -685,6 +716,30 @@ export function createFlightSimController({ viewer, hooks = {} }) {
    * @param {number} deltaS - Seconds since the previous frame.
    * @returns {void}
    */
+  /**
+   * Measure the display's actual refresh period.
+   *
+   * Never hardcoded. The old governor compared smoothed frame times against
+   * constants chosen for a 60 Hz panel, which is why it misbehaved on
+   * everything else. Sampling rAF for a few frames costs nothing and makes the
+   * thresholds correct on 60, 90, 120 and 144 Hz alike.
+   *
+   * @returns {void}
+   */
+  function measureRefreshPeriod() {
+    let frames = 0;
+    const started = performance.now();
+    const tick = () => {
+      frames += 1;
+      if (frames < 40) { requestAnimationFrame(tick); return; }
+      const period = (performance.now() - started) / frames;
+      // Ignore an implausible reading (a hidden tab throttles rAF to ~1 Hz)
+      // rather than poisoning every later comparison with it.
+      if (period > 3 && period < 40) refreshPeriodMs = period;
+    };
+    requestAnimationFrame(tick);
+  }
+
   function adaptQuality(deltaS) {
     if (!priorQuality || !viewer?.scene) return;
     // An explicit quality level is the user's decision, not a starting point.
@@ -694,35 +749,60 @@ export function createFlightSimController({ viewer, hooks = {} }) {
     // hardware, and the user would return to a deliberately ruined image.
     if (document.hidden) return;
 
+    const tileset = priorQuality.tileset;
+    // A load spike while tiles stream is not a verdict on the hardware. Acting
+    // on it permanently drops quality for a reason that lasts seconds.
+    if (tileset && tileset.tilesLoaded === false) return;
+
     const ms = deltaS * 1000;
-    // A tab switch or a tile-loading hitch is not a verdict on the hardware,
-    // so absurd frames are excluded from the average rather than acted on.
-    if (ms > 0 && ms < 500) frameAvgMs += (ms - frameAvgMs) * 0.05;
+    // A tab switch or a loading hitch is excluded rather than acted on.
+    if (!(ms > 0 && ms < 500)) return;
+
+    // MEASURE IN VSYNC PERIODS, NOT MILLISECONDS.
+    //
+    // The old test was `frameAvgMs < 13` to step up. Under vsync the frame
+    // interval is quantised to a whole number of refresh periods, so on a 60 Hz
+    // panel the average could never fall below 16.67 and that branch was
+    // mathematically unreachable. Only the step-DOWN branch could ever run:
+    // quality ratcheted away over a session and never came back.
+    //
+    // In periods, 1.0 means "hit every vsync" and is exactly achievable, so
+    // recovery is reachable by construction.
+    const periods = Math.max(1, Math.round(ms / refreshPeriodMs));
+    frameLoadPeriods += (periods - frameLoadPeriods) * 0.05;
 
     qualityCooldownS -= deltaS;
     if (qualityCooldownS > 0) return;
 
-    const tileset = priorQuality.tileset;
     const current = viewer.resolutionScale;
+    const target = 1;
 
-    if (frameAvgMs > 22) {
-      // Below ~45 fps: give back pixels first, then tile detail.
-      if (current > 1) {
-        viewer.resolutionScale = Math.max(1, +(current - 0.25).toFixed(2));
+    if (frameLoadPeriods > target * 1.12) {
+      // Missing frames: give back pixels first, then tile detail.
+      if (current > QUALITY_FLOOR) {
+        viewer.resolutionScale = Math.max(QUALITY_FLOOR, +(current - QUALITY_STEP).toFixed(2));
       } else if (tileset && tileset.maximumScreenSpaceError < TILE_DETAIL_WORST) {
         tileset.maximumScreenSpaceError = Math.min(
           TILE_DETAIL_WORST, tileset.maximumScreenSpaceError + 4
         );
       }
-      qualityCooldownS = 2;
-    } else if (frameAvgMs < 13) {
-      // Comfortably above 75 fps: buy detail back in the reverse order.
+      // A step down straight after a speculative step up means the probe
+      // failed; wait considerably longer before trying again so the two do
+      // not oscillate against each other.
+      qualityCooldownS = probedUp ? 12 : 3;
+      probedUp = false;
+    } else if (frameLoadPeriods <= target * 1.02) {
+      // Hitting every frame. That proves we are not missing any, NOT that
+      // there is headroom — so stepping up is a speculative probe, and the
+      // branch above is what catches it when it was too optimistic.
       if (tileset && tileset.maximumScreenSpaceError > TILE_DETAIL_BEST) {
         tileset.maximumScreenSpaceError = Math.max(
           TILE_DETAIL_BEST, tileset.maximumScreenSpaceError - 4
         );
-      } else if (current < qualityCeiling) {
-        viewer.resolutionScale = Math.min(qualityCeiling, +(current + 0.25).toFixed(2));
+        probedUp = true;
+      } else if (current < QUALITY_CEILING) {
+        viewer.resolutionScale = Math.min(QUALITY_CEILING, +(current + QUALITY_STEP).toFixed(2));
+        probedUp = true;
       }
       qualityCooldownS = 4;
     }
