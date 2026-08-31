@@ -2073,11 +2073,26 @@ export class DataLayerManager {
       header.type = 'button';
       header.setAttribute('aria-expanded', String(!isCollapsed));
       const activeCount = members.filter((layer) => layer.enabled).length;
-      header.innerHTML = `<span class="data-group-caret" aria-hidden="true"></span>`
-        + `<span class="data-group-icon">${group.icon}</span>`
-        + `<span class="data-group-label">${group.label}</span>`
-        + `<span class="data-group-tally"${activeCount ? ' data-active="1"' : ''}>`
-        + `${activeCount ? `${activeCount} ON` : String(members.length)}</span>`;
+      // Built from nodes rather than an HTML string. Group labels and icons are
+      // interpolated here, and assembling markup by concatenation is how those
+      // stop being data and start being markup. textContent cannot do that.
+      const caret = document.createElement('span');
+      caret.className = 'data-group-caret';
+      caret.setAttribute('aria-hidden', 'true');
+      const icon = document.createElement('span');
+      icon.className = 'data-group-icon';
+      icon.textContent = group.icon;
+      const label = document.createElement('span');
+      label.className = 'data-group-label';
+      label.textContent = group.label;
+      const tally = document.createElement('span');
+      tally.className = 'data-group-tally';
+      tally.textContent = activeCount ? `${activeCount} ON` : String(members.length);
+      if (activeCount) tally.dataset.active = '1';
+      header.appendChild(caret);
+      header.appendChild(icon);
+      header.appendChild(label);
+      header.appendChild(tally);
       header.addEventListener('click', () => {
         const next = new Set(this._collapsedGroups());
         if (next.has(group.id)) next.delete(group.id);
@@ -2323,6 +2338,26 @@ export class DataLayerManager {
       this._panelRefreshPendingOnVisible = true;
       return;
     }
+    // Group headers first. The tally is the whole point of being able to
+    // collapse a group — it says what is running inside one you cannot see
+    // into — so it has to track reality. It was computed once when the panel
+    // was built and then never again, which meant a header kept showing the
+    // layer COUNT ("5") long after a layer inside it had been switched on and
+    // should have read "1 ON". Enabling a layer from a share link, where the
+    // restore lands after the first render, made it wrong immediately.
+    for (const section of this._toggleContainer.querySelectorAll('.data-group')) {
+      const tally = section.querySelector('.data-group-tally');
+      if (!tally) continue;
+      const rows = section.querySelectorAll('[data-layer-id]');
+      let active = 0;
+      for (const row of rows) {
+        if (this.isEffectivelyEnabled(row.dataset.layerId)) active += 1;
+      }
+      tally.textContent = active ? `${active} ON` : String(rows.length);
+      if (active) tally.dataset.active = '1';
+      else delete tally.dataset.active;
+    }
+
     for (const layer of this.getAll()) {
       const row = this._toggleContainer.querySelector(`[data-layer-id="${layer.id}"]`);
       if (!row) continue;

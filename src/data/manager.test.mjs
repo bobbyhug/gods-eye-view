@@ -112,6 +112,25 @@ test('renders ordinary layer rows without recreating a panel-hidden coordinator'
       appendChild(child) { this.children.push(child); return child; },
       addEventListener() {},
       setAttribute(name, value) { this.attributes[name] = String(value); },
+      querySelectorAll(selector) {
+        // Descendant search returning ALL matches, like the real DOM. Supports
+        // the two shapes the panel uses: a class selector and [data-layer-id].
+        const out = [];
+        const wantsLayerRows = selector === '[data-layer-id]';
+        const className = selector.startsWith('.') ? selector.slice(1) : '';
+        const visit = (node) => {
+          for (const child of node.children || []) {
+            if (wantsLayerRows) {
+              if (child.dataset?.layerId) out.push(child);
+            } else if (String(child.className).split(/\s+/).includes(className)) {
+              out.push(child);
+            }
+            visit(child);
+          }
+        };
+        visit(this);
+        return out;
+      },
       querySelector(selector) {
         if (selector.startsWith('[data-layer-id="')) {
           const id = selector.slice(16, -2);
@@ -2787,6 +2806,25 @@ function makeControlElement() {
       const className = selector.slice(1);
       return String(this.className).split(/\s+/).includes(className) ? this : null;
     },
+    querySelectorAll(selector) {
+      // Descendant search returning ALL matches, like the real DOM. Supports
+      // the two shapes the panel uses: a class selector and [data-layer-id].
+      const out = [];
+      const wantsLayerRows = selector === '[data-layer-id]';
+      const className = selector.startsWith('.') ? selector.slice(1) : '';
+      const visit = (node) => {
+        for (const child of node.children || []) {
+        if (wantsLayerRows) {
+          if (child.dataset?.layerId) out.push(child);
+        } else if (String(child.className).split(/\s+/).includes(className)) {
+          out.push(child);
+        }
+        visit(child);
+        }
+      };
+      visit(this);
+      return out;
+    },
     querySelector(selector) {
       if (selector.startsWith('[data-layer-id="')) {
         const id = selector.slice(16, -2);
@@ -3132,5 +3170,72 @@ test('a layer that surrenders its row controls hides the block entirely', async 
     await mgr.destroyAll();
     if (originalDocument === undefined) delete globalThis.document;
     else globalThis.document = originalDocument;
+  }
+});
+
+test('a group header tally tracks what is actually running inside it', async () => {
+  // THE REGRESSION THIS GUARDS. The tally is the reason collapsing a group is
+  // safe — it reports what is on inside a group you cannot see into. It was
+  // computed once when the panel was built and never again, so a header kept
+  // reading the layer COUNT long after a layer inside it had been switched on.
+  // Restoring a layer from a share link, where the restore lands after the
+  // first render, made it wrong immediately and permanently.
+  const originalDocument = globalThis.document;
+  const makeElement = () => {
+    const element = {
+      children: [], className: '', dataset: {}, textContent: '', disabled: false,
+      attributes: {}, hidden: false,
+      classList: (() => {
+        const names = new Set();
+        return {
+          add: (n) => names.add(n), remove: (n) => names.delete(n),
+          contains: (n) => names.has(n),
+          toggle: (n) => (names.has(n) ? (names.delete(n), false) : (names.add(n), true)),
+        };
+      })(),
+      appendChild(child) { this.children.push(child); return child; },
+      addEventListener() {},
+      setAttribute(name, value) { this.attributes[name] = String(value); },
+      querySelectorAll(selector) {
+        const out = [];
+        const wantsRows = selector === '[data-layer-id]';
+        const className = selector.startsWith('.') ? selector.slice(1) : '';
+        const visit = (node) => {
+          for (const child of node.children || []) {
+            if (wantsRows) { if (child.dataset?.layerId) out.push(child); }
+            else if (String(child.className).split(/\s+/).includes(className)) out.push(child);
+            visit(child);
+          }
+        };
+        visit(this);
+        return out;
+      },
+      querySelector(selector) { return this.querySelectorAll(selector)[0] || null; },
+      set innerHTML(value) { if (value === '') this.children = []; },
+      get innerHTML() { return ''; },
+    };
+    return element;
+  };
+  globalThis.document = { createElement: makeElement };
+  try {
+    const mgr = new DataLayerManager({});
+    const flights = makeSlowLayer('flights', { updateInterval: -1 });
+    mgr.register(flights.module);
+    const container = makeElement();
+    mgr.buildTogglePanel(container);
+
+    const tallyOf = () => container.querySelector('.data-group-tally')?.textContent;
+    // Nothing on: the header reports how many layers the group holds.
+    assert.equal(tallyOf(), '1');
+
+    await mgr.setEnabled('flights', true);
+    mgr._refreshTogglePanel();
+    assert.equal(tallyOf(), '1 ON', 'the tally must follow the layer being enabled');
+
+    await mgr.setEnabled('flights', false);
+    mgr._refreshTogglePanel();
+    assert.equal(tallyOf(), '1', 'and follow it back off again');
+  } finally {
+    globalThis.document = originalDocument;
   }
 });
