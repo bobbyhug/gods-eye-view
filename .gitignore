@@ -16,3 +16,6 @@ data/temperature-cache.json
 
 # Stray dumps from live-site verification runs.
 h.txt
+
+# Stray SPARQL scratch files from research runs.
+*.rq
