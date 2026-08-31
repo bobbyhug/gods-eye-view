@@ -275,6 +275,10 @@ export const SHARE_TRACKING_RESTORE_POLICIES = Object.freeze({
  * owns stable URL ordering.
  */
 export const LAYER_STATE_REGISTRY = Object.freeze([
+  // 'h' for hangar; a/i/s/t were taken. enabled-only, matching 'shootings':
+  // the size-tier chips are a view preference rather than layer state a
+  // share link has to carry.
+  Object.freeze({ id: 'airports', token: 'h', disposition: 'enabled-only' }),
   Object.freeze({ id: 'ais-live-vessels', token: 'a', disposition: 'enabled-only' }),
   Object.freeze({ id: 'bikeshare', token: 'b', disposition: 'enabled-only' }),
   Object.freeze({ id: 'cctv', token: 'c', disposition: 'enabled+options', optionOwner: 'cctv' }),

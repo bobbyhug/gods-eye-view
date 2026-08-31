@@ -574,13 +574,16 @@ export function initFreeVoice({
     }
 
     if (!aiAvailable) {
-      // Telling someone their phrasing was not understood, when in fact
-      // nothing on this deployment could ever have understood it, sends them
-      // rephrasing forever.
-      const reply = 'I can only take set commands here. Try "fly to Tokyo", '
-        + '"show shootings", "zoom out", or "reset view".';
-      onState('idle', reply);
-      speak(reply);
+      // NAME THE CAUSE. Saying only "I can only take set commands" tells
+      // someone their phrasing was wrong when in fact nothing on this
+      // deployment could have understood any phrasing — so they rephrase, and
+      // rephrase, and conclude the feature is broken. It is not broken; it has
+      // no model to call, which is a different problem with a different fix.
+      const spoken = "I can't hold a conversation here — there's no AI model "
+        + 'configured on this deployment. I can still take direct commands, '
+        + 'like "fly to Tokyo" or "show shootings".';
+      onState('idle', 'NO AI MODEL — set OPENROUTER_API_KEY to enable conversation');
+      speak(spoken);
       return;
     }
 

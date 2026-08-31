@@ -8191,6 +8191,72 @@ function normalizeAisTimestamp(value) {
  *
  * @returns {import('vite').Plugin}
  */
+/**
+ * Serve the compiled airports dataset.
+ *
+ * Static reference data — 11,444 airports and their runways — so this is a
+ * straight file read with an mtime-keyed cache, the same shape as the other
+ * compiled datasets here. Recompiling takes effect without a restart.
+ */
+function airportsData() {
+  const DATA_PATH = path.resolve(__dirname, 'data/airports.json');
+  let cached = null;
+  let cachedMtimeMs = -1;
+
+  /** @returns {Promise<object|null>} */
+  async function load() {
+    let mtimeMs = -1;
+    try {
+      mtimeMs = (await fs.promises.stat(DATA_PATH)).mtimeMs;
+    } catch {
+      return null;
+    }
+    if (cached && mtimeMs === cachedMtimeMs) return cached;
+    try {
+      cached = JSON.parse(await fs.promises.readFile(DATA_PATH, 'utf8'));
+      cachedMtimeMs = mtimeMs;
+      return cached;
+    } catch {
+      return null;
+    }
+  }
+
+  const install = (server) => {
+    server.middlewares.use('/api/airports', async (req, res) => {
+      const payload = await load();
+      if (!payload) {
+        res.statusCode = 503;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({
+          error: 'airports dataset not compiled',
+          hint: 'run: node scripts/compile-airports.mjs',
+          airports: [],
+        }));
+        return;
+      }
+      const body = JSON.stringify(payload);
+      res.setHeader('Content-Type', 'application/json');
+      // Revalidate rather than cache by age: a recompiled dataset must not be
+      // hidden behind a max-age, which is exactly what froze the shootings
+      // layer at a stale count for an hour after it grew.
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('ETag', `W/"${Buffer.byteLength(body)}-${cachedMtimeMs}"`);
+      if (req.headers['if-none-match'] === res.getHeader('ETag')) {
+        res.statusCode = 304;
+        res.end();
+        return;
+      }
+      res.end(body);
+    });
+  };
+
+  return {
+    name: 'airports-data',
+    configureServer: install,
+    configurePreviewServer: install,
+  };
+}
+
 function shootingsData() {
   const DATA_PATH = path.resolve(__dirname, 'data/shootings.json');
   /** Fields dropped on the way out, whatever a source happened to include. */
@@ -8864,8 +8930,26 @@ function openRouterProxy() {
    * Reasoning-heavy models are deliberately absent — nemotron returned "Here's
    * a thinking process:" for a request that asked for five words.
    */
+  /**
+   * Free models to try, in order, until one answers.
+   *
+   * All open-weight models served at no cost. The order is capability first,
+   * then reliability: a free slot can be busy or rate-limited at any moment, so
+   * the walk down this list is what makes the feature work at all rather than a
+   * preference between them.
+   *
+   * The two Nemotrons were previously left out because they answered with
+   * conversational preamble ("Here's the JSON you asked for...") instead of a
+   * bare object. That is no longer disqualifying: the agent loop extracts the
+   * outermost braces and parses defensively, precisely because free models do
+   * this constantly. They are the most capable things on the list, so they now
+   * go first.
+   */
   const FREE_MODELS = [
+    'nvidia/nemotron-3-ultra-550b-a55b:free',
     'minimax/minimax-m3:free',
+    'nvidia/nemotron-3.5-lightning:free',
+    'thinkingmachines/inkling:free',
     'google/gemma-4-31b-it:free',
     'google/gemma-4-26b-a4b-it:free',
     'poolside/laguna-s-2.1:free',
@@ -9005,6 +9089,7 @@ export default defineConfig(({ mode }) => {
       shootingsData(),
       safetyData(),
       temperatureData(),
+      airportsData(),
       productionHeaders(),
       openRouterProxy(),
     ].map((plugin, index) => (index === 0 ? plugin : alsoServeInPreview(plugin))),

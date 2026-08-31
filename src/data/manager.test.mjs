@@ -100,16 +100,34 @@ test('renders ordinary layer rows without recreating a panel-hidden coordinator'
       textContent: '',
       disabled: false,
       attributes: {},
-      classList: {
-        toggle() {},
-      },
+      classList: (() => {
+        const names = new Set();
+        return {
+          add: (name) => names.add(name),
+          remove: (name) => names.delete(name),
+          contains: (name) => names.has(name),
+          toggle: (name) => (names.has(name) ? (names.delete(name), false) : (names.add(name), true)),
+        };
+      })(),
       appendChild(child) { this.children.push(child); return child; },
       addEventListener() {},
       setAttribute(name, value) { this.attributes[name] = String(value); },
       querySelector(selector) {
         if (selector.startsWith('[data-layer-id="')) {
           const id = selector.slice(16, -2);
-          return this.children.find((child) => child.dataset.layerId === id) || null;
+          // DESCENDANTS, not just direct children. The real querySelector
+          // searches the whole subtree, and layer rows now sit inside group
+          // sections rather than directly under the container. A stub that only
+          // looked one level down reported every row missing.
+          const find = (node) => {
+            for (const child of node.children || []) {
+              if (child.dataset?.layerId === id) return child;
+              const nested = find(child);
+              if (nested) return nested;
+            }
+            return null;
+          };
+          return find(this);
         }
         const className = selector.startsWith('.') ? selector.slice(1) : '';
         const visit = (node) => {
@@ -2742,7 +2760,15 @@ function makeControlElement() {
     disabled: false,
     title: '',
     type: '',
-    classList: { toggle() {} },
+    classList: (() => {
+      const names = new Set();
+      return {
+        add: (name) => names.add(name),
+        remove: (name) => names.delete(name),
+        contains: (name) => names.has(name),
+        toggle: (name) => (names.has(name) ? (names.delete(name), false) : (names.add(name), true)),
+      };
+    })(),
     appendChild(child) { child.parent = this; this.children.push(child); return child; },
     append(...nodes) { for (const n of nodes) n.parent = this; this.children.push(...nodes); },
     replaceChildren(...nodes) { this.children = [...nodes]; },
@@ -2764,7 +2790,17 @@ function makeControlElement() {
     querySelector(selector) {
       if (selector.startsWith('[data-layer-id="')) {
         const id = selector.slice(16, -2);
-        return this.children.find((child) => child.dataset.layerId === id) || null;
+        // Descendants, not just direct children — layer rows sit inside group
+        // sections now, and the real querySelector searches the whole subtree.
+        const find = (node) => {
+          for (const child of node.children || []) {
+            if (child.dataset?.layerId === id) return child;
+            const nested = find(child);
+            if (nested) return nested;
+          }
+          return null;
+        };
+        return find(this);
       }
       const className = selector.startsWith('.') ? selector.slice(1) : '';
       const visit = (node) => {

@@ -6,6 +6,7 @@ import {
   setRenderQuality,
   applyRenderQuality as applySceneQuality,
 } from './renderQuality.js';
+import airportsLayer from './data/airports.js';
 import { tuneTileStreaming } from './tileStreaming.js';
 import { StyleManager } from './ui.js';
 import { flyToAustin } from './camera.js';
@@ -278,6 +279,7 @@ async function init() {
     dataManager.register(flightsLayer);
     dataManager.register(militaryFlightsLayer);
     dataManager.register(earthquakesLayer);
+    dataManager.register(airportsLayer);
     dataManager.register(shootingsLayer);
     dataManager.register(safetyLayer);
     dataManager.register(temperatureLayer);

@@ -10160,3 +10160,190 @@ body.cockpit-mode #flightsim-hud { display: none; }
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
+
+/* ==========================================================================
+   DATA LAYERS — GROUPED
+   ==========================================================================
+   The panel was a flat list of every layer. At twenty-one rows it was taller
+   than the viewport, so finding one meant scrolling past all the others and
+   every layer added made every other layer harder to find. Rows now sit under
+   collapsible group headers; the grouping itself is data, in layerGroups.js.
+   ========================================================================== */
+.data-group {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.data-group:last-child {
+  border-bottom: none;
+}
+
+.data-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: var(--text-dim, rgba(200, 225, 235, 0.72));
+  letter-spacing: 0.09em;
+  font-size: 10px;
+  text-align: left;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.data-group-header:hover {
+  color: var(--accent, #4fd8e8);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* A caret that turns, rather than two icons that can disagree with the state. */
+.data-group-caret {
+  width: 0;
+  height: 0;
+  border-left: 4px solid currentColor;
+  border-top: 3.5px solid transparent;
+  border-bottom: 3.5px solid transparent;
+  transform: rotate(90deg);
+  transition: transform 0.18s ease;
+  flex: none;
+}
+.data-group.collapsed .data-group-caret {
+  transform: rotate(0deg);
+}
+
+.data-group-icon {
+  font-size: 12px;
+  line-height: 1;
+  flex: none;
+}
+.data-group-label {
+  flex: 1 1 auto;
+  font-weight: 600;
+}
+
+/* The tally is the point of collapsing: it has to say what is on inside a
+   group you cannot see into, or closing a group hides information. */
+.data-group-tally {
+  flex: none;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(200, 225, 235, 0.5);
+}
+.data-group-tally[data-active] {
+  color: var(--accent, #4fd8e8);
+  border-color: rgba(79, 216, 232, 0.4);
+  background: rgba(79, 216, 232, 0.08);
+}
+
+.data-group-body {
+  overflow: hidden;
+}
+.data-group.collapsed .data-group-body {
+  display: none;
+}
+
+/* Indent rows so the header reads as a parent rather than another row. */
+.data-group-body .data-toggle-row {
+  padding-left: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .data-group-caret,
+  .data-group-header {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   AIRPORT CARD
+   ==========================================================================
+   Opens on clicking an airport marker. The runway block is the point of it:
+   photorealistic tiles can show a runway but cannot say which way it points,
+   how long it is, or whether it is paved, and all three decide whether you can
+   land on it.
+   ========================================================================== */
+.airport-card {
+  position: fixed;
+  right: 18px;
+  bottom: 96px;
+  z-index: 60;
+  width: min(320px, calc(100vw - 36px));
+  padding: 14px 16px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(79, 216, 232, 0.28);
+  background: rgba(8, 14, 20, 0.92);
+  color: var(--text, #dceaf0);
+  font-size: 12px;
+  line-height: 1.45;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+.airport-card[hidden] {
+  display: none;
+}
+
+.airport-card-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: rgba(200, 225, 235, 0.55);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.airport-card-close:hover {
+  color: var(--accent, #4fd8e8);
+}
+
+.airport-card-type {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(200, 225, 235, 0.5);
+}
+.airport-card-name {
+  margin: 3px 0 2px;
+  font-size: 15px;
+  line-height: 1.25;
+  padding-right: 20px;
+}
+.airport-card-code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--accent, #4fd8e8);
+}
+.airport-card-meta {
+  margin-top: 4px;
+  color: rgba(200, 225, 235, 0.62);
+  font-size: 11px;
+}
+
+.airport-card-runways {
+  margin-top: 11px;
+  padding-top: 9px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.airport-card-label {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: rgba(200, 225, 235, 0.45);
+  margin-bottom: 5px;
+}
+.airport-card-runways ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.airport-card-runways li {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  padding: 2px 0;
+  color: rgba(220, 234, 240, 0.88);
+}

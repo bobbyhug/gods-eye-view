@@ -750,7 +750,11 @@ test('Global Context names its mixed contact cycle without changing the stable m
 
 test('Global Context uses its dedicated right rail without a duplicate Data Layers row', () => {
   assert.match(contextLayer, /id:\s*'military-awareness'[\s\S]*?showInTogglePanel:\s*false/);
-  assert.match(manager, /if \(!layer\.showInTogglePanel\) continue;/);
+  // The panel filters panel-hidden layers out before grouping. Pinned on the
+  // filter rather than the old `continue`, because the rows are now built
+  // per group; the guarantee is unchanged — a coordinator layer that sets
+  // showInTogglePanel:false must never get a row of its own.
+  assert.match(manager, /filter\(\(layer\) => layer\.showInTogglePanel\)/);
   assert.match(html, /id="global-context-panel"/);
   assert.match(html, /id="global-context-flights-btn"/);
   assert.match(html, /id="global-context-missions-btn"/);

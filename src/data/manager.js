@@ -1,5 +1,6 @@
 import { governorRequestRender } from '../renderGovernor.js';
 import { markDetectionSourcesChanged } from './detection.js';
+import { groupLayers } from './layerGroups.js';
 function cloneLayerParams(value) {
   if (Array.isArray(value)) return value.map(cloneLayerParams);
   if (value && typeof value === 'object') {
@@ -9,6 +10,9 @@ function cloneLayerParams(value) {
   }
   return value;
 }
+
+/** Which layer groups the user has collapsed, remembered across sessions. */
+const COLLAPSED_GROUPS_KEY = 'gev.collapsedLayerGroups';
 
 const FEED_STATE_LABELS = Object.freeze({
   nominal: 'ON',
@@ -2018,12 +2022,89 @@ export class DataLayerManager {
     this._renderToggles();
   }
 
+  /**
+   * Which groups the user has collapsed. Remembered across sessions, because
+   * re-collapsing the same eight groups on every load would make the grouping
+   * a chore rather than a convenience.
+   *
+   * @returns {Set<string>}
+   */
+  _collapsedGroups() {
+    if (this._collapsedGroupCache) return this._collapsedGroupCache;
+    let stored = [];
+    try {
+      stored = JSON.parse(localStorage.getItem(COLLAPSED_GROUPS_KEY) || '[]');
+    } catch {
+      stored = [];
+    }
+    this._collapsedGroupCache = new Set(Array.isArray(stored) ? stored : []);
+    return this._collapsedGroupCache;
+  }
+
+  /** @param {Set<string>} set */
+  _persistCollapsedGroups(set) {
+    this._collapsedGroupCache = set;
+    try {
+      localStorage.setItem(COLLAPSED_GROUPS_KEY, JSON.stringify([...set]));
+    } catch {
+      // A browser refusing storage is not a reason to fail the panel.
+    }
+  }
+
   _renderToggles() {
     if (!this._toggleContainer) return;
     this._toggleContainer.innerHTML = '';
 
-    for (const layer of this.getAll()) {
-      if (!layer.showInTogglePanel) continue;
+    // Rows are grouped rather than listed flat. At twenty-one layers the flat
+    // list was taller than the screen, so every layer added made every other
+    // layer harder to find. The taxonomy lives in layerGroups.js as data.
+    const visible = this.getAll().filter((layer) => layer.showInTogglePanel);
+    const collapsed = this._collapsedGroups();
+
+    for (const { group, layers: members } of groupLayers(visible)) {
+      const section = document.createElement('div');
+      section.className = 'data-group';
+      section.dataset.groupId = group.id;
+      const isCollapsed = collapsed.has(group.id);
+      if (isCollapsed) section.classList.add('collapsed');
+
+      const header = document.createElement('button');
+      header.className = 'data-group-header';
+      header.type = 'button';
+      header.setAttribute('aria-expanded', String(!isCollapsed));
+      const activeCount = members.filter((layer) => layer.enabled).length;
+      header.innerHTML = `<span class="data-group-caret" aria-hidden="true"></span>`
+        + `<span class="data-group-icon">${group.icon}</span>`
+        + `<span class="data-group-label">${group.label}</span>`
+        + `<span class="data-group-tally"${activeCount ? ' data-active="1"' : ''}>`
+        + `${activeCount ? `${activeCount} ON` : String(members.length)}</span>`;
+      header.addEventListener('click', () => {
+        const next = new Set(this._collapsedGroups());
+        if (next.has(group.id)) next.delete(group.id);
+        else next.add(group.id);
+        this._persistCollapsedGroups(next);
+        section.classList.toggle('collapsed');
+        header.setAttribute('aria-expanded', String(!section.classList.contains('collapsed')));
+      });
+      section.appendChild(header);
+
+      const body = document.createElement('div');
+      body.className = 'data-group-body';
+      section.appendChild(body);
+      this._toggleContainer.appendChild(section);
+      this._renderGroupRows(body, members);
+    }
+  }
+
+  /**
+   * Draw the layer rows for one group.
+   *
+   * @param {HTMLElement} container
+   * @param {Array<object>} members
+   * @returns {void}
+   */
+  _renderGroupRows(container, members) {
+    for (const layer of members) {
       const row = document.createElement('div');
       row.className = 'data-toggle-row';
       row.dataset.layerId = layer.id;
@@ -2101,7 +2182,7 @@ export class DataLayerManager {
         this._syncRowControls(controls, layer);
       }
 
-      this._toggleContainer.appendChild(row);
+      container.appendChild(row);
     }
   }
 
