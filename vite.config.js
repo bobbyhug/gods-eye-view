@@ -2865,8 +2865,33 @@ function overpassProxy() {
 
 export function adsbLolFallbackAnchor(req) {
   const incoming = new URL(req?.url || '', 'http://localhost');
-  const latitude = requiredFiniteQueryNumber(incoming.searchParams, 'lat');
-  const longitude = requiredFiniteQueryNumber(incoming.searchParams, 'lon');
+  let latitude = requiredFiniteQueryNumber(incoming.searchParams, 'lat');
+  let longitude = requiredFiniteQueryNumber(incoming.searchParams, 'lon');
+
+  // FALL BACK TO THE CENTRE OF THE BOUNDING BOX.
+  //
+  // This only accepted an explicit lat/lon anchor, and the flights layer does
+  // not send one — it sends a bounding box, because that is what the OpenSky
+  // API takes. So the anchor was ALWAYS null, the regional fallback never once
+  // fired, and every OpenSky failure fell straight through to a 502 with an
+  // empty sky. On a deployment whose egress OpenSky refuses, that is the entire
+  // layer, permanently, with a perfectly good keyless alternative sitting
+  // unused behind it.
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    const laMin = requiredFiniteQueryNumber(incoming.searchParams, 'lamin');
+    const laMax = requiredFiniteQueryNumber(incoming.searchParams, 'lamax');
+    const loMin = requiredFiniteQueryNumber(incoming.searchParams, 'lomin');
+    const loMax = requiredFiniteQueryNumber(incoming.searchParams, 'lomax');
+    if ([laMin, laMax, loMin, loMax].every(Number.isFinite)) {
+      latitude = (laMin + laMax) / 2;
+      // Longitude midpoint the short way round, so a box spanning the
+      // antimeridian anchors in the Pacific rather than on the far side of the
+      // planet in Africa.
+      const delta = ((loMax - loMin + 540) % 360) - 180;
+      longitude = (((loMin + (delta / 2)) + 540) % 360) - 180;
+    }
+  }
+
   if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) return null;
   if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) return null;
   return { latitude, longitude };
