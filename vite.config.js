@@ -1436,7 +1436,30 @@ async function getOpenSkyToken() {
  */
 function normalizeOpenSkyAuthMode(value) {
   const raw = String(value || '').trim().toLowerCase();
-  if (!raw) return OPENSKY_AUTH_MODE_DEFAULT;
+  if (!raw) {
+    // NO CREDENTIALS MEANS ANONYMOUS, NOT OAUTH.
+    //
+    // The default was 'oauth' unconditionally, which is right on a deployment
+    // that has OPENSKY_CLIENT_ID and OPENSKY_CLIENT_SECRET and wrong on one
+    // that does not: the token request cannot succeed, so the whole layer
+    // failed with "OpenSky proxy error" and showed no aircraft at all.
+    //
+    // OpenSky serves anonymous requests. They are rate-limited far more
+    // tightly than an authenticated client, which is a real downgrade — but a
+    // reduced flight layer is worth incomparably more than an empty one, and
+    // the deployment that has credentials is unaffected because this branch
+    // only runs when there are none.
+    const hasOauth = Boolean(process.env.OPENSKY_CLIENT_ID && process.env.OPENSKY_CLIENT_SECRET);
+    const hasBasic = Boolean(process.env.OPENSKY_USERNAME && process.env.OPENSKY_PASSWORD);
+    if (!hasOauth && !hasBasic) {
+      if (!_openskyAuthModeWarned) {
+        console.info('[OpenSky] No credentials configured; using anonymous access.');
+        _openskyAuthModeWarned = true;
+      }
+      return 'anon';
+    }
+    return OPENSKY_AUTH_MODE_DEFAULT;
+  }
   if (OPENSKY_AUTH_MODE_SET.has(raw)) return raw;
   if (!_openskyAuthModeWarned) {
     console.warn(
@@ -1496,6 +1519,32 @@ function buildOpenSkyHeaders({ cacheStatus, requestedMode, usedMode, reason, sta
  * cache+serve-stale. Adapted from skylight's TleStore (MIT).
  */
 function celestrakProxy() {
+  /** Seed TLEs committed to the repo, so a cold deploy is never empty. */
+  const SEED_DIR = path.resolve(__dirname, 'data/tle');
+  /** @type {Map<string, string|null>} */
+  const seedCache = new Map();
+
+  /**
+   * Read a shipped seed set for a group.
+   *
+   * @param {string} group
+   * @returns {string|null}
+   */
+  function readSeed(group) {
+    if (seedCache.has(group)) return seedCache.get(group);
+    let body = null;
+    try {
+      // Group names come from a fixed catalogue, but resolve and bound the path
+      // anyway rather than trusting that to stay true.
+      const file = path.resolve(SEED_DIR, `${String(group).replace(/[^a-z0-9-]/gi, '')}.txt`);
+      if (file.startsWith(SEED_DIR)) body = fs.readFileSync(file, 'utf8');
+    } catch {
+      body = null;
+    }
+    seedCache.set(group, body);
+    return body;
+  }
+
   const TLE_TTL_MS = 6 * 3600_000;
   const CACHE_DIR = path.join(process.cwd(), '.gev-cache');
   const mem = new Map(); // group -> { at: epochMs, body: string }
@@ -1586,7 +1635,25 @@ function celestrakProxy() {
           } else if (entry) {
             send(200, entry.body, 'STALE-ERROR'); // upstream down — stale beats empty
           } else {
-            send(502, 'celestrak fetch failed and no cache available', 'NONE');
+            // SEED DATA, SHIPPED WITH THE BUILD.
+            //
+            // CelesTrak is intermittent — it answered 503, then 200 on the very
+            // next request — and the runtime disk cache lives in .gev-cache/,
+            // which is gitignored. So a fresh deployment had nothing at all to
+            // fall back on and the satellite layer failed outright with "no
+            // cache available" the first time upstream hiccuped.
+            //
+            // Orbital elements decay in accuracy over days rather than minutes,
+            // so a seed that is a little old puts satellites within a few
+            // kilometres of where they belong. That is incomparably better than
+            // an empty sky, and the moment CelesTrak answers again the live
+            // data replaces it.
+            const seed = readSeed(group);
+            if (seed) {
+              send(200, seed, 'SEED');
+            } else {
+              send(502, 'celestrak fetch failed and no cache available', 'NONE');
+            }
           }
         } catch (err) {
           send(500, `celestrak proxy error: ${err?.message || err}`, 'ERROR');
