@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { createMarkerBatch } from './markerBatch.js';
 import { cameraViewBox, createViewportIndex } from './viewportIndex.js';
+import { loadLayerData } from './layerDataClient.js';
 
 /**
  * Airports.
@@ -332,17 +333,15 @@ export function createAirportsLayer() {
       // pure waste, since none of these records change between deploys.
       if (_loaded) return true;
       try {
-        const response = await fetch(API_URL);
-        if (!response.ok) {
-          _lastError = `Airports HTTP ${response.status}`;
-          return false;
-        }
-        const payload = await response.json();
-        const rows = Array.isArray(payload?.airports) ? payload.airports : [];
-        _airports = rows.filter(
-          (row) => row && Number.isFinite(row.lat) && Number.isFinite(row.lon)
-        );
-        _coverageNote = typeof payload?.coverageNote === 'string' ? payload.coverageNote : '';
+        // OFF THE MAIN THREAD. This dataset is five megabytes, and the
+        // download, the JSON.parse and the filtering all used to happen on the
+        // thread that draws frames — which is why switching a layer on froze
+        // the interface for seconds rather than milliseconds. The worker does
+        // it on another core and hands back finished rows.
+        const payload = await loadLayerData('airports', API_URL);
+        _airports = Array.isArray(payload?.airports) ? payload.airports : [];
+        _coverageNote = typeof payload?.note === 'string' ? payload.note
+          : (typeof payload?.coverageNote === 'string' ? payload.coverageNote : '');
         _loaded = true;
         _lastUpdate = Date.now();
         _lastError = null;
