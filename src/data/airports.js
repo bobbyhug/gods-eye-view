@@ -156,6 +156,20 @@ export function createAirportsLayer() {
       return {
         lon: airport.lon,
         lat: airport.lat,
+        // TERRAIN HEIGHT MATTERS HERE, and batched points cannot clamp.
+        //
+        // Cesium's Entity API offers heightReference: CLAMP_TO_GROUND, which
+        // drops a marker onto the terrain wherever it is. PointPrimitive has no
+        // such option — a batched point sits at the height you give it — so a
+        // marker left at ellipsoid zero is BELOW ground anywhere with
+        // elevation, and airports at Denver, La Paz or Lhasa would be buried
+        // inside the mountain they sit on.
+        //
+        // OurAirports records field elevation, so there is no need to sample
+        // terrain for it: use the number the dataset already carries. Feet to
+        // metres, and zero where it is unknown, which is correct for the
+        // sea-level fields that make up most of the unknowns.
+        height: Number.isFinite(airport.elevationFt) ? airport.elevationFt * 0.3048 : 0,
         size: tier.pixelSize,
         color: Cesium.Color.fromCssColorString(tier.color).withAlpha(0.92),
         outlineColor: Cesium.Color.BLACK.withAlpha(0.55),

@@ -30,6 +30,21 @@ import * as Cesium from 'cesium';
  * objects — labels, models, polylines, anything wanting a description or a
  * per-object material. This is for the case that hurts: thousands of plain
  * points that differ only in position, size and colour.
+ *
+ * IT CANNOT CLAMP TO TERRAIN, and that is the one thing to check before
+ * converting a layer. The Entity API offers `heightReference: CLAMP_TO_GROUND`,
+ * which drops a marker onto the ground wherever it is; a PointPrimitive sits at
+ * exactly the height it is given. A point left at zero is therefore BELOW
+ * GROUND anywhere with elevation — buried inside the hill it belongs to, which
+ * is a bug this repo has already fixed once, on a layer whose markers vanished
+ * in Denver and Zurich.
+ *
+ * So a layer may only move here if one of these holds:
+ *   - it knows its own heights (airports carry field elevation), or
+ *   - its points are genuinely at sea level, or
+ *   - it can afford to sample terrain once when the data loads.
+ * A layer that needs live clamping and has no height of its own should stay on
+ * entities. Being fast is not worth being wrong about where something is.
  */
 
 /** Points added per chunk. Large enough to be quick, small enough to yield. */
