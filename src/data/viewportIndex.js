@@ -1,5 +1,3 @@
-import RBush from 'rbush';
-
 /**
  * Viewport culling for point layers.
  *
@@ -16,12 +14,26 @@ import RBush from 'rbush';
  * or three orders of magnitude; at globe zoom it correctly returns everything,
  * because everything genuinely is in view.
  *
- * WHY AN R-TREE AND NOT A LOOP. At ten thousand points a linear scan is honestly
- * fine — well under a millisecond. It stops being fine at a hundred thousand,
- * which is where this is going: 108,045 military installations and 304,632
- * mines are already researched and waiting. Building the index costs one pass
- * when the data loads; querying it costs almost nothing, and it is the querying
- * that happens on every camera move.
+ * WHY A GRID AND NOT A LIBRARY. This began as rbush, which is the obvious
+ * choice and a good one. It could not ship: adding it made Render's build fail
+ * three times running with npm's usage dump, while npm ci and the full build
+ * both succeeded from a clean clone here — this machine runs npm 11 on Node 25
+ * and Render runs Node 24.15, and no amount of regenerating the lockfile
+ * reconciled them. A dependency that cannot be deployed is worth nothing, and
+ * the index it provided is fifty lines.
+ *
+ * A uniform grid is also the better fit for this shape of problem. An R-tree
+ * earns its complexity on overlapping rectangles of wildly varying size; these
+ * are points, and the query is always an axis-aligned box. Bucketing by whole
+ * degrees answers that by walking only the cells the box touches — no tree, no
+ * rebalancing, and a build that is one pass with no allocation per node.
+ *
+ * At ten thousand points a plain linear scan is honestly fine, well under a
+ * millisecond. It stops being fine at a hundred thousand, which is where this
+ * is going: 108,045 military installations and 304,632 mines are already
+ * researched and waiting. Building costs one pass when the data loads;
+ * querying costs almost nothing, and querying is what happens on every camera
+ * move.
  *
  * THE ANTIMERIDIAN IS HANDLED, because it is the thing that quietly breaks
  * every naive bounding-box cull: a view spanning it has a west edge numerically
@@ -36,21 +48,59 @@ import RBush from 'rbush';
  * @returns {object} Index with a `search` method.
  */
 export function createViewportIndex(points) {
-  const tree = new RBush();
+  /** Cell size in degrees. One degree is ~111 km, a sensible bucket for a map. */
+  const CELL = 1;
+  const key = (lonCell, latCell) => `${lonCell}:${latCell}`;
+  /** @type {Map<string, Array<object>>} */
+  const cells = new Map();
   const items = [];
+
   for (const point of points || []) {
     const lon = Number(point?.lon);
     const lat = Number(point?.lat);
     if (!Number.isFinite(lon) || !Number.isFinite(lat)) continue;
-    // Zero-area boxes: these are points, and RBush is happy to index them.
-    items.push({ minX: lon, minY: lat, maxX: lon, maxY: lat, point });
+    items.push(point);
+    const k = key(Math.floor(lon / CELL), Math.floor(lat / CELL));
+    const bucket = cells.get(k);
+    if (bucket) bucket.push(point);
+    else cells.set(k, [point]);
   }
-  // Bulk load, which builds a far better balanced tree than repeated inserts.
-  tree.load(items);
+
+  /**
+   * Collect points from every cell the box touches.
+   *
+   * Cells are whole degrees, so a box's own edges are re-checked per point:
+   * the grid narrows the candidates, the comparison decides. Without that
+   * second test a query would return everything in the straddled cells, which
+   * at globe zoom is nearly everything.
+   *
+   * @param {number} west @param {number} south @param {number} east @param {number} north
+   * @param {Set<object>} into
+   * @returns {void}
+   */
+  function collect(west, south, east, north, into) {
+    const lon0 = Math.floor(west / CELL);
+    const lon1 = Math.floor(east / CELL);
+    const lat0 = Math.floor(south / CELL);
+    const lat1 = Math.floor(north / CELL);
+    for (let x = lon0; x <= lon1; x += 1) {
+      for (let y = lat0; y <= lat1; y += 1) {
+        const bucket = cells.get(key(x, y));
+        if (!bucket) continue;
+        for (const point of bucket) {
+          if (point.lon >= west && point.lon <= east
+            && point.lat >= south && point.lat <= north) into.add(point);
+        }
+      }
+    }
+  }
 
   return {
     /** @returns {number} Points indexed. */
     size() { return items.length; },
+
+    /** @returns {number} Occupied grid cells, for diagnostics. */
+    cells() { return cells.size; },
 
     /**
      * Points inside a geographic rectangle.
@@ -59,10 +109,10 @@ export function createViewportIndex(points) {
      * @returns {Array<object>} The original point objects.
      */
     search(box) {
-      if (!box) return items.map((entry) => entry.point);
+      if (!box) return items.slice();
       const { west, south, east, north } = box;
       if (![west, south, east, north].every(Number.isFinite)) {
-        return items.map((entry) => entry.point);
+        return items.slice();
       }
       const minY = Math.min(south, north);
       const maxY = Math.max(south, north);
@@ -70,24 +120,18 @@ export function createViewportIndex(points) {
       // A view crossing the antimeridian has west > east. Queried as one
       // rectangle that matches nothing, and the layer silently empties exactly
       // where the Pacific is.
+      const found = new Set();
       if (west > east) {
-        const left = tree.search({ minX: -180, minY, maxX: east, maxY });
-        const right = tree.search({ minX: west, minY, maxX: 180, maxY });
-        const seen = new Set();
-        const out = [];
-        for (const entry of left.concat(right)) {
-          if (seen.has(entry)) continue;
-          seen.add(entry);
-          out.push(entry.point);
-        }
-        return out;
+        collect(-180, minY, east, maxY, found);
+        collect(west, minY, 180, maxY, found);
+      } else {
+        collect(west, minY, east, maxY, found);
       }
-      return tree.search({ minX: west, minY, maxX: east, maxY })
-        .map((entry) => entry.point);
+      return [...found];
     },
 
     /** @returns {Array<object>} Everything, unculled. */
-    all() { return items.map((entry) => entry.point); },
+    all() { return items.slice(); },
   };
 }
 
