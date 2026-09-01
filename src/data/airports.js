@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { createMarkerBatch } from './markerBatch.js';
+import { cameraViewBox, createViewportIndex } from './viewportIndex.js';
 
 /**
  * Airports.
@@ -118,6 +119,12 @@ export function createAirportsLayer() {
   let _markers = null;
   /** @type {object|null} */
   let _viewer = null;
+  /** R-tree over the visible tier set, rebuilt when the filter changes. */
+  let _index = null;
+  /** Camera listener handle, so it can be detached. */
+  let _removeCameraListener = null;
+  /** Coalesces camera moves into one rebuild. */
+  let _cullTimer = null;
   /** @type {Array<object>} */
   let _airports = [];
   let _shown = 0;
@@ -147,9 +154,29 @@ export function createAirportsLayer() {
    * PointPrimitiveCollection puts them all in one buffer, and the batch fills
    * it across frames so the tab never locks up.
    */
-  function render() {
-    if (!_markers) return;
-    const rows = visible();
+  /**
+   * Rebuild the index over whichever tiers are switched on.
+   *
+   * Rebuilt on a filter change rather than on every camera move: the index
+   * describes the DATA, and only the query depends on where the camera is.
+   */
+  function reindex() {
+    _index = createViewportIndex(visible());
+  }
+
+  /**
+   * Draw whatever the camera can currently see.
+   *
+   * Culling to the view is what keeps this cheap as the dataset grows: at city
+   * zoom a handful of airports are in frame, and building the other eleven
+   * thousand is work whose result nobody can see. A view covering most of the
+   * globe returns no box, and then everything is drawn — correctly, because at
+   * that point everything IS visible.
+   */
+  function renderVisible() {
+    if (!_markers || !_index) return;
+    const box = _viewer ? cameraViewBox(_viewer, Cesium) : null;
+    const rows = box ? _index.search(box) : _index.all();
     _shown = rows.length;
     _markers.setPoints(rows.map((airport) => {
       const tier = AIRPORT_TIERS[airport.type] || AIRPORT_TIERS.small;
@@ -184,6 +211,24 @@ export function createAirportsLayer() {
       };
     }));
     _rowControlsListener?.();
+  }
+
+  /**
+   * Redraw after the camera settles.
+   *
+   * Coalesced, because a single drag fires many move events and rebuilding the
+   * marker set on each one would cost far more than the culling saves.
+   */
+  function scheduleCull() {
+    if (!_enabled) return;
+    clearTimeout(_cullTimer);
+    _cullTimer = setTimeout(renderVisible, 120);
+  }
+
+  /** Rebuild the index and redraw. Called when the data or filter changes. */
+  function render() {
+    reindex();
+    renderVisible();
   }
 
   /**
@@ -264,10 +309,20 @@ export function createAirportsLayer() {
       _enabled = true;
       _markers?.setVisible(true);
       installInteraction(viewer);
+      // Recull when the camera stops. moveEnd rather than every frame: the
+      // visible set only changes when the view does, and only meaningfully
+      // once it has settled.
+      if (!_removeCameraListener && viewer?.camera?.moveEnd) {
+        _removeCameraListener = viewer.camera.moveEnd.addEventListener(scheduleCull);
+      }
+      renderVisible();
     },
 
     disable() {
       _enabled = false;
+      clearTimeout(_cullTimer);
+      _removeCameraListener?.();
+      _removeCameraListener = null;
       _markers?.setVisible(false);
       closeCard();
     },
