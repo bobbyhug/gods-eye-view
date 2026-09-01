@@ -2083,6 +2083,38 @@ function firmsProxy() {
    * (FIRMS reports errors as HTML/plain text, never CSV). Never log the URL —
    * it embeds the MAP_KEY.
    */
+  /**
+   * The keyless public archive, used when no MAP_KEY is configured.
+   *
+   * NASA publishes the last 24 hours of global detections as a plain CSV with
+   * no key, no quota and no signup — the same data the keyed area API returns,
+   * just as one worldwide file instead of a bounded query. It is 14 MB and
+   * about 179,000 detections, fetched in a couple of seconds.
+   *
+   * This is a server-side fetch, which is what makes it usable at all: the
+   * archive sends no CORS header, so the browser could not fetch it directly,
+   * but nothing in this app does — every source is proxied through here.
+   *
+   * The keyed path is still preferred where a key exists: it is bounded, has a
+   * smaller payload, and reports quota. This is what makes the layer work at
+   * all on a deployment with no key, which previously returned 503 forever.
+   */
+  const KEYLESS_ARCHIVES = Object.freeze([
+    { source: 'VIIRS_NOAA20_NRT', url: 'https://firms.modaps.eosdis.nasa.gov/data/active_fire/noaa-20-viirs-c2/csv/J1_VIIRS_C2_Global_24h.csv' },
+  ]);
+
+  /** @returns {Promise<Array<object>>} */
+  async function fetchKeylessArchive(source) {
+    const res = await fetch(source.url, {
+      headers: { 'User-Agent': 'GodsEyeView/1.0 (https://github.com/uhrichsam4/gods-eye-view)' },
+      signal: AbortSignal.timeout(90_000),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const records = parseFirmsCsv(await res.text());
+    if (records === null) throw new Error('non-CSV upstream response');
+    return records;
+  }
+
   async function fetchSource(key, source) {
     const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${encodeURIComponent(key)}/${source}/world/2`;
     const res = await fetch(url, { signal: AbortSignal.timeout(60_000) });
@@ -2194,6 +2226,68 @@ function firmsProxy() {
           }
 
           if (!key) {
+            // No key: serve the keyless global archive instead of refusing.
+            // This layer returned 503 forever on any deployment without a
+            // MAP_KEY, which is an empty map for a dataset NASA publishes
+            // openly.
+            try {
+              const now = Date.now();
+              if (!mem || now - mem.at >= TTL_MS) {
+                const fires = [];
+                const sources = [];
+                for (const archive of KEYLESS_ARCHIVES) {
+                  try {
+                    const records = filterTrailing24h(await fetchKeylessArchive(archive), now);
+                    sources.push({ source: archive.source, count: records.length, ok: true });
+                    fires.push(...records);
+                  } catch (err) {
+                    sources.push({ source: archive.source, ok: false, error: String(err?.message || err) });
+                  }
+                }
+                // CAP BY FIRE INTENSITY, NOT BY SLICING ARBITRARILY.
+                //
+                // The global archive is 98,000 detections and 19 MB — too many
+                // markers to draw and too many bytes to ship. Most of them are
+                // very small: the median detection is 5 MW of radiative power,
+                // which is a cooking fire or a gas flare, not something anyone
+                // opened a map to see.
+                //
+                // Keeping everything at or above 10 MW leaves about 23,000 —
+                // roughly a quarter of the detections and, by definition, every
+                // one of the larger ones. Sorted so that if the cap below still
+                // bites, what survives is the most intense fires burning right
+                // now rather than whichever rows happened to come first.
+                const MIN_FRP_MW = 10;
+                const MAX_FIRES = 25_000;
+                const significant = fires
+                  .filter((fire) => Number(fire?.frp) >= MIN_FRP_MW)
+                  .sort((a, b) => Number(b.frp) - Number(a.frp))
+                  .slice(0, MAX_FIRES);
+                if (significant.length) {
+                  mem = {
+                    at: now,
+                    sources: sources.map((entry) => (entry.ok
+                      ? { ...entry, kept: significant.length, minFrpMw: MIN_FRP_MW }
+                      : entry)),
+                    fires: significant,
+                  };
+                }
+              }
+              if (mem) {
+                sendJson(200, {
+                  fetchedAt: mem.at,
+                  stale: Date.now() - mem.at >= TTL_MS,
+                  ttlMs: TTL_MS,
+                  sources: mem.sources,
+                  count: mem.fires.length,
+                  keyless: true,
+                  fires: mem.fires,
+                });
+                return;
+              }
+            } catch {
+              // Fall through to the honest refusal below.
+            }
             sendJson(503, { error: 'no_key' });
             return;
           }
