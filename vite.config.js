@@ -2257,12 +2257,45 @@ function firmsProxy() {
                 // one of the larger ones. Sorted so that if the cap below still
                 // bites, what survives is the most intense fires burning right
                 // now rather than whichever rows happened to come first.
-                const MIN_FRP_MW = 10;
-                const MAX_FIRES = 25_000;
+                // 20 MW, not 10. Measured on a live global archive, 10 MW kept
+                // 23,336 detections and 4.4 MB; 20 MW keeps 9,346 and about a
+                // quarter of the bytes. Enabling the layer was taking 7.7
+                // SECONDS of frozen interface — the payload, the parse and the
+                // marker build all land on the main thread — and 23,000 tiny
+                // markers read as a haze over every continent rather than as
+                // fires. Both problems have the same cause and the same fix.
+                //
+                // 20 MW is still a genuinely large fire. Nothing significant is
+                // lost; what goes is the long tail of gas flares, kilns and
+                // cooking fires that VIIRS also sees.
+                const MIN_FRP_MW = 20;
+                const MAX_FIRES = 12_000;
+                const round = (value, dp) => {
+                  const n = Number(value);
+                  return Number.isFinite(n) ? Number(n.toFixed(dp)) : undefined;
+                };
                 const significant = fires
                   .filter((fire) => Number(fire?.frp) >= MIN_FRP_MW)
                   .sort((a, b) => Number(b.frp) - Number(a.frp))
-                  .slice(0, MAX_FIRES);
+                  .slice(0, MAX_FIRES)
+                  // Trim the numbers on the way out. Four decimal places of
+                  // latitude is about eleven metres, which is far finer than a
+                  // 375 m satellite footprint can justify, and the extra digits
+                  // were pure transfer cost.
+                  .map((fire) => {
+                    const slim = {
+                      ...fire,
+                      lat: round(fire.lat, 4),
+                      lon: round(fire.lon, 4),
+                      frp: round(fire.frp, 1),
+                      brightness: round(fire.brightness, 1),
+                      brightnessTi5: round(fire.brightnessTi5, 1),
+                    };
+                    for (const key of Object.keys(slim)) {
+                      if (slim[key] === '' || slim[key] === undefined) delete slim[key];
+                    }
+                    return slim;
+                  });
                 if (significant.length) {
                   mem = {
                     at: now,
