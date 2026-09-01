@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium';
+import { createMarkerBatch } from './markerBatch.js';
 
 /**
  * Airports.
@@ -113,8 +114,10 @@ export function nearestUsable(airports, lat, lon, requiredFt = 8000) {
  * @returns {object} Layer module.
  */
 export function createAirportsLayer() {
-  /** @type {Cesium.CustomDataSource|null} */
-  let _dataSource = null;
+  /** @type {object|null} Batched point primitives, not entities. */
+  let _markers = null;
+  /** @type {object|null} */
+  let _viewer = null;
   /** @type {Array<object>} */
   let _airports = [];
   let _shown = 0;
@@ -134,43 +137,38 @@ export function createAirportsLayer() {
     return _airports.filter((airport) => _tiers.has(airport.type));
   }
 
+  /**
+   * Draw the markers.
+   *
+   * BATCHED PRIMITIVES, NOT ENTITIES. Eleven thousand airports as entities is
+   * eleven thousand primitives, each with its own draw call and its own
+   * per-frame visualiser pass. Measured across the app, that approach froze the
+   * interface for seconds whenever a large layer was switched on. A
+   * PointPrimitiveCollection puts them all in one buffer, and the batch fills
+   * it across frames so the tab never locks up.
+   */
   function render() {
-    if (!_dataSource) return;
-    _dataSource.entities.removeAll();
+    if (!_markers) return;
     const rows = visible();
-    _shown = 0;
-
-    for (const airport of rows) {
+    _shown = rows.length;
+    _markers.setPoints(rows.map((airport) => {
       const tier = AIRPORT_TIERS[airport.type] || AIRPORT_TIERS.small;
-      try {
-        _dataSource.entities.add({
-          id: `airport-${airport.id}`,
-          position: Cesium.Cartesian3.fromDegrees(airport.lon, airport.lat),
-          point: {
-            pixelSize: tier.pixelSize,
-            color: Cesium.Color.fromCssColorString(tier.color).withAlpha(0.92),
-            outlineColor: Cesium.Color.BLACK.withAlpha(0.55),
-            outlineWidth: 1,
-            // Clamped, or the marker floats at ellipsoid height and sinks into
-            // the terrain wherever the ground is above it.
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-            // Finite, not Infinity: an infinite value draws the marker through
-            // the planet, so airports on the far side show through the globe.
-            disableDepthTestDistance: 50_000,
-            // Small fields only appear once the camera is close enough for them
-            // to be distinguishable; drawn at global zoom they are a grey haze
-            // over every populated continent.
-            distanceDisplayCondition: Number.isFinite(tier.minZoomM)
-              ? new Cesium.DistanceDisplayCondition(0, tier.minZoomM)
-              : undefined,
-          },
-          properties: { airport },
-        });
-        _shown += 1;
-      } catch {
-        // One bad row must not abandon the rest of the world.
-      }
-    }
+      return {
+        lon: airport.lon,
+        lat: airport.lat,
+        size: tier.pixelSize,
+        color: Cesium.Color.fromCssColorString(tier.color).withAlpha(0.92),
+        outlineColor: Cesium.Color.BLACK.withAlpha(0.55),
+        outlineWidth: 1,
+        // Small fields only appear once the camera is close enough for them to
+        // be distinguishable; drawn at global zoom they are a grey haze over
+        // every populated continent.
+        distanceMax: Number.isFinite(tier.minZoomM) ? tier.minZoomM : undefined,
+        // The pick target. A batched point carries an id rather than an entity,
+        // so this is what a click resolves to.
+        id: { airport },
+      };
+    }));
     _rowControlsListener?.();
   }
 
@@ -217,7 +215,9 @@ export function createAirportsLayer() {
       // click on a marker reads as empty ground.
       const hits = viewer.scene.drillPick(click.position, PICK_DEPTH) || [];
       for (const hit of hits) {
-        const airport = hit?.id?.properties?.airport?.getValue?.();
+        // Batched points carry a plain object id, not an Entity, so there is no
+        // properties bag and no getValue() to unwrap.
+        const airport = hit?.id?.airport;
         if (airport) { showCard(airport); return; }
       }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
@@ -231,9 +231,13 @@ export function createAirportsLayer() {
     updateInterval: UPDATE_INTERVAL_MS,
 
     init(viewer) {
-      _dataSource = new Cesium.CustomDataSource('airports');
-      _dataSource.show = false;
-      viewer.dataSources.add(_dataSource);
+      _viewer = viewer;
+      _markers = createMarkerBatch({
+        scene: viewer.scene,
+        requestRender: () => viewer.scene.requestRender(),
+        onDone: () => _rowControlsListener?.(),
+      });
+      _markers.setVisible(false);
       _airports = [];
       _shown = 0;
       _loaded = false;
@@ -244,13 +248,13 @@ export function createAirportsLayer() {
 
     enable(viewer) {
       _enabled = true;
-      if (_dataSource) _dataSource.show = true;
+      _markers?.setVisible(true);
       installInteraction(viewer);
     },
 
     disable() {
       _enabled = false;
-      if (_dataSource) _dataSource.show = false;
+      _markers?.setVisible(false);
       closeCard();
     },
 
