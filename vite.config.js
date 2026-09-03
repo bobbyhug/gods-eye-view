@@ -9330,7 +9330,7 @@ export default defineConfig(({ mode }) => {
       port: parseInt(env.PORT, 10) || 4173,
       allowedHosts: (() => {
         const raw = String(env.PREVIEW_ALLOWED_HOSTS || '').trim();
-        if (!raw) return ['localhost', '127.0.0.1', '.local'];
+        if (!raw) return ['localhost', '127.0.0.1', '.local', '.onrender.com'];
         if (raw === 'true') return true;
         return raw.split(',').map((host) => host.trim()).filter(Boolean);
       })(),
